@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600&display=swap');
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Page entrance animation (Emil: ease-out, transform+opacity, <320ms) ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.anim-fade-up {
+  animation: fadeUp 320ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  will-change: transform, opacity;
+}
+/* Respect users who opt out of motion */
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up { animation: none; }
+}
+
+/* ── ApexCharts tooltip animation ─────────────────────────────
+   Emil Kowalski ease-out curve, 160ms enter / 120ms exit, 4px translate.
+   Only animates transform + opacity (GPU-accelerated).
+*/
+.apexcharts-tooltip {
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+  transform: translateY(4px) scale(0.98);
+  will-change: transform, opacity;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+.apexcharts-tooltip .apexcharts-tooltip-title {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+.apexcharts-tooltip.apexcharts-active {
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+/* Exit: snappier */
+.apexcharts-tooltip:not(.apexcharts-active) {
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out !important;
+}
+/* xaxis tooltip (hover crosshair label) follows the same curve */
+.apexcharts-xaxistooltip,
+.apexcharts-yaxistooltip {
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+@layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: var(--text-neutral);
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-neutral) inset;
+    caret-color: var(--text-neutral);
+    transition: background-color 600000s 0s, color 600000s 0s;
+  }
+}

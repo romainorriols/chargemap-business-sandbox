@@ -1,0 +1,18 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { bus, selectedBuId } from '../state/bus'
+import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+
+const currentBu = computed(() => bus.find(b => b.id === selectedBuId.value) ?? null)
+</script>
+
+<template>
+  <div class="flex flex-col items-center justify-center h-full p-[24px] text-center">
+    <h1 :class="['mb-[8px]', isNavV2 ? 'font-sans font-semibold text-[24px] tracking-[-0.72px] text-text-neutral' : V1_PAGE_HEADING]">
+      {{ currentBu?.name ?? 'Business unit' }}
+    </h1>
+    <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary max-w-[440px]">
+      Les pages au niveau business unit arrivent bientôt.
+    </p>
+  </div>
+</template>

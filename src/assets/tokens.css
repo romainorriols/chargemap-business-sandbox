@@ -1,0 +1,164 @@
+/**
+ * Design tokens — aligned with Figma tokens.json
+ *
+ * Two layers:
+ *   1. Brand primitives (--brand-*) → switchable via theme class on <html> / <body>.
+ *   2. Semantic tokens (--bg-*, --text-*, --border-*, --icon-*) → consumed by tailwind + components.
+ *
+ * Active theme = Business. Toggle to Partners by adding class `theme-partners`.
+ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────
+   * Brand primitives — BUSINESS (default)
+   * ───────────────────────────────────────────────────────── */
+  --brand-base: #2463eb;
+  --brand-strong: #1d4fd7;
+  --brand-deep: #1e3b8a;
+  --brand-medium: #91c3fd;
+  --brand-lighter: #dcebfe;
+  --brand-surface: #f0f6ff;
+
+  /* ─────────────────────────────────────────────────────────
+   * Semantic — Backgrounds
+   * ───────────────────────────────────────────────────────── */
+  --bg-neutral: #ffffff;
+  --bg-neutral-secondary: #f8fafc;
+  --bg-neutral-tertiary: #f1f5f9;
+  --bg-neutral-hover: #f8fafc;
+  --bg-neutral-disabled: #e1e7ef;
+  --bg-neutral-selected: #f8fafc;
+  --bg-neutral-inverse: #0f1729;
+
+  --bg-brand: var(--brand-base);
+  --bg-brand-hover: var(--brand-strong);
+  --bg-brand-deep: var(--brand-deep);
+  --bg-brand-surface: var(--brand-surface);
+  --bg-brand-medium: var(--brand-medium);
+  --bg-brand-lighter: var(--brand-lighter);
+
+  --bg-danger: #dc2828;
+  --bg-danger-hover: #ba1b1b;
+  --bg-danger-deep: #811d1d;
+  --bg-danger-surface: #fef1f1;
+  --bg-danger-medium: #fca6a6;
+
+  --bg-success: #16a339;
+  --bg-success-hover: #158037;
+  --bg-success-deep: #145329;
+  --bg-success-surface: #f2fdf4;
+  --bg-success-medium: #86ef94;
+
+  --bg-warning: #e8590c;
+  --bg-warning-hover: #bf3f0c;
+  --bg-warning-deep: #7c2c11;
+  --bg-warning-surface: #fff5ea;
+  --bg-warning-medium: #fcb972;
+
+  /* ─────────────────────────────────────────────────────────
+   * Semantic — Text
+   * ───────────────────────────────────────────────────────── */
+  --text-neutral: #0f1729;
+  --text-neutral-secondary: #48566a;
+  --text-neutral-tertiary: #f1f5f9;
+  --text-neutral-disabled: #94a3b8;
+  --text-neutral-inverse: #f8fafc;
+  --text-secondary: #65758b;
+
+  --text-brand-lighter: var(--brand-medium);
+  --text-brand-medium: var(--brand-base);
+  --text-brand-deep: var(--brand-deep);
+
+  --text-danger-lighter: #f87171;
+  --text-danger-medium: #ba1b1b;
+  --text-danger-deep: #811d1d;
+
+  --text-success-lighter: #4ade5e;
+  --text-success-medium: #158037;
+  --text-success-deep: #145329;
+
+  --text-warning-lighter: #fb923c;
+  --text-warning-medium: #bf3f0c;
+  --text-warning-deep: #7c2c11;
+
+  /* ─────────────────────────────────────────────────────────
+   * Semantic — Borders
+   * ───────────────────────────────────────────────────────── */
+  --border-neutral: #cbd5e1;
+  --border-neutral-secondary: #e1e7ef;
+  --border-neutral-tertiary: #f1f5f9;
+
+  --border-brand: var(--brand-base);
+  --border-brand-lighter: var(--brand-lighter);
+  --border-brand-medium: var(--brand-medium);
+  --border-brand-deep: var(--brand-deep);
+
+  --border-danger: #dc2828;
+  --border-danger-lighter: #fee1e1;
+  --border-danger-medium: #fca6a6;
+  --border-danger-deep: #811d1d;
+
+  --border-success: #16a339;
+  --border-success-lighter: #dcfce0;
+  --border-success-medium: #86ef94;
+  --border-success-deep: #145329;
+
+  --border-warning: #e8590c;
+  --border-warning-lighter: #ffedd6;
+  --border-warning-medium: #fcb972;
+  --border-warning-deep: #7c2c11;
+
+  /* ─────────────────────────────────────────────────────────
+   * Semantic — Icons
+   * ───────────────────────────────────────────────────────── */
+  --icon-neutral-primary: #0f1729;
+  --icon-neutral-secondary: #48566a;
+  --icon-neutral-disabled: #94a3b8;
+  --icon-neutral-inverse: #ffffff;
+
+  --icon-brand: var(--brand-base);
+  --icon-brand-surface: var(--brand-lighter);
+  --icon-brand-medium: var(--brand-medium);
+  --icon-brand-deep: var(--brand-deep);
+
+  --icon-danger: #ba1b1b;
+  --icon-danger-surface: #fef1f1;
+  --icon-danger-medium: #fca6a6;
+  --icon-danger-deep: #811d1d;
+
+  --icon-success: #158037;
+  --icon-success-surface: #f2fdf4;
+  --icon-success-medium: #86ef94;
+  --icon-success-deep: #145329;
+
+  --icon-warning: #bf3f0c;
+  --icon-warning-surface: #fff5ea;
+  --icon-warning-medium: #fcb972;
+  --icon-warning-deep: #7c2c11;
+
+  --icon-accent-turquoise: #18b97e;
+  --icon-accent-yellow: #c78904;
+  --icon-accent-rose: #e11d47;
+  --icon-accent-purple: #9133e9;
+  --icon-accent-brand: var(--brand-base);
+
+  /* ─────────────────────────────────────────────────────────
+   * Composed — Focus rings
+   * 4px halo at 24% opacity of the brand/danger base, matches Figma pattern.
+   * ───────────────────────────────────────────────────────── */
+  --ring-brand: 0 0 0 4px color-mix(in srgb, var(--brand-base) 24%, transparent), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ring-danger: 0 0 0 4px color-mix(in srgb, var(--bg-danger) 24%, transparent), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ───────────────────────────────────────────────────────────
+ * Theme override — PARTNERS
+ * Apply to <html> or <body>: class="theme-partners"
+ * ─────────────────────────────────────────────────────────── */
+.theme-partners {
+  --brand-base: #7c3bed;
+  --brand-strong: #6b26d9;
+  --brand-deep: #4d1d95;
+  --brand-medium: #c3b4fd;
+  --brand-lighter: #ebe7fe;
+  --brand-surface: #f6f5ff;
+}
