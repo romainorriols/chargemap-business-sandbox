@@ -11,6 +11,7 @@ import Orders from './pages/Orders.vue'
 import Settings from './pages/Settings.vue'
 import Users from './pages/Users.vue'
 import BuHome from './pages/BuHome.vue'
+import BuSettings from './pages/BuSettings.vue'
 import SupervisedCharges from './pages/SupervisedCharges.vue'
 import { orga } from './state/orga'
 import { bus, selectedBuId } from './state/bus'
@@ -272,6 +273,7 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
     >
       <!-- BU-scoped pages: built ones routed individually, the rest fall through to BuHome. -->
       <SupervisedCharges v-if="activeId === 'bu-supervision-charges'" />
+      <BuSettings v-else-if="activeId === 'bu-settings'" />
       <BuHome v-else-if="activeId === 'bu-home' || activeId.startsWith('bu-')" />
       <Dashboard v-else-if="activeId === 'dashboard'" />
       <BusinessUnits v-else-if="activeId === 'bus'" />
