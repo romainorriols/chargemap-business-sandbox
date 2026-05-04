@@ -55,6 +55,8 @@
   --bg-warning-surface: #fff5ea;
   --bg-warning-medium: #fcb972;
 
+  --bg-accent-cyan: #ebfeff;
+
   /* ─────────────────────────────────────────────────────────
    * Semantic — Text
    * ───────────────────────────────────────────────────────── */
@@ -80,6 +82,8 @@
   --text-warning-lighter: #fb923c;
   --text-warning-medium: #bf3f0c;
   --text-warning-deep: #7c2c11;
+
+  --text-accent-cyan: #088eaf;
 
   /* ─────────────────────────────────────────────────────────
    * Semantic — Borders
@@ -107,6 +111,8 @@
   --border-warning-lighter: #ffedd6;
   --border-warning-medium: #fcb972;
   --border-warning-deep: #7c2c11;
+
+  --border-accent-cyan: #a6f4fc;
 
   /* ─────────────────────────────────────────────────────────
    * Semantic — Icons
