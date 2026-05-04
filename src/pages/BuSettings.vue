@@ -38,13 +38,28 @@ const moyenPaiementDescription = computed(() => {
       return 'Renseignez ces informations pour obtenir un IBAN dédié. Vous pourrez ensuite effectuer le virement depuis votre banque'
     case 'carte':
       return 'Renseigner les informations de votre carte bancaire'
+    case 'prelevement':
+      return 'Pour utiliser la méthode par prélèvement, vous devez enregistrer votre moyen de prélèvement avec le service sécurisé GoCardless.'
     default:
       return ''
   }
 })
-const moyenPaiementCtaLabel = computed(() =>
-  moyenPaiement.value === 'virement' ? 'Recevoir un IBAN dédié' : 'Valider',
-)
+const moyenPaiementCtaLabel = computed(() => {
+  switch (moyenPaiement.value) {
+    case 'virement':
+      return 'Recevoir un IBAN dédié'
+    case 'prelevement':
+      return 'Mettre en place le prélèvement'
+    default:
+      return 'Valider'
+  }
+})
+
+// Hard-coded prélèvement bank details — only displayed in the saved-state view.
+const prelevementInfo = {
+  banque: 'Crédit Agricole',
+  codePays: 'FR',
+}
 
 const contactFacturation = ref('')
 const langueCommunication = ref('FR')
@@ -165,6 +180,12 @@ const onValiderMoyen = () => {
     showSuccessToast('Carte bancaire enregistrée', '')
     return
   }
+  if (moyenPaiement.value === 'prelevement') {
+    // No fields to validate — would redirect to GoCardless in real life.
+    hasPaymentMethod.value = true
+    showSuccessToast('Prélèvement activé', '')
+    return
+  }
 }
 
 // Saved state — variant-specific copy & display.
@@ -174,6 +195,8 @@ const savedStatusLabel = computed(() => {
       return 'Virement bancaire activé'
     case 'carte':
       return 'Paiement par carte bancaire activé'
+    case 'prelevement':
+      return 'Prélèvement activé'
     default:
       return 'Moyen de paiement activé'
   }
@@ -316,23 +339,21 @@ const showSuccessToast = (title: string, description: string) => {
                     v-for="opt in moyenPaiementOptions"
                     :key="opt.value"
                     type="button"
-                    class="group flex items-start gap-[8px] outline-none rounded-[6px] focus-visible:shadow-ring-brand"
+                    class="group flex items-center gap-[8px] outline-none rounded-[6px] focus-visible:shadow-ring-brand"
                     @click="moyenPaiement = opt.value"
                   >
-                    <div class="shrink-0 pt-[4px]">
+                    <div
+                      :class="[
+                        'flex items-center justify-center shrink-0 size-[16px] rounded-full transition-colors duration-150',
+                        moyenPaiement === opt.value
+                          ? 'bg-brand'
+                          : 'border border-border-neutral',
+                      ]"
+                    >
                       <div
-                        :class="[
-                          'flex items-center justify-center shrink-0 size-[16px] rounded-full transition-colors duration-150',
-                          moyenPaiement === opt.value
-                            ? 'bg-brand'
-                            : 'border border-border-neutral',
-                        ]"
-                      >
-                        <div
-                          v-if="moyenPaiement === opt.value"
-                          class="size-[6px] rounded-full bg-white"
-                        />
-                      </div>
+                        v-if="moyenPaiement === opt.value"
+                        class="size-[6px] rounded-full bg-white"
+                      />
                     </div>
                     <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                       {{ opt.label }}
@@ -377,10 +398,16 @@ const showSuccessToast = (title: string, description: string) => {
                     </div>
                   </Transition>
 
-                  <div class="h-px w-full bg-border-neutral-secondary" />
+                  <!-- Separator only for variants with form fields below (Prélèvement has none). -->
+                  <div
+                    v-if="moyenPaiement !== 'prelevement'"
+                    class="h-px w-full bg-border-neutral-secondary"
+                  />
 
-                  <!-- Form fields cross-fade when switching between moyen variants. -->
+                  <!-- Form fields cross-fade when switching between moyen variants.
+                       Prélèvement has no fields — the GoCardless redirect happens through the CTA only. -->
                   <Transition
+                    v-if="moyenPaiement !== 'prelevement'"
                     mode="out-in"
                     enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
                     enter-from-class="opacity-0 translate-y-[4px]"
@@ -456,14 +483,6 @@ const showSuccessToast = (title: string, description: string) => {
                       </div>
                     </div>
 
-                    <!-- Prélèvement: not designed yet -->
-                    <div
-                      v-else
-                      :key="'prelevement-fields'"
-                      class="w-full text-center py-[8px] font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary"
-                    >
-                      À venir.
-                    </div>
                   </Transition>
 
                   <!-- CTA — always inside the form card, md size (same for all variants). -->
@@ -613,6 +632,25 @@ const showSuccessToast = (title: string, description: string) => {
                     <Icon name="arrow-down-tray" variant="outline" :size="20" class="shrink-0" />
                     Télécharger le RIB
                   </button>
+                </section>
+                </template>
+
+                <!-- ━━━━━━━━━━━━━━━━━━━━ PRÉLÈVEMENT VARIANT ━━━━━━━━━━━━━━━━━━━━ -->
+                <template v-else-if="moyenPaiement === 'prelevement'">
+                <section
+                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] flex flex-col gap-[24px] overflow-clip"
+                >
+                  <div class="flex items-center gap-[16px] w-full font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                    <p class="shrink-0 text-text-neutral-secondary whitespace-nowrap">Banque</p>
+                    <p class="flex-1 min-w-0 text-text-neutral text-right truncate">{{ prelevementInfo.banque }}</p>
+                  </div>
+
+                  <div class="h-px w-full bg-border-neutral-secondary" />
+
+                  <div class="flex items-center gap-[16px] w-full font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                    <p class="shrink-0 text-text-neutral-secondary whitespace-nowrap">Code pays</p>
+                    <p class="flex-1 min-w-0 text-text-neutral text-right truncate">{{ prelevementInfo.codePays }}</p>
+                  </div>
                 </section>
                 </template>
 
