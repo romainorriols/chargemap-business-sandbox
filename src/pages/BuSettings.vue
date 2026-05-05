@@ -215,12 +215,12 @@ const displayCardExpiration = computed(() => {
 
 // Edit-in-place for the Informations card. Snapshot on enter so Annuler can revert.
 const editingInfo = ref(false)
-let infoSnapshot = { contact: '', langue: '' }
+let infoSnapshot = { contact: '' }
 const onModifierMoyen = () => {
   // Virement uses in-place editing (snapshot + Annuler/Enregistrer in the status card).
   // Carte falls back to the regular form (values are preserved on the refs).
   if (moyenPaiement.value === 'virement') {
-    infoSnapshot = { contact: contactFacturation.value, langue: langueCommunication.value }
+    infoSnapshot = { contact: contactFacturation.value }
     editingInfo.value = true
     return
   }
@@ -228,13 +228,10 @@ const onModifierMoyen = () => {
 }
 const onAnnulerInfo = () => {
   contactFacturation.value = infoSnapshot.contact
-  langueCommunication.value = infoSnapshot.langue
   editingInfo.value = false
 }
 const onEnregistrerInfo = () => {
-  const changed =
-    contactFacturation.value !== infoSnapshot.contact ||
-    langueCommunication.value !== infoSnapshot.langue
+  const changed = contactFacturation.value !== infoSnapshot.contact
   if (changed) showSuccessToast('Informations mises à jour', '')
   editingInfo.value = false
 }
@@ -404,33 +401,20 @@ const showSuccessToast = (title: string, description: string) => {
                     leave-from-class="opacity-100 translate-y-0"
                     leave-to-class="opacity-0 -translate-y-[2px]"
                   >
-                    <!-- Virement bancaire fields -->
+                    <!-- Virement bancaire fields — only the billing-contact email -->
                     <div
                       v-if="moyenPaiement === 'virement'"
                       :key="'virement-fields'"
-                      class="flex gap-[16px] w-full"
+                      class="w-full"
                     >
-                      <div class="flex-1 min-w-0">
-                        <Input
-                          v-model="contactFacturation"
-                          size="md"
-                          label="Email contact de facturation"
-                          placeholder="johndoe@email.com"
-                          :destructive="showContactError"
-                          :hint="showContactError ? 'Veuillez renseigner un email' : ''"
-                        />
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <Dropdown
-                          v-model="langueCommunication"
-                          :items="langueItems"
-                          size="md"
-                          label="Langue des communications de facturation"
-                          :show-hint="false"
-                          :searchable="false"
-                          placeholder="Sélectionner une langue"
-                        />
-                      </div>
+                      <Input
+                        v-model="contactFacturation"
+                        size="md"
+                        label="Email contact de facturation"
+                        placeholder="johndoe@email.com"
+                        :destructive="showContactError"
+                        :hint="showContactError ? 'Veuillez renseigner un email' : ''"
+                      />
                     </div>
 
                     <!-- Carte bancaire fields -->
@@ -563,41 +547,21 @@ const showSuccessToast = (title: string, description: string) => {
                     leave-to-class="opacity-0 -translate-y-[4px]"
                   >
                     <!-- View mode -->
-                    <div v-if="!editingInfo" key="view" class="flex flex-col gap-[24px] w-full">
+                    <div v-if="!editingInfo" key="view" class="w-full">
                       <div class="flex items-center gap-[16px] w-full font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
                         <p class="shrink-0 text-text-neutral-secondary whitespace-nowrap">Contact de facturation</p>
                         <p class="flex-1 min-w-0 text-text-neutral text-right truncate">{{ contactFacturation }}</p>
                       </div>
-
-                      <div class="h-px w-full bg-border-neutral-secondary" />
-
-                      <div class="flex items-center gap-[16px] w-full font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-                        <p class="shrink-0 text-text-neutral-secondary whitespace-nowrap">Langue de communication</p>
-                        <p class="flex-1 min-w-0 text-text-neutral text-right truncate">{{ selectedLangueLabel }}</p>
-                      </div>
                     </div>
 
                     <!-- Edit mode -->
-                    <div v-else key="edit" class="flex gap-[12px] w-full">
-                      <div class="flex-1 min-w-0">
-                        <Input
-                          v-model="contactFacturation"
-                          size="md"
-                          label="Email contact de facturation"
-                          placeholder="johndoe@email.com"
-                        />
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <Dropdown
-                          v-model="langueCommunication"
-                          :items="langueItems"
-                          size="md"
-                          label="Langue des communications de facturation"
-                          :show-hint="false"
-                          :searchable="false"
-                          placeholder="Sélectionner une langue"
-                        />
-                      </div>
+                    <div v-else key="edit" class="w-full">
+                      <Input
+                        v-model="contactFacturation"
+                        size="md"
+                        label="Email contact de facturation"
+                        placeholder="johndoe@email.com"
+                      />
                     </div>
                   </Transition>
                 </section>
