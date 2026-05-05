@@ -55,6 +55,12 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!-- Single-root wrapper. When a #panel slot is supplied, tabs nav and panel
+       sit as siblings inside this wrapper so external `class` (max-width, etc.)
+       applies cleanly to the whole component. Internal flex-col + gap-[40px]
+       gives canonical spacing between tabs and content. -->
+  <div :class="['flex flex-col items-stretch w-full', $slots.panel ? 'gap-[40px]' : '']">
+
   <!-- Pill variant — dark segmented control with sliding white pill -->
   <div v-if="variant === 'pill'" class="bg-neutral-tertiary flex p-[4px] rounded-[8px] w-fit">
     <div class="relative flex gap-[4px] items-center">
@@ -143,5 +149,19 @@ onMounted(async () => {
         </span>
       </button>
     </div>
+  </div>
+
+  <!-- Optional panel slot — when provided, content is wrapped in a cross-fade Transition
+       keyed on the active tab. Uses the global .tab-fade-* classes (see main.css). -->
+  <Transition
+    v-if="$slots.panel"
+    mode="out-in"
+    name="tab-fade"
+  >
+    <div :key="modelValue" class="w-full">
+      <slot name="panel" :active-tab="modelValue" />
+    </div>
+  </Transition>
+
   </div>
 </template>

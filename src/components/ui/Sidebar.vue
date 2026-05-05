@@ -436,6 +436,36 @@ const pillStyle = computed(() => ({
       <slot name="upsell" />
     </div>
 
+    <!-- Newsletter + Centre d'aide — pinned above the user profile footer. -->
+    <div class="shrink-0 px-[16px] pt-[8px] pb-[4px] w-full flex flex-col gap-[4px]">
+      <button
+        type="button"
+        :class="itemClassDirect(false)"
+      >
+        <Icon
+          name="megaphone"
+          variant="solid"
+          :size="20"
+          :class="itemIconClass(false)"
+        />
+        <span :class="itemTextClass(false)">Recevoir la news letter</span>
+      </button>
+      <a
+        href="https://chargemap-business.frontkb.com/fr"
+        target="_blank"
+        rel="noopener noreferrer"
+        :class="itemClassDirect(false)"
+      >
+        <Icon
+          name="book-open"
+          variant="solid"
+          :size="20"
+          :class="itemIconClass(false)"
+        />
+        <span :class="itemTextClass(false)">Centre d'aide</span>
+      </a>
+    </div>
+
     <!-- Footer (user profile) -->
     <div v-if="user" class="shrink-0 p-[16px] w-full">
       <div class="flex gap-[12px] items-center overflow-hidden px-[12px] py-[8px] rounded-[8px] w-full">

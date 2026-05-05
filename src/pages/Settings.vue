@@ -368,20 +368,11 @@ watch(newTokenOpen, isOpen => {
       </button>
     </div>
 
-    <!-- Tab content -->
-    <Transition
-      mode="out-in"
-      enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-      enter-from-class="opacity-0 translate-y-[4px]"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-[2px]"
-    >
+    <!-- Tab content — canonical tab-fade animation (see main.css). -->
+    <Transition mode="out-in" name="tab-fade">
       <div
         :key="activeTab"
-        class="w-full max-w-[800px] flex flex-col gap-[16px] anim-fade-up"
-        style="animation-delay: 80ms"
+        class="w-full max-w-[800px] flex flex-col gap-[16px]"
       >
         <!-- Informations tab -->
         <template v-if="activeTab === 'informations'">

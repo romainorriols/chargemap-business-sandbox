@@ -294,28 +294,25 @@ const showSuccessToast = (title: string, description: string) => {
       </h1>
     </div>
 
-    <!-- Horizontal tabs — underline variant with sliding indicator (matches SupervisedCharges). -->
-    <div
-      class="w-full max-w-[800px] border-b border-border-neutral-secondary anim-fade-up"
+    <!-- Horizontal tabs + panel slot — canonical tab-fade Transition baked into the
+         component (matches SupervisedCharges). The component renders tabs and panel
+         inside a single 40px-gap wrapper, so external max-width applies to both. -->
+    <HorizontalTabs
+      :tabs="tabs"
+      v-model="activeTab"
+      variant="underline"
+      class="max-w-[800px] anim-fade-up"
       style="animation-delay: 40ms"
     >
-      <HorizontalTabs :tabs="tabs" v-model="activeTab" variant="underline" />
-    </div>
-
-    <!-- Tab content — matches the charges-row animation in SupervisedCharges.
-         No anim-fade-up here: it'd be a CSS keyframe on opacity/transform that overrides the Transition. -->
-    <Transition mode="out-in" name="tab-content">
-      <div
-        :key="activeTab"
-        class="w-full max-w-[800px] flex flex-col gap-[16px]"
-      >
+      <template #panel>
+        <div class="w-full flex flex-col gap-[16px]">
         <!-- Moyen de paiement tab -->
         <template v-if="activeTab === 'moyen-de-paiement'">
 
-          <!-- Stack of standalone cards (no outer wrapper) — gap-[12px] between siblings.
-               The radio selector only shows in form state; saved state replaces it with the status card. -->
+          <!-- Tertiary-gray frame holding the cards (radio + form, or status + saved bodies).
+               Cards remain bg-neutral; the outer fill provides visual separation per Figma. -->
           <div
-            class="w-full flex flex-col gap-[12px] anim-fade-up"
+            class="w-full bg-neutral-tertiary border border-border-neutral-secondary rounded-[8px] shadow-sm p-[8px] flex flex-col gap-[8px] anim-fade-up"
             style="animation-delay: 120ms"
           >
 
@@ -330,10 +327,10 @@ const showSuccessToast = (title: string, description: string) => {
               leave-to-class="opacity-0 -translate-y-[4px]"
             >
               <!-- ──────────── FORM STATE: radio selector + editable form + Valider CTA ──────────── -->
-              <div v-if="!hasPaymentMethod" key="form" class="flex flex-col gap-[12px] w-full">
+              <div v-if="!hasPaymentMethod" key="form" class="flex flex-col gap-[8px] w-full">
                 <!-- Payment method selector — only visible while no method is saved. -->
                 <section
-                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] drop-shadow-sm p-[24px] flex items-start justify-between"
+                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] drop-shadow-sm p-[24px] flex items-start justify-between"
                 >
                   <button
                     v-for="opt in moyenPaiementOptions"
@@ -363,10 +360,8 @@ const showSuccessToast = (title: string, description: string) => {
 
                 <section
                   :class="[
-                    'w-full bg-neutral border border-border-neutral-secondary drop-shadow-sm flex flex-col gap-[24px]',
-                    moyenPaiement === 'virement'
-                      ? 'rounded-[16px] p-[24px]'
-                      : 'rounded-[8px] p-[16px]',
+                    'w-full bg-neutral border border-border-neutral-secondary drop-shadow-sm rounded-[8px] flex flex-col gap-[24px]',
+                    moyenPaiement === 'virement' ? 'p-[24px]' : 'p-[16px]',
                   ]"
                 >
                   <Transition
@@ -379,14 +374,7 @@ const showSuccessToast = (title: string, description: string) => {
                     leave-to-class="opacity-0 -translate-y-[2px]"
                   >
                     <div :key="moyenPaiement" class="flex flex-col gap-[4px] w-full leading-[1.5]">
-                      <p
-                        :class="[
-                          'font-sans font-medium text-text-neutral',
-                          moyenPaiement === 'virement'
-                            ? 'text-[18px] tracking-[-0.54px]'
-                            : 'text-[16px] tracking-[-0.48px]',
-                        ]"
-                      >
+                      <p class="font-sans font-medium text-[18px] tracking-[-0.54px] text-text-neutral">
                         {{ moyenPaiementTitle }}
                       </p>
                       <p
@@ -497,24 +485,59 @@ const showSuccessToast = (title: string, description: string) => {
               </div>
 
               <!-- ──────────── SAVED STATE: Status + Informations + IBAN cards (Télécharger inside IBAN) ──────────── -->
-              <div v-else key="saved" class="flex flex-col gap-[12px] w-full">
+              <div v-else key="saved" class="flex flex-col gap-[8px] w-full">
                 <!-- Status card — replaces the radio card while a payment method is active.
                      Right side morphs between [Modifier les infos + Trash] (saved) and
                      [Annuler + Enregistrer] (editing). -->
                 <section
                   :class="[
-                    'relative w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] flex items-center gap-[8px]',
+                    'relative w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px] flex items-center gap-[8px]',
                     editingInfo ? 'z-20' : 'z-10',
                   ]"
                 >
                   <div class="flex-1 min-w-0 flex items-center gap-[8px]">
-                    <Icon name="check-circle" variant="outline" :size="20" class="shrink-0 text-text-neutral" />
-                    <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                    <Icon name="check-circle" variant="outline" :size="18" class="shrink-0 text-text-neutral" />
+                    <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                       {{ savedStatusLabel }}
                     </p>
                   </div>
 
+                  <!-- Virement: Modifier les infos triggers edit-in-place. Other variants: trash only. -->
+                  <div v-if="moyenPaiement === 'virement' && !editingInfo" class="shrink-0 flex items-center gap-[8px]">
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] bg-neutral border border-border-neutral font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray active:scale-[0.97]"
+                      @click="onModifierMoyen"
+                    >
+                      Modifier les infos
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Supprimer le moyen de paiement"
+                      class="inline-flex items-center justify-center p-[8px] rounded-[8px] bg-neutral border border-border-neutral text-text-neutral-secondary outline-none transition-[background-color,transform,color] duration-200 ease-out hover:bg-neutral-secondary hover:text-text-danger focus-visible:shadow-ring-gray active:scale-[0.97]"
+                      @click="onSupprimerMoyen"
+                    >
+                      <Icon name="trash" variant="outline" :size="18" />
+                    </button>
+                  </div>
+                  <div v-else-if="moyenPaiement === 'virement' && editingInfo" class="shrink-0 flex items-center gap-[8px]">
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] bg-neutral border border-border-neutral font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray active:scale-[0.97]"
+                      @click="onAnnulerInfo"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] bg-brand border border-brand text-white font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-brand-hover focus-visible:shadow-ring-brand active:scale-[0.97]"
+                      @click="onEnregistrerInfo"
+                    >
+                      Enregistrer
+                    </button>
+                  </div>
                   <button
+                    v-else
                     type="button"
                     aria-label="Supprimer le moyen de paiement"
                     class="shrink-0 inline-flex items-center justify-center p-[8px] rounded-[8px] bg-neutral border border-border-neutral text-text-neutral-secondary outline-none transition-[background-color,transform,color] duration-200 ease-out hover:bg-neutral-secondary hover:text-text-danger focus-visible:shadow-ring-gray active:scale-[0.97]"
@@ -528,7 +551,7 @@ const showSuccessToast = (title: string, description: string) => {
                 <template v-if="moyenPaiement === 'virement'">
                 <!-- Informations card — view rows ↔ edit form, no internal header. -->
                 <section
-                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] drop-shadow-sm p-[24px] flex flex-col gap-[24px]"
+                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] drop-shadow-sm p-[24px] flex flex-col gap-[24px]"
                 >
                   <Transition
                     mode="out-in"
@@ -581,7 +604,7 @@ const showSuccessToast = (title: string, description: string) => {
 
                 <!-- IBAN card — title 18px semibold, Télécharger button now lives inside. -->
                 <section
-                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] drop-shadow-sm p-[24px] flex flex-col gap-[24px]"
+                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] drop-shadow-sm p-[24px] flex flex-col gap-[24px]"
                 >
                   <div class="flex flex-col w-full leading-[1.5]">
                     <p class="font-sans font-medium text-[18px] tracking-[-0.54px] text-text-neutral">
@@ -627,9 +650,9 @@ const showSuccessToast = (title: string, description: string) => {
                   <!-- Télécharger le RIB CTA — now inside the IBAN card -->
                   <button
                     type="button"
-                    class="w-full flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] bg-neutral border border-border-neutral font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray active:scale-[0.97]"
+                    class="w-full flex items-center justify-center gap-[8px] px-[16px] py-[8px] rounded-[8px] bg-neutral border border-border-neutral font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray active:scale-[0.97]"
                   >
-                    <Icon name="arrow-down-tray" variant="outline" :size="20" class="shrink-0" />
+                    <Icon name="arrow-down-tray" variant="outline" :size="18" class="shrink-0" />
                     Télécharger le RIB
                   </button>
                 </section>
@@ -638,7 +661,7 @@ const showSuccessToast = (title: string, description: string) => {
                 <!-- ━━━━━━━━━━━━━━━━━━━━ PRÉLÈVEMENT VARIANT ━━━━━━━━━━━━━━━━━━━━ -->
                 <template v-else-if="moyenPaiement === 'prelevement'">
                 <section
-                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] flex flex-col gap-[24px] overflow-clip"
+                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[24px] flex flex-col gap-[24px] overflow-clip"
                 >
                   <div class="flex items-center gap-[16px] w-full font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
                     <p class="shrink-0 text-text-neutral-secondary whitespace-nowrap">Banque</p>
@@ -657,7 +680,7 @@ const showSuccessToast = (title: string, description: string) => {
                 <!-- ━━━━━━━━━━━━━━━━━━━━ CARTE VARIANT ━━━━━━━━━━━━━━━━━━━━ -->
                 <template v-else-if="moyenPaiement === 'carte'">
                 <section
-                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[24px] overflow-clip"
+                  class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[24px] flex flex-col gap-[24px] overflow-clip"
                 >
                   <!-- Numéro de carte row — label left + masked number + brand logo right -->
                   <div class="flex items-center justify-between w-full">
@@ -708,8 +731,9 @@ const showSuccessToast = (title: string, description: string) => {
 
         <!-- Footer spacer -->
         <div class="h-[60px] shrink-0 w-full" />
-      </div>
-    </Transition>
+        </div>
+      </template>
+    </HorizontalTabs>
 
     <!-- Toast overlay (top-right, floats above the scroll area) -->
     <div class="pointer-events-none fixed top-[24px] right-[24px] z-50">
@@ -727,26 +751,3 @@ const showSuccessToast = (title: string, description: string) => {
   </div>
 </template>
 
-<style scoped>
-/* Tab swap — matches .charges-row in SupervisedCharges so transitions feel consistent across BU pages. */
-.tab-content-enter-active,
-.tab-content-leave-active {
-  transition:
-    opacity 200ms ease,
-    transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-.tab-content-enter-from {
-  opacity: 0;
-  transform: translateY(4px);
-}
-.tab-content-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-@media (prefers-reduced-motion: reduce) {
-  .tab-content-enter-active,
-  .tab-content-leave-active {
-    transition: none;
-  }
-}
-</style>
