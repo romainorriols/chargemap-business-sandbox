@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import Icon from './Icon.vue'
-
 type OrgaType = 'Orga' | 'BU'
 type SidebarMode = 'orga' | 'bu-selection'
 

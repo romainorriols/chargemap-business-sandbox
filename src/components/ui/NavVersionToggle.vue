@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import Toggle from './Toggle.vue'
-
 interface Props {
   /** true = V2 (white nav), false = V1 (blue nav) */
   modelValue: boolean

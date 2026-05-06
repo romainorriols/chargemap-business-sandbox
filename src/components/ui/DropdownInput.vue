@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Icon from './Icon.vue'
-
 type Size = 'sm' | 'md'
 type Type = 'default' | 'leadingIcon' | 'country'
 

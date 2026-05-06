@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Icon from './Icon.vue'
-
 type AlertType = 'brand' | 'neutral' | 'danger' | 'warning' | 'success'
 
 interface Props {

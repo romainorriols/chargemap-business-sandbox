@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import StatRowCard from '../components/dashboard/StatRowCard.vue'
-import StatCell from '../components/dashboard/StatCell.vue'
-import ChartCard from '../components/dashboard/ChartCard.vue'
-import SideKpiCard from '../components/dashboard/SideKpiCard.vue'
-import StackedBarChart from '../components/dashboard/StackedBarChart.vue'
-import GroupedBarChart from '../components/dashboard/GroupedBarChart.vue'
-import HorizontalTabs from '../components/dashboard/HorizontalTabs.vue'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+const navStore = useNavStore()
 
 // ─── Colors lifted from Figma variables ────────────────────────
 const COLOR_CYAN_400       = '#20d3ee'
@@ -161,7 +154,7 @@ const supervisionCard = computed(() =>
 
       <!-- Page header -->
       <div class="h-[48px] flex items-center anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+        <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
           Tableau de bord de Brakson
         </h1>
       </div>
@@ -192,7 +185,7 @@ const supervisionCard = computed(() =>
             :unit="rechargeCard.unit"
           >
             <template #tabs>
-              <HorizontalTabs v-model="chargeTab" :tabs="chargeTabs" />
+              <DashboardTabs v-model="chargeTab" :tabs="chargeTabs" />
             </template>
             <StackedBarChart :categories="months" :series="rechargeCard.series" :unit="rechargeCard.tooltipUnit" />
           </ChartCard>
@@ -258,7 +251,7 @@ const supervisionCard = computed(() =>
             :unit="supervisionCard.unit"
           >
             <template #tabs>
-              <HorizontalTabs v-model="supervisionTab" :tabs="chargeTabs" />
+              <DashboardTabs v-model="supervisionTab" :tabs="chargeTabs" />
             </template>
             <GroupedBarChart :categories="months" :series="supervisionCard.series" :unit="supervisionCard.tooltipUnit" />
           </ChartCard>

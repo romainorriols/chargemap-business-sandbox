@@ -1,21 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import Sidebar from './components/ui/Sidebar.vue'
-import SidebarV1, { type SidebarV1Section } from './components/ui/SidebarV1.vue'
-import SidebarUpsellCard from './components/ui/SidebarUpsellCard.vue'
-import NavVersionToggle from './components/ui/NavVersionToggle.vue'
-import Dashboard from './pages/Dashboard.vue'
-import BusinessUnits from './pages/BusinessUnits.vue'
-import Billing from './pages/Billing.vue'
-import Orders from './pages/Orders.vue'
-import Settings from './pages/Settings.vue'
-import Users from './pages/Users.vue'
-import BuHome from './pages/BuHome.vue'
-import BuSettings from './pages/BuSettings.vue'
-import SupervisedCharges from './pages/SupervisedCharges.vue'
-import { orga } from './state/orga'
-import { bus, selectedBuId } from './state/bus'
-import { isNavV2 } from './state/nav'
+import type { SidebarV1Section } from '~/components/ui/SidebarV1.vue'
+const orgaStore = useOrgaStore()
+const busStore = useBusStore()
+const navStore = useNavStore()
 
 const groups = [
   {
@@ -38,8 +26,7 @@ const groups = [
   },
 ]
 
-// V1 (blue) sidebar — Figma 5113-71427. Two sections separated by a 16px gap:
-// Pilotage (Tableau de bord → Projet d'installation) and Paramètres (Settings, Users).
+// V1 (blue) sidebar — Figma 5113-71427.
 const v1OrgaSections: SidebarV1Section[] = [
   [
     { id: 'dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
@@ -54,7 +41,7 @@ const v1OrgaSections: SidebarV1Section[] = [
   ],
 ]
 
-// V1 BU-scoped nav — Figma 5214-15304. Sections separated by 16px gaps, two collapsible groups.
+// V1 BU-scoped nav — Figma 5214-15304.
 const v1BuSections: SidebarV1Section[] = [
   [
     { id: 'bu-dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
@@ -102,100 +89,116 @@ const v1BuSections: SidebarV1Section[] = [
 
 const user = { name: 'John Doe', email: 'johndoe@email.com' }
 
-const STORAGE_KEY = 'cm-sandbox-active-page'
-const validIds = new Set<string>([
-  ...groups.flatMap(g => g.items.map(i => i.id)),
-  'bu-home',
-  'install-project',
-])
-// Allow any bu-* id (BU sub-pages) to round-trip through localStorage.
-const isValidId = (id: string) => validIds.has(id) || id.startsWith('bu-')
+// ── Routing ↔ sidebar id mapping ──────────────────────────────────────
+// Orga-level: id 1:1 with route slug, except 'dashboard' → '/'.
+const ORGA_ID_TO_PATH: Record<string, string> = {
+  dashboard: '/',
+  billing: '/billing',
+  orders: '/orders',
+  bus: '/bus',
+  settings: '/settings',
+  users: '/users',
+  'install-project': '/install-project',
+}
+// BU-level slug irregularity: 'bu-supervision-charges' → 'supervised-charges'.
+// Everything else strips 'bu-' to derive the slug, and stores under /bu/[id]/.
+// Pages exist for home / settings / supervised-charges; other slugs hit the
+// [...slug].vue catchall which renders the BuHome content.
+const BU_ID_TO_SLUG: Record<string, string> = {
+  'bu-home': 'home',
+  'bu-settings': 'settings',
+  'bu-supervision-charges': 'supervised-charges',
+}
+function buIdToSlug(id: string): string {
+  return BU_ID_TO_SLUG[id] ?? id.replace(/^bu-/, '')
+}
+function slugToBuId(slug: string): string {
+  for (const [id, sl] of Object.entries(BU_ID_TO_SLUG)) {
+    if (sl === slug) return id
+  }
+  return `bu-${slug}`
+}
 
-// URL-driven state — `?page=...&bu=...&nav=v1` lets users share a deep link
-// that lands on the right tab with the right nav version. URL params win over
-// localStorage on initial load, then state changes write back to the URL via
-// history.replaceState so the address bar stays a sharable snapshot.
-const urlParams = new URLSearchParams(window.location.search)
-const urlPage = urlParams.get('page')
-const urlBu = urlParams.get('bu')
-const urlNav = urlParams.get('nav')
+const route = useRoute()
 
-if (urlNav === 'v1') isNavV2.value = false
-else if (urlNav === 'v2') isNavV2.value = true
+// Sidebar's :active-id derived from the URL.
+const activeId = computed(() => {
+  const path = route.path
+  if (path.startsWith('/bu/')) {
+    const segs = path.split('/').filter(Boolean) // ['bu', '<id>', '<slug>?']
+    const slug = segs[2] ?? 'home'
+    return slugToBuId(slug)
+  }
+  if (path === '/') return 'dashboard'
+  const slug = path.replace(/^\//, '').split('/')[0] ?? ''
+  return slug || 'dashboard'
+})
 
-if (urlBu === 'orga') selectedBuId.value = null
-else if (urlBu && bus.some(b => b.id === urlBu)) selectedBuId.value = urlBu
+// Sync selectedBuId from the URL — single source of truth for BU context.
+watch(
+  () => route.fullPath,
+  () => {
+    const id = route.params.id
+    if (route.path.startsWith('/bu/') && typeof id === 'string' && busStore.bus.some(b => b.id === id)) {
+      busStore.selectedBuId = id
+    } else if (!route.path.startsWith('/bu/')) {
+      busStore.selectedBuId = null
+    }
+  },
+  { immediate: true },
+)
 
-const stored = localStorage.getItem(STORAGE_KEY)
-const initialPage = (urlPage && isValidId(urlPage)) ? urlPage
-  : (stored && isValidId(stored)) ? stored
-  : 'dashboard'
-const activeId = ref<string>(initialPage)
-watch(activeId, v => localStorage.setItem(STORAGE_KEY, v))
+// Sidebar item click → URL navigation.
+function onSelect(id: string) {
+  if (id.startsWith('bu-')) {
+    const buId = busStore.selectedBuId
+    if (!buId) return
+    navigateTo(`/bu/${buId}/${buIdToSlug(id)}`)
+    return
+  }
+  navigateTo(ORGA_ID_TO_PATH[id] ?? '/')
+}
 
-// Sidebar upsell stack: card 1 shows first, closing it reveals card 2, closing that hides the stack.
+const sidebarMode = ref<'orga' | 'bu-selection'>('orga')
+watch(() => navStore.isNavV2, () => { sidebarMode.value = 'orga' })
+
 const upsellStep = ref<1 | 2 | 0>(1)
 
-// V1 sidebar mode: 'orga' (normal nav) or 'bu-selection' (BU picker).
-const sidebarMode = ref<'orga' | 'bu-selection'>('orga')
-
-// Reset sidebar mode whenever we toggle nav versions, so V1 doesn't reopen mid-selection.
-watch(isNavV2, () => { sidebarMode.value = 'orga' })
-
-const currentBu = computed(() => bus.find(b => b.id === selectedBuId.value) ?? null)
+const currentBu = computed(() => busStore.bus.find(b => b.id === busStore.selectedBuId) ?? null)
 const switcherContextLabel = computed(() => currentBu.value?.name ?? '')
 const switcherContextKind = computed<'orga' | 'bu'>(() => (currentBu.value ? 'bu' : 'orga'))
 
-function onSwapOrga() {
-  sidebarMode.value = 'bu-selection'
-}
-function onBack() {
-  sidebarMode.value = 'orga'
-}
+function onSwapOrga() { sidebarMode.value = 'bu-selection' }
+function onBack() { sidebarMode.value = 'orga' }
 function onSelectBu(id: string) {
-  selectedBuId.value = id
+  busStore.selectedBuId = id
   sidebarMode.value = 'orga'
-  activeId.value = 'bu-home'
+  navigateTo(`/bu/${id}/home`)
 }
 function onSelectOrga() {
-  selectedBuId.value = null
+  busStore.selectedBuId = null
   sidebarMode.value = 'orga'
-  activeId.value = 'dashboard'
+  navigateTo('/')
 }
-
-// Keep the URL in sync with the active state so the address bar always
-// reflects a sharable snapshot. `replaceState` (not pushState) avoids
-// polluting the browser history on every nav.
-function syncUrl() {
-  const params = new URLSearchParams()
-  params.set('page', activeId.value)
-  params.set('bu', selectedBuId.value ?? 'orga')
-  params.set('nav', isNavV2.value ? 'v2' : 'v1')
-  const newUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`
-  if (newUrl !== window.location.pathname + window.location.search + window.location.hash) {
-    window.history.replaceState(null, '', newUrl)
-  }
-}
-watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
 </script>
 
 <template>
   <div
     class="flex h-screen w-screen overflow-hidden"
-    :class="isNavV2 ? 'bg-neutral pt-[12px] pb-[12px] pr-[12px]' : 'bg-neutral-secondary'"
+    :class="navStore.isNavV2 ? 'bg-neutral pt-[12px] pb-[12px] pr-[12px]' : 'bg-neutral-secondary'"
   >
     <SidebarV1
-      v-if="!isNavV2"
+      v-if="!navStore.isNavV2"
       :mode="sidebarMode"
-      :orga-name="orga.raisonSociale"
+      :orga-name="orgaStore.raisonSociale"
       :context-label="switcherContextLabel"
       :context-kind="switcherContextKind"
       :items="[]"
       :sections="currentBu ? v1BuSections : v1OrgaSections"
-      :bus="bus"
+      :bus="busStore.bus"
       :user="user"
       :active-id="activeId"
-      @select="(id: string) => (activeId = id)"
+      @select="onSelect"
       @swap-orga="onSwapOrga"
       @back="onBack"
       @select-bu="onSelectBu"
@@ -205,15 +208,15 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
       v-else
       :mode="sidebarMode"
       :orga-type="currentBu ? 'BU' : 'Orga'"
-      :orga-name="orga.raisonSociale"
+      :orga-name="orgaStore.raisonSociale"
       :context-label="switcherContextLabel"
       :context-kind="switcherContextKind"
       :groups="currentBu ? [] : groups"
       :sections="currentBu ? v1BuSections : []"
-      :bus="bus"
+      :bus="busStore.bus"
       :user="user"
       :active-id="activeId"
-      @select="(id: string) => (activeId = id)"
+      @select="onSelect"
       @swap-orga="onSwapOrga"
       @back="onBack"
       @select-bu="onSelectBu"
@@ -224,8 +227,7 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
           Stacked upsell deck (Figma 4985-65475). Both cards share the same grid cell so
           the supervision card peeks 16px above the briefcase. Closing the briefcase peels
           the front card away while the supervision card simultaneously grows from its
-          back/truncated pose to the full front pose (width, height, margin all transition
-          with Emil's ease). Closing supervision fades the last card away.
+          back/truncated pose to the full front pose. Closing supervision fades the last away.
           Upsell stack is orga-scoped only — hidden inside any BU context.
         -->
         <div
@@ -250,11 +252,6 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
               @close="upsellStep = 0"
             />
           </Transition>
-          <!--
-            Briefcase peels off quickly (180ms, ease-out-expo) with a slight lift + shrink so
-            the supervision morph underneath can breathe. Enter is softer/slower so the deck
-            settles rather than snapping.
-          -->
           <Transition
             enter-active-class="transition-[opacity,transform] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
             enter-from-class="opacity-0 translate-y-[6px] scale-[0.98]"
@@ -276,21 +273,11 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
     </Sidebar>
     <main
       class="flex-1 min-w-0 bg-neutral-secondary overflow-y-auto"
-      :class="isNavV2 ? 'rounded-[24px]' : ''"
+      :class="navStore.isNavV2 ? 'rounded-[24px]' : ''"
     >
-      <!-- BU-scoped pages: built ones routed individually, the rest fall through to BuHome. -->
-      <SupervisedCharges v-if="activeId === 'bu-supervision-charges'" />
-      <BuSettings v-else-if="activeId === 'bu-settings'" />
-      <BuHome v-else-if="activeId === 'bu-home' || activeId.startsWith('bu-')" />
-      <Dashboard v-else-if="activeId === 'dashboard'" />
-      <BusinessUnits v-else-if="activeId === 'bus'" />
-      <Billing v-else-if="activeId === 'billing'" />
-      <Orders v-else-if="activeId === 'orders'" />
-      <Settings v-else-if="activeId === 'settings'" />
-      <Users v-else-if="activeId === 'users'" />
-      <Dashboard v-else />
+      <slot />
     </main>
 
-    <NavVersionToggle v-model="isNavV2" />
+    <NavVersionToggle v-model="navStore.isNavV2" />
   </div>
 </template>
