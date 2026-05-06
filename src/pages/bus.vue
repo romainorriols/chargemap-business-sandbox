@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import Icon from '../components/ui/Icon.vue'
-import Button from '../components/ui/Button.vue'
-import Input from '../components/ui/Input.vue'
-import Toggle from '../components/ui/Toggle.vue'
-import Toast from '../components/ui/Toast.vue'
-import HorizontalTabs, { type HorizontalTab } from '../components/ui/HorizontalTabs.vue'
+import type { HorizontalTab } from '../components/ui/HorizontalTabs.vue'
 import buEmptyIllustration from '@/assets/illustrations/bu-empty.svg'
-import { bus, type BusinessUnit } from '../state/bus'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+
+const busStore = useBusStore()
+const navStore = useNavStore()
 
 const search = ref('')
 
@@ -16,8 +12,8 @@ const search = ref('')
 // the user doesn't land on an empty page when counts differ.
 type Scope = 'actives' | 'disabled'
 const scope = ref<Scope>('actives')
-const activesCount = computed(() => bus.filter(b => b.active).length)
-const disabledCount = computed(() => bus.filter(b => !b.active).length)
+const activesCount = computed(() => busStore.bus.filter(b => b.active).length)
+const disabledCount = computed(() => busStore.bus.filter(b => !b.active).length)
 const scopeTabs = computed<HorizontalTab[]>(() => [
   { id: 'actives', label: 'Activées', count: activesCount.value },
   { id: 'disabled', label: 'Désactivées', count: disabledCount.value },
@@ -30,7 +26,7 @@ function setScope(next: Scope) {
 }
 
 const filtered = computed(() => {
-  const scoped = bus.filter(b => (scope.value === 'actives' ? b.active : !b.active))
+  const scoped = busStore.bus.filter(b => (scope.value === 'actives' ? b.active : !b.active))
   const q = search.value.trim().toLowerCase()
   if (!q) return scoped
   return scoped.filter(b => b.name.toLowerCase().includes(q))
@@ -114,8 +110,8 @@ function submitCreate() {
   // Simulated server round-trip — surfaces the spinning-loader state on the
   // primary button before swapping back to the listing.
   setTimeout(() => {
-    bus.push({
-      id: `bu-${bus.length + 1}`,
+    busStore.bus.push({
+      id: `bu-${busStore.bus.length + 1}`,
       name,
       badges: 0,
       vehicules: 0,
@@ -153,7 +149,7 @@ const showSuccessToast = (title: string, description: string) => {
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+        <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
           Business units
         </h1>
         <Button
@@ -480,7 +476,7 @@ const showSuccessToast = (title: string, description: string) => {
               Retour
             </span>
           </button>
-          <h1 :class="['whitespace-nowrap', isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]">
+          <h1 :class="['whitespace-nowrap', navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]">
             Nouvelle Business unit
           </h1>
         </div>

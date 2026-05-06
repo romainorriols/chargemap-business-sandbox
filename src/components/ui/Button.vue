@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Icon from './Icon.vue'
-
 type ButtonType = 'primary' | 'secondary' | 'tertiaryColor' | 'tertiaryGray' | 'destructive'
 type ButtonSize = 'sm' | 'md' | 'lg'
 type ButtonState = 'default' | 'hover' | 'focus' | 'loading' | 'disabled'

@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
-import Icon from './Icon.vue'
-import Button from './Button.vue'
-
 /**
  * Tokens from Figma MCP (node 10880:66149 / 10880:65780) — consumed via CSS vars
  * defined in src/assets/tokens.css and mapped in tailwind.config.js.

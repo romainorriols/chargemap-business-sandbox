@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
-import Icon from '../components/ui/Icon.vue'
-import Button from '../components/ui/Button.vue'
-import Input from '../components/ui/Input.vue'
-import Dropdown from '../components/ui/Dropdown.vue'
-import Toast from '../components/ui/Toast.vue'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+const navStore = useNavStore()
 
 interface UserRole {
   bu: string
@@ -224,7 +219,7 @@ watch(rolesForm, (rows) => {
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+        <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
           Utilisateurs
         </h1>
         <Button
@@ -437,7 +432,7 @@ watch(rolesForm, (rows) => {
               Retour
             </span>
           </button>
-          <h1 :class="['whitespace-nowrap', isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]">
+          <h1 :class="['whitespace-nowrap', navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]">
             {{ selectedUser.name }}
           </h1>
         </div>

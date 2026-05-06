@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import Icon from '../components/ui/Icon.vue'
-import Input from '../components/ui/Input.vue'
-import Dropdown from '../components/ui/Dropdown.vue'
-import Button from '../components/ui/Button.vue'
-import Skeleton from '../components/ui/Skeleton.vue'
-import TableFooter from '../components/ui/TableFooter.vue'
-import Alert from '../components/ui/Alert.vue'
-import Toast from '../components/ui/Toast.vue'
-import HorizontalTabs, { type HorizontalTab } from '../components/ui/HorizontalTabs.vue'
-import { bus } from '../state/bus'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
+const busStore = useBusStore()
+const navStore = useNavStore()
 
 // ─── Data generation ─────────────────────────────────────────────────────────
 // Mulberry32 — seeded PRNG so the table is identical across reloads.
@@ -129,7 +121,7 @@ function generateRows(count: number): ChargeRow[] {
   // Anchor at 2026-04-26 11:39 to match the Figma's most-recent row.
   const NOW_MS = new Date(2026, 3, 26, 11, 39).getTime()
   let anchor = new Date(NOW_MS)
-  const buNames = bus.map(b => b.name)
+  const buNames = busStore.bus.map(b => b.name)
   // Per-run rates — the seeded RNG keeps things reproducible, but the run-time
   // fluctuation makes the dataset feel less hand-tuned. Parasitic readings
   // happen on a few percent of charges; suspect anomalies are marginal.
@@ -642,7 +634,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
       <!-- Page header -->
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <h1
-          :class="isNavV2
+          :class="navStore.isNavV2
             ? 'font-heading font-semibold text-[28px] leading-[1.3] tracking-[-0.84px] text-text-neutral'
             : V1_PAGE_HEADING"
         >

@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import Icon from '../components/ui/Icon.vue'
-import Input from '../components/ui/Input.vue'
-import Dropdown from '../components/ui/Dropdown.vue'
-import Toast from '../components/ui/Toast.vue'
-import Alert from '../components/ui/Alert.vue'
-import Toggle from '../components/ui/Toggle.vue'
-import HorizontalTabs from '../components/ui/HorizontalTabs.vue'
-import { orga } from '../state/orga'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+const orgaStore = useOrgaStore()
+const navStore = useNavStore()
 import briefcaseHero from '../assets/illustrations/upsell-briefcase-hero.png'
 import classicHighlight from '../assets/illustrations/classic-highlight.png'
 
@@ -62,7 +55,7 @@ const paysItems = [
   { value: 'NO', label: 'Norvège',            flagUrl: flag('NO') },
   { value: 'FI', label: 'Finlande',           flagUrl: flag('FI') },
 ]
-const selectedPays = computed(() => paysItems.find(p => p.value === orga.pays))
+const selectedPays = computed(() => paysItems.find(p => p.value === orgaStore.pays))
 
 // ── Per-card edit state ───────────────────────────────────────────────────
 // Each card snapshots its values on enter and compares on save — if anything
@@ -73,9 +66,9 @@ const editing = reactive<Record<'admin' | 'orga', boolean>>({
   orga: false,
 })
 
-type OrgaSnapshot = typeof orga
+type OrgaSnapshot = typeof orgaStore.$state
 let adminSnapshot = adminSelected.value
-let orgaSnapshot: OrgaSnapshot = { ...orga }
+let orgaSnapshot: OrgaSnapshot = { ...orgaStore.$state }
 
 // Toast state — one at a time, auto-dismiss after 3.5s.
 const toast = reactive<{ visible: boolean; title: string; description: string }>({
@@ -114,16 +107,16 @@ const onToggleAdmin = () => {
 
 const onToggleOrga = () => {
   if (!editing.orga) {
-    orgaSnapshot = { ...orga }
+    orgaSnapshot = { ...orgaStore.$state }
     editing.orga = true
     return
   }
   const changed =
-    orga.raisonSociale !== orgaSnapshot.raisonSociale ||
-    orga.adresse !== orgaSnapshot.adresse ||
-    orga.codePostal !== orgaSnapshot.codePostal ||
-    orga.ville !== orgaSnapshot.ville ||
-    orga.pays !== orgaSnapshot.pays
+    orgaStore.raisonSociale !== orgaSnapshot.raisonSociale ||
+    orgaStore.adresse !== orgaSnapshot.adresse ||
+    orgaStore.codePostal !== orgaSnapshot.codePostal ||
+    orgaStore.ville !== orgaSnapshot.ville ||
+    orgaStore.pays !== orgaSnapshot.pays
   if (changed) {
     showSuccessToast('Informations mis à jours', '')
   }
@@ -335,7 +328,7 @@ watch(newTokenOpen, isOpen => {
 
     <!-- Page header -->
     <div class="w-full max-w-[800px] flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
-      <h1 :class="isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+      <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
         {{ pageTitle }}
       </h1>
     </div>
@@ -520,14 +513,14 @@ watch(newTokenOpen, isOpen => {
                 <div class="h-px w-full bg-border-neutral-secondary" />
                 <div class="flex items-center justify-between h-[37px] py-[8px] w-full font-sans text-[14px] leading-[1.5] tracking-[-0.42px]">
                   <p class="flex-1 min-w-0 font-normal text-text-neutral-secondary">Raison sociale</p>
-                  <p class="flex-1 min-w-0 font-medium text-text-neutral text-right truncate">{{ orga.raisonSociale }}</p>
+                  <p class="flex-1 min-w-0 font-medium text-text-neutral text-right truncate">{{ orgaStore.raisonSociale }}</p>
                 </div>
                 <div class="h-px w-full bg-border-neutral-secondary" />
                 <div class="flex items-start justify-between min-h-[58px] py-[8px] w-full font-sans text-[14px] leading-[1.5] tracking-[-0.42px]">
                   <p class="flex-1 min-w-0 font-normal text-text-neutral-secondary">Adresse</p>
                   <div class="flex-1 min-w-0 font-medium text-text-neutral text-right">
-                    <p>{{ orga.adresse }}</p>
-                    <p>{{ orga.codePostal }} {{ orga.ville }}, {{ selectedPays?.label ?? '' }}</p>
+                    <p>{{ orgaStore.adresse }}</p>
+                    <p>{{ orgaStore.codePostal }} {{ orgaStore.ville }}, {{ selectedPays?.label ?? '' }}</p>
                   </div>
                 </div>
               </div>
@@ -535,33 +528,33 @@ watch(newTokenOpen, isOpen => {
               <!-- Edit mode -->
               <div v-else key="edit" class="flex flex-col gap-[16px] w-full">
                 <Input
-                  v-model="orga.raisonSociale"
+                  v-model="orgaStore.raisonSociale"
                   label="Raison sociale"
                   placeholder="Brakson"
                 />
                 <Input
-                  v-model="orga.adresse"
+                  v-model="orgaStore.adresse"
                   label="Adresse"
                   placeholder="7 Allée Ceres"
                 />
                 <div class="flex gap-[16px] w-full">
                   <div class="flex-1 min-w-0">
                     <Input
-                      v-model="orga.codePostal"
+                      v-model="orgaStore.codePostal"
                       label="Code postal"
                       placeholder="67000"
                     />
                   </div>
                   <div class="flex-1 min-w-0">
                     <Input
-                      v-model="orga.ville"
+                      v-model="orgaStore.ville"
                       label="Ville"
                       placeholder="Strasbourg"
                     />
                   </div>
                 </div>
                 <Dropdown
-                  v-model="orga.pays"
+                  v-model="orgaStore.pays"
                   :items="paysItems"
                   input-type="country"
                   menu-type="country"

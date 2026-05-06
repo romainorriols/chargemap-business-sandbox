@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue'
-import Icon from './Icon.vue'
-
 type InputSize = 'sm' | 'md'
 type InputType = 'default' | 'leadingIcon' | 'leadingText' | 'leadingDropdown' | 'trailingText' | 'trailingButton' | 'payment'
 

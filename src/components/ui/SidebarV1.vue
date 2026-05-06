@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import Icon from './Icon.vue'
 import chargemapBusinessLogo from '@/assets/logos/chargemap-business.svg'
 
 export interface SidebarV1MenuItem {

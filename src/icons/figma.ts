@@ -1,6 +1,6 @@
 import type { IconVariant } from './custom'
 
-export { IconVariant }
+export type { IconVariant }
 
 
 export const figmaIcons: Record<string, { viewBox?: string; outline?: string; solid?: string }> = {

@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import Icon from '../components/ui/Icon.vue'
-import Button from '../components/ui/Button.vue'
-import Input from '../components/ui/Input.vue'
-import Dropdown from '../components/ui/Dropdown.vue'
-import Skeleton from '../components/ui/Skeleton.vue'
-import TableFooter from '../components/ui/TableFooter.vue'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
+const navStore = useNavStore()
 
 type Status = 'paid' | 'processing' | 'toPay' | 'overdue'
 
@@ -339,7 +333,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
       <!-- Page header -->
       <h1
-        :class="['anim-fade-up', isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]"
+        :class="['anim-fade-up', navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]"
         style="animation-delay: 0ms"
       >
         {{ pageTitle }}

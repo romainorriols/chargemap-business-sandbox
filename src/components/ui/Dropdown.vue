@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import DropdownInput from './DropdownInput.vue'
-import DropdownMenu, { type DropdownItem } from './DropdownMenu.vue'
-
+import type { DropdownItem } from './DropdownMenu.vue'
 type Size = 'sm' | 'md'
 type InputType = 'default' | 'leadingIcon' | 'country'
 type MenuType = 'default' | 'leadingIcon' | 'multiselect' | 'country'

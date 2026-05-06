@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import Banner from '../components/ui/Banner.vue'
-import HorizontalTabs from '../components/ui/HorizontalTabs.vue'
-import Icon from '../components/ui/Icon.vue'
-import Input from '../components/ui/Input.vue'
-import Toast from '../components/ui/Toast.vue'
-import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
-import { bus, selectedBuId } from '../state/bus'
+const busStore = useBusStore()
+const navStore = useNavStore()
 
 const tabs = [
   { id: 'general', label: 'Général' },
@@ -17,7 +12,7 @@ const tabs = [
 ]
 const activeTab = ref<string>('moyen-de-paiement')
 
-const currentBu = computed(() => bus.find(b => b.id === selectedBuId.value) ?? null)
+const currentBu = computed(() => busStore.bus.find(b => b.id === busStore.selectedBuId) ?? null)
 const pageTitle = computed(() => `${currentBu.value?.name ?? 'Paramètres'} BU`)
 
 // ── Moyen de paiement tab ─────────────────────────────────────────────────
@@ -274,7 +269,7 @@ const showSuccessToast = (title: string, description: string) => {
 
     <!-- Page header -->
     <div class="w-full max-w-[800px] flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
-      <h1 :class="isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+      <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
         {{ pageTitle }}
       </h1>
     </div>
