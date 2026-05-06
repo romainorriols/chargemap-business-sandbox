@@ -10,6 +10,7 @@ Project-scoped skills live under `.claude/skills/`. They auto-trigger when their
 
 - [chargemap-figma-implement](.claude/skills/chargemap-figma-implement/SKILL.md) — translate a Figma node into code following the project's component conventions.
 - [emil-design-eng](.claude/skills/emil-design-eng/SKILL.md) — Emil Kowalski's playbook on UI polish, animation decisions, micro-interactions.
+- [impeccable](.claude/skills/impeccable/SKILL.md) — design vocabulary + 23 commands (`shape`, `craft`, `audit`, `polish`, …) and anti-pattern detection. Pinned via `skills-lock.json`. Companion CLI runs via `npx impeccable detect src/` (no devDep). First use on a fresh checkout: run `/impeccable teach` to generate `PRODUCT.md` — the skill won't do design work without it.
 
 ---
 
