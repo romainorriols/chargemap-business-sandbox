@@ -152,8 +152,8 @@ const switcherLabel = computed(() => {
 </script>
 
 <template>
-  <!-- Outer wrapper: 288px column, 8px padding, rounded card stack -->
-  <div class="flex flex-col h-full w-[288px] p-[8px]">
+  <!-- Outer wrapper: 304px column, 8px padding, rounded card stack -->
+  <div class="flex flex-col h-full w-[304px] p-[8px]">
 
     <!-- Top section: logo + orga switcher -->
     <div
