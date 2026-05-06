@@ -67,8 +67,11 @@ const tabs = [
 const activeTab = ref('factures')
 const pageTitle = computed(() => tabs.find(t => t.id === activeTab.value)?.label ?? 'Facturation')
 
-// Dismissible info alert (only shown on the Appels de fonds tab)
-const alertDismissed = ref(false)
+// Dismissible info alerts — one per info-bearing tab so dismissing on one
+// doesn't hide the other. Appels de fonds and Appels à facturation each
+// surface a "Comment fonctionnent..." banner.
+const alertDismissedFonds = ref(false)
+const alertDismissedFacturation = ref(false)
 
 // ── Appels de fonds data ───────────────────────────────────────────────
 const demands: Demand[] = [
@@ -427,7 +430,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
       <!-- KPI card: 3 segments. Outer = card frame (initial fade-in only). Inner = content (cross-fades on tab change). -->
       <div
-        v-if="activeTab !== 'factures' && activeTab !== 'appels-fonds' && activeTab !== 'notes-frais'"
+        v-if="activeTab !== 'factures' && activeTab !== 'appels-fonds' && activeTab !== 'notes-frais' && activeTab !== 'appels-facturation'"
         class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] anim-fade-up"
         style="animation-delay: 80ms"
       >
@@ -495,7 +498,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           leave-to-class="opacity-0 -translate-y-[6px]"
         >
           <div
-            v-if="activeTab === 'appels-fonds' && !alertDismissed"
+            v-if="(activeTab === 'appels-fonds' && !alertDismissedFonds)
+              || (activeTab === 'appels-facturation' && !alertDismissedFacturation)"
             class="bg-brand-surface border border-border-brand-medium rounded-[8px] shadow-sm p-[16px] flex items-start gap-[12px]"
             role="status"
           >
@@ -514,10 +518,14 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-0 flex flex-col gap-[12px]">
               <div class="flex flex-col gap-[4px] text-text-brand-deep">
                 <p class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px]">
-                  Comment fonctionnent les appels de fonds ?
+                  {{ activeTab === 'appels-fonds'
+                    ? 'Comment fonctionnent les appels de fonds ?'
+                    : 'Comment fonctionnent les appels à facturation ?' }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px]">
-                  Vos recharges sont automatiquement facturées à votre entreprise, puis vous êtes remboursé sans aucune démarche de votre part.
+                  {{ activeTab === 'appels-fonds'
+                    ? 'Vos recharges sont automatiquement facturées à votre entreprise, puis vous êtes remboursé sans aucune démarche de votre part.'
+                    : "Les recharges sur site d'entreprise sont automatiquement facturées à votre entreprise, puis vous êtes remboursé sans aucune démarche de votre part." }}
                 </p>
               </div>
               <a
@@ -532,7 +540,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               type="button"
               class="shrink-0 flex items-center justify-center w-[36px] h-[36px] -mt-[8px] -mr-[8px] rounded-[8px] text-text-brand-deep hover:bg-black/5 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
               aria-label="Fermer"
-              @click="alertDismissed = true"
+              @click="activeTab === 'appels-fonds' ? alertDismissedFonds = true : alertDismissedFacturation = true"
             >
               <Icon name="x-mark" variant="solid" :size="20" />
             </button>
@@ -1189,21 +1197,21 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           :key="`tbl-appels-facturation-${activeTab}`"
           class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
         >
-          <!-- Header row -->
+          <!-- Header row — column widths match Figma 4815-8482 (flex-1 + Figma min-widths). -->
           <div class="flex items-stretch bg-neutral-tertiary">
-            <div class="w-[250px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Numéro
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Net à payer
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Organisation / BU
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Date
             </div>
-            <div class="w-[215px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -1221,17 +1229,17 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               openMenuId === row.id ? 'z-30' : 'z-0',
             ]"
           >
-            <div class="w-[250px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ row.number }}
               </span>
             </div>
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
-            <div class="flex-1 min-w-0 flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <div class="flex-1 min-w-[150px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ row.bu }}
               </span>
@@ -1239,12 +1247,12 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ row.organization }}
               </span>
             </div>
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(row.date) }}
               </span>
             </div>
-            <div class="w-[215px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
