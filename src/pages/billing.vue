@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-const navStore = useNavStore()
-
 type Status = 'paid' | 'processing' | 'toPay' | 'overdue'
 
 interface Invoice {
@@ -333,7 +331,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
       <!-- Page header -->
       <h1
-        :class="['anim-fade-up', navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]"
+        :class="['anim-fade-up', V1_PAGE_HEADING]"
         style="animation-delay: 0ms"
       >
         {{ pageTitle }}

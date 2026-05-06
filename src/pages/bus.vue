@@ -4,8 +4,6 @@ import type { HorizontalTab } from '../components/ui/HorizontalTabs.vue'
 import buEmptyIllustration from '@/assets/illustrations/bu-empty.svg'
 
 const busStore = useBusStore()
-const navStore = useNavStore()
-
 const search = ref('')
 
 // Scope filter: active vs deactivated. Swapping tabs resets pagination so
@@ -149,7 +147,7 @@ const showSuccessToast = (title: string, description: string) => {
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+        <h1 :class="V1_PAGE_HEADING">
           Business units
         </h1>
         <Button
@@ -476,7 +474,7 @@ const showSuccessToast = (title: string, description: string) => {
               Retour
             </span>
           </button>
-          <h1 :class="['whitespace-nowrap', navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]">
+          <h1 :class="['whitespace-nowrap', V1_PAGE_HEADING]">
             Nouvelle Business unit
           </h1>
         </div>

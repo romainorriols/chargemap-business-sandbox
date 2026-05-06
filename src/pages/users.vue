@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue'
-const navStore = useNavStore()
-
 interface UserRole {
   bu: string
   role: string
@@ -219,7 +217,7 @@ watch(rolesForm, (rows) => {
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+        <h1 :class="V1_PAGE_HEADING">
           Utilisateurs
         </h1>
         <Button
@@ -432,7 +430,7 @@ watch(rolesForm, (rows) => {
               Retour
             </span>
           </button>
-          <h1 :class="['whitespace-nowrap', navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING]">
+          <h1 :class="['whitespace-nowrap', V1_PAGE_HEADING]">
             {{ selectedUser.name }}
           </h1>
         </div>

@@ -1,33 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { SidebarV1Section } from '~/components/ui/SidebarV1.vue'
+
 const orgaStore = useOrgaStore()
 const busStore = useBusStore()
-const navStore = useNavStore()
 
-const groups = [
-  {
-    heading: 'Pilotage',
-    itemsGap: 8 as const,
-    items: [
-      { id: 'dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
-      { id: 'billing', label: 'Facturation', icon: 'credit-card' },
-      { id: 'orders', label: 'Commandes', icon: 'document-duplicate' },
-      { id: 'bus', label: 'Business units', icon: 'building-office-2' },
-    ],
-  },
-  {
-    heading: 'Paramètres',
-    itemsGap: 4 as const,
-    items: [
-      { id: 'settings', label: 'Paramètres', icon: 'cog-6-tooth' },
-      { id: 'users', label: 'Utilisateurs', icon: 'users' },
-    ],
-  },
-]
-
-// V1 (blue) sidebar — Figma 5113-71427.
-const v1OrgaSections: SidebarV1Section[] = [
+// Orga-level nav (V1 blue sidebar — Figma 5113-71427).
+const orgaSections: SidebarV1Section[] = [
   [
     { id: 'dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
     { id: 'billing', label: 'Facturation', icon: 'wallet' },
@@ -41,8 +20,8 @@ const v1OrgaSections: SidebarV1Section[] = [
   ],
 ]
 
-// V1 BU-scoped nav — Figma 5214-15304.
-const v1BuSections: SidebarV1Section[] = [
+// BU-scoped nav (V1 — Figma 5214-15304).
+const buSections: SidebarV1Section[] = [
   [
     { id: 'bu-dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
     { id: 'bu-shop', label: 'Boutique', icon: 'shopping-bag' },
@@ -101,9 +80,9 @@ const ORGA_ID_TO_PATH: Record<string, string> = {
   'install-project': '/install-project',
 }
 // BU-level slug irregularity: 'bu-supervision-charges' → 'supervised-charges'.
-// Everything else strips 'bu-' to derive the slug, and stores under /bu/[id]/.
-// Pages exist for home / settings / supervised-charges; other slugs hit the
-// [...slug].vue catchall which renders the BuHome content.
+// Everything else strips 'bu-' to derive the slug. Dedicated pages exist for
+// home / settings / supervised-charges; other slugs hit the [...slug].vue
+// catchall which renders the BuHome content.
 const BU_ID_TO_SLUG: Record<string, string> = {
   'bu-home': 'home',
   'bu-settings': 'settings',
@@ -148,7 +127,6 @@ watch(
   { immediate: true },
 )
 
-// Sidebar item click → URL navigation.
 function onSelect(id: string) {
   if (id.startsWith('bu-')) {
     const buId = busStore.selectedBuId
@@ -160,9 +138,6 @@ function onSelect(id: string) {
 }
 
 const sidebarMode = ref<'orga' | 'bu-selection'>('orga')
-watch(() => navStore.isNavV2, () => { sidebarMode.value = 'orga' })
-
-const upsellStep = ref<1 | 2 | 0>(1)
 
 const currentBu = computed(() => busStore.bus.find(b => b.id === busStore.selectedBuId) ?? null)
 const switcherContextLabel = computed(() => currentBu.value?.name ?? '')
@@ -183,18 +158,14 @@ function onSelectOrga() {
 </script>
 
 <template>
-  <div
-    class="flex h-screen w-screen overflow-hidden"
-    :class="navStore.isNavV2 ? 'bg-neutral pt-[12px] pb-[12px] pr-[12px]' : 'bg-neutral-secondary'"
-  >
+  <div class="flex h-screen w-screen overflow-hidden bg-neutral-secondary">
     <SidebarV1
-      v-if="!navStore.isNavV2"
       :mode="sidebarMode"
       :orga-name="orgaStore.raisonSociale"
       :context-label="switcherContextLabel"
       :context-kind="switcherContextKind"
       :items="[]"
-      :sections="currentBu ? v1BuSections : v1OrgaSections"
+      :sections="currentBu ? buSections : orgaSections"
       :bus="busStore.bus"
       :user="user"
       :active-id="activeId"
@@ -204,80 +175,8 @@ function onSelectOrga() {
       @select-bu="onSelectBu"
       @select-orga="onSelectOrga"
     />
-    <Sidebar
-      v-else
-      :mode="sidebarMode"
-      :orga-type="currentBu ? 'BU' : 'Orga'"
-      :orga-name="orgaStore.raisonSociale"
-      :context-label="switcherContextLabel"
-      :context-kind="switcherContextKind"
-      :groups="currentBu ? [] : groups"
-      :sections="currentBu ? v1BuSections : []"
-      :bus="busStore.bus"
-      :user="user"
-      :active-id="activeId"
-      @select="onSelect"
-      @swap-orga="onSwapOrga"
-      @back="onBack"
-      @select-bu="onSelectBu"
-      @select-orga="onSelectOrga"
-    >
-      <template #upsell>
-        <!--
-          Stacked upsell deck (Figma 4985-65475). Both cards share the same grid cell so
-          the supervision card peeks 16px above the briefcase. Closing the briefcase peels
-          the front card away while the supervision card simultaneously grows from its
-          back/truncated pose to the full front pose. Closing supervision fades the last away.
-          Upsell stack is orga-scoped only — hidden inside any BU context.
-        -->
-        <div
-          v-if="!currentBu"
-          class="inline-grid grid-cols-[max-content] grid-rows-[max-content] place-items-start"
-        >
-          <Transition
-            enter-active-class="transition-opacity duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-            leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 scale-100"
-            leave-to-class="opacity-0 scale-[0.97]"
-          >
-            <SidebarUpsellCard
-              v-if="upsellStep >= 1"
-              variant="supervision"
-              :stacked="upsellStep === 1"
-              close-label="Fermer la carte Recharge sur site"
-              class="col-start-1 row-start-1"
-              :class="upsellStep === 1 ? 'ml-[10px]' : 'ml-0'"
-              @close="upsellStep = 0"
-            />
-          </Transition>
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 translate-y-[6px] scale-[0.98]"
-            enter-to-class="opacity-100 translate-y-0 scale-100"
-            leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0 scale-100"
-            leave-to-class="opacity-0 -translate-y-[8px] scale-[0.95]"
-          >
-            <SidebarUpsellCard
-              v-if="upsellStep === 1"
-              variant="briefcase"
-              close-label="Fermer la carte Boostez votre flotte"
-              class="col-start-1 row-start-1 ml-0 mt-[16px]"
-              @close="upsellStep = 2"
-            />
-          </Transition>
-        </div>
-      </template>
-    </Sidebar>
-    <main
-      class="flex-1 min-w-0 bg-neutral-secondary overflow-y-auto"
-      :class="navStore.isNavV2 ? 'rounded-[24px]' : ''"
-    >
+    <main class="flex-1 min-w-0 bg-neutral-secondary overflow-y-auto">
       <slot />
     </main>
-
-    <NavVersionToggle v-model="navStore.isNavV2" />
   </div>
 </template>

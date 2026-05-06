@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-const navStore = useNavStore()
-
 // ─── Colors lifted from Figma variables ────────────────────────
 const COLOR_CYAN_400       = '#20d3ee'
 const COLOR_INDIGO_400     = '#828df8'
@@ -154,7 +152,7 @@ const supervisionCard = computed(() =>
 
       <!-- Page header -->
       <div class="h-[48px] flex items-center anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+        <h1 :class="V1_PAGE_HEADING">
           Tableau de bord de Brakson
         </h1>
       </div>

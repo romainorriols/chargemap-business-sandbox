@@ -2,8 +2,6 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 const busStore = useBusStore()
-const navStore = useNavStore()
-
 // ─── Data generation ─────────────────────────────────────────────────────────
 // Mulberry32 — seeded PRNG so the table is identical across reloads.
 function makeRng(seed: number) {
@@ -634,9 +632,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
       <!-- Page header -->
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <h1
-          :class="navStore.isNavV2
-            ? 'font-heading font-semibold text-[28px] leading-[1.3] tracking-[-0.84px] text-text-neutral'
-            : V1_PAGE_HEADING"
+          :class="V1_PAGE_HEADING"
         >
           {{ isAuthJournalTab ? 'Journal des autorisations'
             : isInProgressTab ? 'Recharges en cours'

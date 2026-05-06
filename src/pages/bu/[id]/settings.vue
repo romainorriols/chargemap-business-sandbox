@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 const busStore = useBusStore()
-const navStore = useNavStore()
-
 const tabs = [
   { id: 'general', label: 'Général' },
   { id: 'facturation', label: 'Facturation' },
@@ -269,7 +267,7 @@ const showSuccessToast = (title: string, description: string) => {
 
     <!-- Page header -->
     <div class="w-full max-w-[800px] flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
-      <h1 :class="navStore.isNavV2 ? 'font-heading font-semibold text-[32px] leading-[1.5] tracking-[-0.96px] text-text-neutral' : V1_PAGE_HEADING">
+      <h1 :class="V1_PAGE_HEADING">
         {{ pageTitle }}
       </h1>
     </div>
