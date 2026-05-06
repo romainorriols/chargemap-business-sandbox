@@ -206,13 +206,13 @@ const rangeStart = computed(() => filtered.value.length === 0 ? 0 : (page.value 
 const rangeEnd = computed(() => Math.min(page.value * perPage, filtered.value.length))
 
 // ── Selection ──────────────────────────────────────────────────────────
-const selectionMode = ref(false)
+// Factures tab shows checkboxes inline (always); the "Quitter l'export"
+// header button and the floating bulk bar are driven by `selected.size > 0`.
 const selected = ref<Set<string>>(new Set())
 
 watch([search, statusFilter, dateFilter, activeTab], () => {
   page.value = 1
   selected.value = new Set()
-  selectionMode.value = false
 })
 
 function goto(n: number) {
@@ -220,11 +220,7 @@ function goto(n: number) {
   page.value = n
 }
 
-function enterSelectionMode() {
-  selectionMode.value = true
-}
-function exitSelectionMode() {
-  selectionMode.value = false
+function clearSelection() {
   selected.value = new Set()
 }
 
@@ -304,7 +300,7 @@ function onDownload(_inv: Row) {
 }
 function onExportSelection() {
   // Hook exporter la sélection here
-  exitSelectionMode()
+  clearSelection()
 }
 
 // ── Row-level menu ─────────────────────────────────────────────────────
@@ -329,13 +325,33 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]" @click="closeMenus">
     <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[40px]">
 
-      <!-- Page header -->
-      <h1
-        :class="['anim-fade-up', V1_PAGE_HEADING]"
+      <!-- Page header — title on the left, "Quitter l'export" on the right
+           when at least one Factures row is selected. -->
+      <div
+        class="flex items-center gap-[16px] anim-fade-up"
         style="animation-delay: 0ms"
       >
-        {{ pageTitle }}
-      </h1>
+        <h1 :class="['flex-1 min-w-0', V1_PAGE_HEADING]">
+          {{ pageTitle }}
+        </h1>
+        <Transition
+          enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+          enter-from-class="opacity-0 -translate-y-[4px]"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-[4px]"
+        >
+          <button
+            v-if="activeTab === 'factures' && selected.size > 0"
+            type="button"
+            class="shrink-0 inline-flex items-center justify-center px-[12px] py-[8px] gap-[8px] rounded-[8px] bg-neutral border border-border-neutral-secondary text-text-neutral-secondary font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
+            @click="clearSelection"
+          >
+            Quitter l'export
+          </button>
+        </Transition>
+      </div>
 
       <!-- Tabs -->
       <div
@@ -367,6 +383,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
       <!-- KPI card: 3 segments. Outer = card frame (initial fade-in only). Inner = content (cross-fades on tab change). -->
       <div
+        v-if="activeTab !== 'factures'"
         class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] anim-fade-up"
         style="animation-delay: 80ms"
       >
@@ -514,15 +531,49 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 :show-hint="false"
               />
             </div>
-            <Button
-              v-if="activeTab === 'factures'"
-              type="primary"
-              size="md"
-              label="Exporter"
-              :disabled="selectionMode"
-              @click="enterSelectionMode"
-            />
           </div>
+        </div>
+
+        <!-- Export V2 banner — Factures tab only. Always visible; the info icon
+             surfaces a tooltip explaining the V2 differences. -->
+        <div
+          v-if="activeTab === 'factures'"
+          class="flex items-center gap-[16px] px-[16px] py-[16px] bg-neutral-tertiary rounded-[16px] overflow-clip"
+        >
+          <div class="flex flex-1 min-w-0 items-center gap-[8px]">
+            <Icon name="arrow-down-tray" variant="solid" :size="18" class="text-icon-neutral-secondary shrink-0" />
+            <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+              Export de facture V2 <span class="font-medium">désactivé</span>
+            </p>
+            <span
+              tabindex="0"
+              class="relative inline-flex shrink-0 outline-none rounded-[4px] focus-visible:shadow-ring-gray group/exptip"
+              aria-describedby="tip-export-v2"
+            >
+              <Icon name="information-circle" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+              <span
+                id="tip-export-v2"
+                role="tooltip"
+                class="pointer-events-none absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-30 w-max max-w-[320px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral whitespace-normal flex flex-col gap-[4px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] opacity-0 translate-y-[2px] transition-[opacity,transform] duration-150 ease-out group-hover/exptip:opacity-100 group-hover/exptip:translate-y-0 group-focus-visible/exptip:opacity-100 group-focus-visible/exptip:translate-y-0 before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:size-0 before:border-l-[8px] before:border-r-[8px] before:border-b-[6px] before:border-l-transparent before:border-r-transparent before:border-b-text-neutral"
+              >
+                <span class="font-sans font-semibold text-[12px] leading-[1.5] tracking-[-0.36px] text-[#f1f5f9]">
+                  Export de facture V2
+                </span>
+                <span class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-[#94a3b8]">
+                  Permet d'exporter les rééditions, remboursements et factures à 0€.
+                </span>
+                <span class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-[#94a3b8]">
+                  ⚠ <span class="font-medium">Attention</span> : les colonnes du fichier d'export changent, vos automatisations peuvent être affectées.
+                </span>
+              </span>
+            </span>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep hover:underline outline-none rounded-[4px] focus-visible:shadow-ring-brand transition-colors"
+          >
+            Activer
+          </button>
         </div>
 
         <!-- Table / empty-state cross-fade on tab change — canonical tab-fade (see main.css). -->
@@ -594,7 +645,6 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <!-- Header row -->
           <div class="flex items-stretch bg-neutral-tertiary">
             <div
-              v-if="selectionMode"
               class="w-[48px] shrink-0 flex items-center justify-center px-[16px] py-[8px] min-h-[40px]"
             >
               <button
@@ -655,7 +705,6 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           >
             <!-- Checkbox cell -->
             <div
-              v-if="selectionMode"
               class="w-[48px] shrink-0 flex items-center justify-center px-[16px] py-[12px] min-h-[64px]"
             >
               <button
@@ -1151,35 +1200,37 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
       leave-to-class="opacity-0 translate-y-[12px]"
     >
       <div
-        v-if="selectionMode"
-        class="fixed bottom-[32px] left-1/2 -translate-x-1/2 z-40 w-[min(800px,calc(100vw-64px))] bg-neutral border border-border-neutral rounded-[8px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex items-center justify-between p-[16px]"
+        v-if="activeTab === 'factures' && selected.size > 0"
+        class="fixed bottom-[32px] left-1/2 -translate-x-1/2 z-40 w-[min(640px,calc(100vw-64px))] bg-[#020408] border border-[#344256] rounded-[8px] shadow-[0px_10px_15px_0px_rgba(0,0,0,0.1),0px_4px_6px_0px_rgba(0,0,0,0.1)] flex items-center justify-between p-[16px]"
         role="status"
         @click.stop
       >
         <div class="flex items-center gap-[4px]">
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9] tabular-nums">
             {{ selected.size }}
           </span>
-          <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-            Sélectionné{{ selected.size > 1 ? 's' : '' }}
+          <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9]">
+            élément{{ selected.size > 1 ? 's' : '' }}
           </span>
           <button
             type="button"
-            class="ml-[4px] flex items-center justify-center w-[22px] h-[22px] rounded-[4px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+            class="ml-[4px] flex items-center justify-center w-[22px] h-[22px] rounded-[4px] text-[#94a3b8] hover:bg-white/10 hover:text-[#f1f5f9] transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
             aria-label="Annuler la sélection"
-            @click="exitSelectionMode"
+            @click="clearSelection"
           >
             <Icon name="x-mark" variant="solid" :size="18" />
           </button>
         </div>
-        <Button
-          type="tertiaryGray"
-          size="sm"
-          label="Exporter"
-          icon-right="arrow-down-tray"
-          :disabled="selected.size === 0"
+        <button
+          type="button"
+          class="inline-flex items-center justify-center gap-[8px] p-0 rounded-[8px] outline-none focus-visible:shadow-ring-gray transition-colors duration-150 ease-out hover:opacity-90"
           @click="onExportSelection"
-        />
+        >
+          <Icon name="arrow-down-tray" variant="solid" :size="20" class="text-[#f1f5f9]" />
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9]">
+            Exporter
+          </span>
+        </button>
       </div>
     </Transition>
   </div>
