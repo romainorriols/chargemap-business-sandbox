@@ -103,7 +103,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[40px]">
+    <div class="mx-auto w-full max-w-[2560px] flex flex-col gap-[40px]">
 
       <!-- Page header -->
       <h1

@@ -205,14 +205,17 @@ const paginated = computed(() => {
 const rangeStart = computed(() => filtered.value.length === 0 ? 0 : (page.value - 1) * perPage + 1)
 const rangeEnd = computed(() => Math.min(page.value * perPage, filtered.value.length))
 
-// ── Selection ──────────────────────────────────────────────────────────
-// Factures tab shows checkboxes inline (always); the "Quitter l'export"
-// header button and the floating bulk bar are driven by `selected.size > 0`.
+// ── Selection / export mode ────────────────────────────────────────────
+// Factures tab: header "Exporter" button toggles exportMode; checkboxes
+// only show in exportMode, and the floating bulk bar appears when at least
+// one row is selected. Tab change resets both.
+const exportMode = ref(false)
 const selected = ref<Set<string>>(new Set())
 
 watch([search, statusFilter, dateFilter, activeTab], () => {
   page.value = 1
   selected.value = new Set()
+  exportMode.value = false
 })
 
 function goto(n: number) {
@@ -220,7 +223,12 @@ function goto(n: number) {
   page.value = n
 }
 
-function clearSelection() {
+function enterExportMode() {
+  exportMode.value = true
+  selected.value = new Set()
+}
+function exitExportMode() {
+  exportMode.value = false
   selected.value = new Set()
 }
 
@@ -300,7 +308,7 @@ function onDownload(_inv: Row) {
 }
 function onExportSelection() {
   // Hook exporter la sélection here
-  clearSelection()
+  exitExportMode()
 }
 
 // ── Row-level menu ─────────────────────────────────────────────────────
@@ -323,10 +331,11 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]" @click="closeMenus">
-    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[40px]">
+    <div class="mx-auto w-full max-w-[2560px] flex flex-col gap-[40px]">
 
-      <!-- Page header — title on the left, "Quitter l'export" on the right
-           when at least one Factures row is selected. -->
+      <!-- Page header — title on the left, header CTA on the right.
+           Factures tab: "Exporter" (primary) toggles export mode; once
+           activated, it morphs into "Quitter l'export" (secondary). -->
       <div
         class="flex items-center gap-[16px] anim-fade-up"
         style="animation-delay: 0ms"
@@ -335,6 +344,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           {{ pageTitle }}
         </h1>
         <Transition
+          mode="out-in"
           enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
           enter-from-class="opacity-0 -translate-y-[4px]"
           enter-to-class="opacity-100 translate-y-0"
@@ -343,13 +353,23 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           leave-to-class="opacity-0 -translate-y-[4px]"
         >
           <button
-            v-if="activeTab === 'factures' && selected.size > 0"
+            v-if="activeTab === 'factures' && exportMode"
+            key="quit"
             type="button"
             class="shrink-0 inline-flex items-center justify-center px-[12px] py-[8px] gap-[8px] rounded-[8px] bg-neutral border border-border-neutral-secondary text-text-neutral-secondary font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
-            @click="clearSelection"
+            @click="exitExportMode"
           >
             Quitter l'export
           </button>
+          <Button
+            v-else-if="activeTab === 'factures'"
+            key="enter"
+            type="primary"
+            size="md"
+            label="Exporter"
+            icon-left="arrow-down-tray"
+            @click="enterExportMode"
+          />
         </Transition>
       </div>
 
@@ -645,6 +665,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <!-- Header row -->
           <div class="flex items-stretch bg-neutral-tertiary">
             <div
+              v-if="exportMode"
               class="w-[48px] shrink-0 flex items-center justify-center px-[16px] py-[8px] min-h-[40px]"
             >
               <button
@@ -673,19 +694,19 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 />
               </button>
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[169px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Numéro
             </div>
-            <div class="w-[120px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Net à payer
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Organisation / BU
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Date
             </div>
-            <div class="w-[215px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -705,6 +726,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           >
             <!-- Checkbox cell -->
             <div
+              v-if="exportMode"
               class="w-[48px] shrink-0 flex items-center justify-center px-[16px] py-[12px] min-h-[64px]"
             >
               <button
@@ -725,21 +747,21 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
 
             <!-- Numéro -->
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[169px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ inv.number }}
               </span>
             </div>
 
             <!-- Net à payer -->
-            <div class="w-[120px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(inv.amount) }}
               </span>
             </div>
 
             <!-- BU / Organisation -->
-            <div class="flex-1 min-w-0 flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <div class="flex-1 min-w-[150px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ inv.bu }}
               </span>
@@ -749,14 +771,14 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
 
             <!-- Date -->
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(inv.date) }}
               </span>
             </div>
 
             <!-- État -->
-            <div class="w-[215px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[216px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1200,7 +1222,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
       leave-to-class="opacity-0 translate-y-[12px]"
     >
       <div
-        v-if="activeTab === 'factures' && selected.size > 0"
+        v-if="activeTab === 'factures' && exportMode && selected.size > 0"
         class="fixed bottom-[32px] left-1/2 -translate-x-1/2 z-40 w-[min(640px,calc(100vw-64px))] bg-[#020408] border border-[#344256] rounded-[8px] shadow-[0px_10px_15px_0px_rgba(0,0,0,0.1),0px_4px_6px_0px_rgba(0,0,0,0.1)] flex items-center justify-between p-[16px]"
         role="status"
         @click.stop
@@ -1216,7 +1238,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             type="button"
             class="ml-[4px] flex items-center justify-center w-[22px] h-[22px] rounded-[4px] text-[#94a3b8] hover:bg-white/10 hover:text-[#f1f5f9] transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
             aria-label="Annuler la sélection"
-            @click="clearSelection"
+            @click="exitExportMode"
           >
             <Icon name="x-mark" variant="solid" :size="18" />
           </button>

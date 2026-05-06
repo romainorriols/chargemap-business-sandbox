@@ -627,7 +627,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[28px]">
+    <div class="mx-auto w-full max-w-[2560px] flex flex-col gap-[28px]">
 
       <!-- Page header -->
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
