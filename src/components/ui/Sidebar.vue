@@ -161,7 +161,6 @@ const itemIconClass = (active: boolean) => [
 ]
 
 // Sliding pill indicator — follows the active menu-item
-const contentRef = ref<HTMLDivElement | null>(null)
 const itemRefs = ref<Record<string, HTMLButtonElement>>({})
 const pillTop = ref(0)
 const pillVisible = ref(false)

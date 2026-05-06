@@ -4,7 +4,6 @@ import Banner from '../components/ui/Banner.vue'
 import HorizontalTabs from '../components/ui/HorizontalTabs.vue'
 import Icon from '../components/ui/Icon.vue'
 import Input from '../components/ui/Input.vue'
-import Dropdown from '../components/ui/Dropdown.vue'
 import Toast from '../components/ui/Toast.vue'
 import { isNavV2, V1_PAGE_HEADING } from '../state/nav'
 import { bus, selectedBuId } from '../state/bus'
@@ -62,25 +61,14 @@ const prelevementInfo = {
 }
 
 const contactFacturation = ref('')
-const langueCommunication = ref('FR')
 // Carte bancaire form state — used when moyenPaiement === 'carte'.
 const numeroCarte = ref('')
 const dateExpiration = ref('')
 const codeSecurite = ref('')
-const langueItems = [
-  { value: 'FR', label: 'Français' },
-  { value: 'EN', label: 'English' },
-  { value: 'DE', label: 'Deutsch' },
-  { value: 'IT', label: 'Italiano' },
-  { value: 'ES', label: 'Español' },
-]
 
 // Banner persists until the user has saved a payment method at least once.
 const hasPaymentMethod = ref(false)
 const isContactValid = computed(() => contactFacturation.value.trim().length > 0)
-const selectedLangueLabel = computed(
-  () => langueItems.find(l => l.value === langueCommunication.value)?.label ?? '',
-)
 
 // Hard-coded Chargemap banking details — only displayed in the saved-state view.
 const ibanInfo = {

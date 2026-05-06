@@ -73,7 +73,6 @@ const hintClasses = computed(() => [
 ])
 
 const addonTextSize = computed(() => props.size === 'md' ? 'text-base' : 'text-sm')
-const leadingIconClass = computed(() => props.size === 'md' ? 'w-5 h-5' : 'w-[18px] h-[18px]')
 </script>
 
 <template>

@@ -304,17 +304,14 @@ function statusPill(inv: Row): StatusPill {
 }
 
 // ── Action hooks ───────────────────────────────────────────────────────
-function onViewPdf(inv: Row) {
+function onViewPdf(_inv: Row) {
   // Hook voir le PDF here
-  console.log('view', inv.number)
 }
-function onDownload(inv: Row) {
+function onDownload(_inv: Row) {
   // Hook télécharger la facture here
-  console.log('download', inv.number)
 }
 function onExportSelection() {
   // Hook exporter la sélection here
-  console.log('export selection', selected.value.size, 'invoices')
   exitSelectionMode()
 }
 
