@@ -151,10 +151,11 @@ function generateRows(count: number): ChargeRow[] {
     let cost: number
     let totalMin: number
     if (isParasitic) {
-      energy = Math.round(between(0.02, 0.20) * 100) / 100
-      cost = Math.round(energy * TARIFF_EUR_PER_KWH * 100) / 100
+      between(0.02, 0.20) // burn RNG so the sequence stays stable for other rows
+      energy = 0
+      cost = 0
       totalMin = Math.max(1, Math.round(between(1, 4)))
-      pick(POWERS_KW) // keep the RNG sequence stable for the rest of the row
+      pick(POWERS_KW)
     } else {
       energy = Math.round(between(5, 48) * 100) / 100
       cost = Math.round(energy * TARIFF_EUR_PER_KWH * 100) / 100
@@ -351,10 +352,9 @@ const isAuthJournalTab = computed(() => activeTab.value === 'auth-journal')
 // - Recharges en cours (values aren't final yet)
 // - Journal des autorisations (tracks gateway accept/reject, not metering)
 const supportsParasiticFilter = computed(() => isHomeDomain.value)
-// Leading status icon column — Entreprise (suspect-only) + Domicile + Câbles connectés.
-const hasStatusColumn = computed(() =>
-  activeTab.value === 'entreprise' || isHomeDomain.value,
-)
+// Leading status icon column — Domicile + Câbles connectés. Entreprise uses a
+// 4px red strip on suspect rows instead of an icon column.
+const hasStatusColumn = computed(() => isHomeDomain.value)
 
 // Total live charges — drives the count badge on the "Recharges en cours" tab.
 const inProgressCount = computed(() => charges.value.filter(c => c.inProgress).length)
@@ -811,24 +811,21 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
         >
           <div class="flex flex-1 min-w-px items-center gap-[8px]">
             <Icon
-              :name="hideParasitic ? 'eye-slash' : 'wifi-exclamation'"
+              :name="hideParasitic ? 'eye-slash' : 'eye'"
               variant="outline"
               :size="18"
               class="text-icon-neutral-secondary shrink-0"
             />
-            <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap">
-              <span class="font-medium text-text-neutral">Recharges</span>
-              <span class="font-normal text-text-neutral-secondary">
-                parasites {{ hideParasitic ? 'masquées' : 'affichées' }}
-              </span>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary whitespace-nowrap">
+              Sessions 0min / 0kWh <span class="font-medium text-text-neutral">{{ hideParasitic ? 'masquées' : 'affichées' }}</span>
             </p>
             <span
               tabindex="0"
               class="inline-flex shrink-0 outline-none rounded-[4px] focus-visible:shadow-ring-gray"
-              aria-label="À propos des recharges parasites"
-              @mouseenter="showStatusTip($event, ['Recharges dont la borne ou le câble', 'remonte des valeurs proches de zéro'])"
+              aria-label="À propos des sessions 0min / 0kWh"
+              @mouseenter="showStatusTip($event, ['Recharges dont la borne ou le câble', 'remonte des valeurs à zéro'])"
               @mouseleave="hideStatusTip"
-              @focusin="showStatusTip($event, ['Recharges dont la borne ou le câble', 'remonte des valeurs proches de zéro'])"
+              @focusin="showStatusTip($event, ['Recharges dont la borne ou le câble', 'remonte des valeurs à zéro'])"
               @focusout="hideStatusTip"
             >
               <Icon
@@ -896,8 +893,6 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
 
         <!-- Header row — Entreprise variant -->
         <div v-else-if="!isHomeDomain" class="flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
-          <!-- Status icon column (no header label) — only renders an icon for suspect rows -->
-          <div class="w-[64px] shrink-0 px-[16px] py-[8px]" />
           <div class="flex-[200] min-w-[180px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Zone de recharge
           </div>
@@ -1289,34 +1284,17 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             v-for="(c, ci) in paginated"
             :key="c.id"
             :class="[
-              'flex items-stretch w-full min-h-[66px] transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'relative flex items-stretch w-full min-h-[66px] transition-colors duration-150 ease-out hover:bg-neutral-secondary',
               ci < paginated.length - 1 ? 'border-b border-[#f1f5f9]' : '',
             ]"
           >
-            <!-- Status icon — Entreprise charges aren't reimbursed, so only the
-                 'suspect' anomaly state ever shows here. Other statuses render
-                 as an empty cell (column reserved for layout consistency). -->
-            <div class="w-[64px] shrink-0 px-[16px] py-[12px] flex items-center">
-              <span
-                v-if="c.reimbursementStatus === 'suspect'"
-                tabindex="0"
-                class="inline-flex shrink-0 outline-none"
-                :aria-label="statusConfig('suspect').label"
-                @mouseenter="showStatusForRow($event, 'suspect')"
-                @mouseleave="hideStatusTip"
-                @focusin="showStatusForRow($event, 'suspect')"
-                @focusout="hideStatusTip"
-              >
-                <span :class="['size-[32px] rounded-[8px] flex items-center justify-center shrink-0', statusConfig('suspect').bg]">
-                  <Icon
-                    :name="statusConfig('suspect').icon"
-                    variant="solid"
-                    :size="16"
-                    :class="statusConfig('suspect').fg"
-                  />
-                </span>
-              </span>
-            </div>
+            <!-- Suspect indicator — 4px red strip on the left edge for rows
+                 flagged as anomalies. Replaces the former status icon column. -->
+            <span
+              v-if="c.reimbursementStatus === 'suspect'"
+              aria-hidden="true"
+              class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#f43e5c]"
+            />
             <!-- Zone -->
             <div class="flex-[200] min-w-[180px] px-[16px] py-[12px] flex flex-col justify-center font-sans text-[14px] leading-[1.5] tracking-[-0.42px]">
               <span class="font-normal text-text-neutral truncate">{{ c.zoneName }}</span>
@@ -1333,10 +1311,10 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
                 v-if="c.isParasitic"
                 tabindex="0"
                 class="inline-flex shrink-0 outline-none"
-                aria-label="Recharge parasite"
-                @mouseenter="showStatusTip($event, ['Recharge parasite', 'données proches de zéro'])"
+                aria-label="Recharge à 0"
+                @mouseenter="showStatusTip($event, 'Recharge à 0')"
                 @mouseleave="hideStatusTip"
-                @focusin="showStatusTip($event, ['Recharge parasite', 'données proches de zéro'])"
+                @focusin="showStatusTip($event, 'Recharge à 0')"
                 @focusout="hideStatusTip"
               >
                 <Icon name="signal-slash" variant="outline" :size="14" class="text-icon-neutral-secondary" />
@@ -1380,11 +1358,18 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             v-for="(c, ci) in paginated"
             :key="c.id"
             :class="[
-              'flex items-stretch w-full min-h-[66px] transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'relative flex items-stretch w-full min-h-[66px] transition-colors duration-150 ease-out hover:bg-neutral-secondary',
               ci < paginated.length - 1 ? 'border-b border-[#f1f5f9]' : '',
               isRowSelected(c.id) ? 'bg-brand-surface' : '',
             ]"
           >
+            <!-- Suspect indicator — 4px red strip on the left edge, in addition
+                 to the reimbursement status icon column. -->
+            <span
+              v-if="c.reimbursementStatus === 'suspect'"
+              aria-hidden="true"
+              class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#f43e5c]"
+            />
             <!-- Row checkbox (decision mode only) -->
             <div v-if="decisionMode" class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
               <button
@@ -1436,10 +1421,10 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
                 v-if="c.isParasitic"
                 tabindex="0"
                 class="inline-flex shrink-0 outline-none"
-                aria-label="Recharge parasite"
-                @mouseenter="showStatusTip($event, ['Recharge parasite', 'données proches de zéro'])"
+                aria-label="Recharge à 0"
+                @mouseenter="showStatusTip($event, 'Recharge à 0')"
                 @mouseleave="hideStatusTip"
-                @focusin="showStatusTip($event, ['Recharge parasite', 'données proches de zéro'])"
+                @focusin="showStatusTip($event, 'Recharge à 0')"
                 @focusout="hideStatusTip"
               >
                 <Icon name="signal-slash" variant="outline" :size="14" class="text-icon-neutral-secondary" />
@@ -1479,11 +1464,18 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             v-for="(c, ci) in paginated"
             :key="c.id"
             :class="[
-              'flex items-stretch w-full min-h-[66px] transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'relative flex items-stretch w-full min-h-[66px] transition-colors duration-150 ease-out hover:bg-neutral-secondary',
               ci < paginated.length - 1 ? 'border-b border-[#f1f5f9]' : '',
               isRowSelected(c.id) ? 'bg-brand-surface' : '',
             ]"
           >
+            <!-- Suspect indicator — 4px red strip on the left edge, in addition
+                 to the reimbursement status icon column. -->
+            <span
+              v-if="c.reimbursementStatus === 'suspect'"
+              aria-hidden="true"
+              class="absolute left-0 top-0 bottom-0 w-[4px] bg-[#f43e5c]"
+            />
             <!-- Row checkbox (decision mode only) -->
             <div v-if="decisionMode" class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
               <button
@@ -1535,10 +1527,10 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
                 v-if="c.isParasitic"
                 tabindex="0"
                 class="inline-flex shrink-0 outline-none"
-                aria-label="Recharge parasite"
-                @mouseenter="showStatusTip($event, ['Recharge parasite', 'données proches de zéro'])"
+                aria-label="Recharge à 0"
+                @mouseenter="showStatusTip($event, 'Recharge à 0')"
                 @mouseleave="hideStatusTip"
-                @focusin="showStatusTip($event, ['Recharge parasite', 'données proches de zéro'])"
+                @focusin="showStatusTip($event, 'Recharge à 0')"
                 @focusout="hideStatusTip"
               >
                 <Icon name="signal-slash" variant="outline" :size="14" class="text-icon-neutral-secondary" />

@@ -11,6 +11,7 @@ import Orders from './pages/Orders.vue'
 import Settings from './pages/Settings.vue'
 import Users from './pages/Users.vue'
 import BuHome from './pages/BuHome.vue'
+import BuSettings from './pages/BuSettings.vue'
 import SupervisedCharges from './pages/SupervisedCharges.vue'
 import { orga } from './state/orga'
 import { bus, selectedBuId } from './state/bus'
@@ -37,13 +38,20 @@ const groups = [
   },
 ]
 
-// V1 (blue) sidebar — Figma 5113-56684. Flat list, solid icons, "Projet d'installation" extra entry.
-const v1Items = [
-  { id: 'dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
-  { id: 'billing', label: 'Facturation', icon: 'wallet' },
-  { id: 'orders', label: 'Commandes', icon: 'truck' },
-  { id: 'bus', label: 'Business units', icon: 'building-office-2' },
-  { id: 'install-project', label: "Projet d'installation", icon: 'charging-station' },
+// V1 (blue) sidebar — Figma 5113-71427. Two sections separated by a 16px gap:
+// Pilotage (Tableau de bord → Projet d'installation) and Paramètres (Settings, Users).
+const v1OrgaSections: SidebarV1Section[] = [
+  [
+    { id: 'dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
+    { id: 'billing', label: 'Facturation', icon: 'wallet' },
+    { id: 'orders', label: 'Commandes', icon: 'truck' },
+    { id: 'bus', label: 'Business units', icon: 'building-office-2' },
+    { id: 'install-project', label: "Projet d'installation", icon: 'charging-station' },
+  ],
+  [
+    { id: 'settings', label: 'Paramètres', icon: 'cog-6-tooth' },
+    { id: 'users', label: 'Utilisateurs', icon: 'users' },
+  ],
 ]
 
 // V1 BU-scoped nav — Figma 5214-15304. Sections separated by 16px gaps, two collapsible groups.
@@ -182,8 +190,8 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
       :orga-name="orga.raisonSociale"
       :context-label="switcherContextLabel"
       :context-kind="switcherContextKind"
-      :items="currentBu ? [] : v1Items"
-      :sections="currentBu ? v1BuSections : []"
+      :items="[]"
+      :sections="currentBu ? v1BuSections : v1OrgaSections"
       :bus="bus"
       :user="user"
       :active-id="activeId"
@@ -272,6 +280,7 @@ watch([activeId, selectedBuId, isNavV2], syncUrl, { immediate: true })
     >
       <!-- BU-scoped pages: built ones routed individually, the rest fall through to BuHome. -->
       <SupervisedCharges v-if="activeId === 'bu-supervision-charges'" />
+      <BuSettings v-else-if="activeId === 'bu-settings'" />
       <BuHome v-else-if="activeId === 'bu-home' || activeId.startsWith('bu-')" />
       <Dashboard v-else-if="activeId === 'dashboard'" />
       <BusinessUnits v-else-if="activeId === 'bus'" />

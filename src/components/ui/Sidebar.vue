@@ -161,7 +161,6 @@ const itemIconClass = (active: boolean) => [
 ]
 
 // Sliding pill indicator — follows the active menu-item
-const contentRef = ref<HTMLDivElement | null>(null)
 const itemRefs = ref<Record<string, HTMLButtonElement>>({})
 const pillTop = ref(0)
 const pillVisible = ref(false)
@@ -434,6 +433,36 @@ const pillStyle = computed(() => ({
     <!-- Upsell slot (sits above the footer, outside the scroll area) -->
     <div v-if="$slots.upsell" class="shrink-0 px-[16px] w-full">
       <slot name="upsell" />
+    </div>
+
+    <!-- Newsletter + Centre d'aide — pinned above the user profile footer. -->
+    <div class="shrink-0 px-[16px] pt-[8px] pb-[4px] w-full flex flex-col gap-[4px]">
+      <button
+        type="button"
+        :class="itemClassDirect(false)"
+      >
+        <Icon
+          name="megaphone"
+          variant="solid"
+          :size="20"
+          :class="itemIconClass(false)"
+        />
+        <span :class="itemTextClass(false)">Recevoir la news letter</span>
+      </button>
+      <a
+        href="https://chargemap-business.frontkb.com/fr"
+        target="_blank"
+        rel="noopener noreferrer"
+        :class="itemClassDirect(false)"
+      >
+        <Icon
+          name="book-open"
+          variant="solid"
+          :size="20"
+          :class="itemIconClass(false)"
+        />
+        <span :class="itemTextClass(false)">Centre d'aide</span>
+      </a>
     </div>
 
     <!-- Footer (user profile) -->

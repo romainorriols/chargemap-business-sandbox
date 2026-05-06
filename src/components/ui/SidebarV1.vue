@@ -364,6 +364,39 @@ const switcherLabel = computed(() => {
       </div>
     </div>
 
+    <!-- Newsletter + Centre d'aide — pinned between the menu list and the user footer.
+         Each row keeps the same dark-blue surface but spans edge-to-edge with a top border. -->
+    <button
+      type="button"
+      class="group flex items-center gap-[12px] w-full px-[16px] py-[12px] bg-[#1e3fae] border-b border-brand outline-none transition-colors duration-150 hover:bg-brand-hover focus-visible:bg-brand-hover shrink-0"
+    >
+      <Icon
+        name="megaphone"
+        variant="solid"
+        :size="24"
+        class="shrink-0 text-brand-lighter group-hover:text-text-neutral-inverse transition-colors duration-150"
+      />
+      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-brand-lighter group-hover:text-text-neutral-inverse transition-colors duration-150">
+        Recevoir la news letter
+      </span>
+    </button>
+    <a
+      href="https://chargemap-business.frontkb.com/fr"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="group flex items-center gap-[12px] w-full px-[16px] py-[12px] bg-[#1e3fae] border-b border-brand outline-none transition-colors duration-150 hover:bg-brand-hover focus-visible:bg-brand-hover shrink-0"
+    >
+      <Icon
+        name="book-open"
+        variant="solid"
+        :size="24"
+        class="shrink-0 text-brand-lighter group-hover:text-text-neutral-inverse transition-colors duration-150"
+      />
+      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-brand-lighter group-hover:text-text-neutral-inverse transition-colors duration-150">
+        Centre d'aide
+      </span>
+    </a>
+
     <!-- Footer: avatar + name + email -->
     <div
       v-if="user"

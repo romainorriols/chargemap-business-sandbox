@@ -304,17 +304,14 @@ function statusPill(inv: Row): StatusPill {
 }
 
 // ── Action hooks ───────────────────────────────────────────────────────
-function onViewPdf(inv: Row) {
+function onViewPdf(_inv: Row) {
   // Hook voir le PDF here
-  console.log('view', inv.number)
 }
-function onDownload(inv: Row) {
+function onDownload(_inv: Row) {
   // Hook télécharger la facture here
-  console.log('download', inv.number)
 }
 function onExportSelection() {
   // Hook exporter la sélection here
-  console.log('export selection', selected.value.size, 'invoices')
   exitSelectionMode()
 }
 
@@ -381,15 +378,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] anim-fade-up"
         style="animation-delay: 80ms"
       >
-        <Transition
-          mode="out-in"
-          enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-          enter-from-class="opacity-0 translate-y-[4px]"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-[2px]"
-        >
+        <!-- KPI cross-fade on tab change — canonical tab-fade. -->
+        <Transition mode="out-in" name="tab-fade">
           <div :key="`kpi-${activeTab}`" class="flex items-center gap-[16px]">
             <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
               <div class="flex items-center justify-center w-[37px] h-[37px] rounded-[12px] bg-[#6467f2]">
@@ -543,16 +533,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           </div>
         </div>
 
-        <!-- Table / empty-state cross-fade on tab change. mode="out-in" keeps the swap clean; cubic-bezier(0.23,1,0.32,1) per Emil. -->
-        <Transition
-          mode="out-in"
-          enter-active-class="transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-          enter-from-class="opacity-0 translate-y-[6px]"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-[2px]"
-        >
+        <!-- Table / empty-state cross-fade on tab change — canonical tab-fade (see main.css). -->
+        <Transition mode="out-in" name="tab-fade">
         <!-- Skeleton state — placeholder rows while data loads. Generic across
              tabs; the real table fades in once isLoading flips to false. -->
         <div

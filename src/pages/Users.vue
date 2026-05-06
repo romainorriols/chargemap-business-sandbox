@@ -110,7 +110,9 @@ const coordForm = reactive({
   nom: '',
   telephone: '',
 })
-type RoleRow = { bu: string; role: string }
+type RoleRow = { id: number; bu: string; role: string }
+let nextRoleRowId = 0
+const newRoleRow = (init: Partial<RoleRow> = {}): RoleRow => ({ id: ++nextRoleRowId, bu: '', role: '', ...init })
 const rolesForm = ref<RoleRow[]>([])
 
 // BUs mirror the BusinessUnits.vue list so detail/edit stays consistent.
@@ -184,14 +186,15 @@ const onToggleCoord = () => {
 const onToggleRoles = () => {
   if (!selectedUser.value) return
   if (!editing.roles) {
-    rolesForm.value = selectedUser.value.roles.map(r => ({ ...r }))
+    rolesForm.value = selectedUser.value.roles.map(r => newRoleRow(r))
     rolesSnapshot = rolesForm.value.map(r => ({ ...r }))
     editing.roles = true
     return
   }
-  // Save: drop empty rows (no BU and no role), write back, diff and toast.
+  // Save: drop empty rows (no BU and no role), strip the form-only id, write
+  // back, diff and toast.
   const cleaned = rolesForm.value.filter(r => r.bu && r.role)
-  selectedUser.value.roles = cleaned
+  selectedUser.value.roles = cleaned.map(({ bu, role }) => ({ bu, role }))
   const changed =
     cleaned.length !== rolesSnapshot.length ||
     cleaned.some((r, i) => r.bu !== rolesSnapshot[i]?.bu || r.role !== rolesSnapshot[i]?.role)
@@ -209,7 +212,7 @@ function removeRoleRow(i: number) {
 watch(rolesForm, (rows) => {
   if (!editing.roles) return
   if (rows.length === 0 || (rows[rows.length - 1].bu && rows[rows.length - 1].role)) {
-    rows.push({ bu: '', role: '' })
+    rows.push(newRoleRow())
   }
 }, { deep: true })
 </script>
@@ -604,7 +607,7 @@ watch(rolesForm, (rows) => {
           <div v-else key="edit" class="flex flex-col gap-[16px] w-full">
             <div
               v-for="(row, i) in rolesForm"
-              :key="i"
+              :key="row.id"
               class="flex items-center gap-[16px] w-full"
             >
               <div class="flex-1 min-w-0">
