@@ -21,7 +21,13 @@ interface Billing extends Invoice {
   kind: 'billing'
 }
 
-type Row = Invoice | Demand | Billing
+interface Note extends Invoice {
+  kind: 'note'
+  driver: string
+  period: string
+}
+
+type Row = Invoice | Demand | Billing | Note
 
 // Placeholder invoice data. All under Brakson org; BU varies across the group.
 const invoices: Invoice[] = [
@@ -102,10 +108,29 @@ const billings: Billing[] = [
   { id: 'b15', kind: 'billing', number: '36379643', amount: 4.60,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-28', status: 'paid' },
 ]
 
+// ── Notes de frais data — Figma 4815-6419. Each note has a driver + a billing
+// period; statuses follow the same toPay/processing/paid/overdue scheme.
+const notes: Note[] = [
+  { id: 'nf1',  kind: 'note', number: 'NDF-20260405-69D1D1CC2E9CC', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf2',  kind: 'note', number: 'NDF-20260404-58E2C1BB4F7B1', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Camille Laurent',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf3',  kind: 'note', number: 'NDF-20260403-47F3D2AA5E8A2', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Nicolas Mercier',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf4',  kind: 'note', number: 'NDF-20260402-36A4E3BB6F9B3', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Léa Dubois',       period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf5',  kind: 'note', number: 'NDF-20260401-25B5F4CC7A0C4', amount: 4.92, bu: 'Saabre',  organization: 'Brakson', date: '2026-04-11',                         driver: 'Antoine Robert',   period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf6',  kind: 'note', number: 'NDF-20260331-14C6A5DD8B1D5', amount: 4.92, bu: 'Saabre',  organization: 'Brakson', date: '2026-04-11',                         driver: 'Sophie Moreau',    period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf7',  kind: 'note', number: 'NDF-20260330-03D7B6EE9C2E6', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Julien Bernard',   period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf8',  kind: 'note', number: 'NDF-20260329-92E8C7FF0D3F7', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Émilie Faure',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf9',  kind: 'note', number: 'NDF-20260328-81F9D8AA1E408', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Maxime Colas',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf10', kind: 'note', number: 'NDF-20260327-70AAE9BB2F519', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Romain Orriols',   period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 4.92, bu: 'Responsible Ads', organization: 'Brakson', date: '2026-04-11',                 driver: 'Marie Dubois',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 4.92, bu: 'Marketing',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 4.92, bu: 'Chargemap',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Antoine Lefevre',  period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+]
+
 const currentRows = computed<Row[]>(() => {
   if (activeTab.value === 'factures') return invoices
   if (activeTab.value === 'appels-fonds') return demands
   if (activeTab.value === 'appels-facturation') return billings
+  if (activeTab.value === 'notes-frais') return notes
   return []
 })
 
@@ -114,6 +139,9 @@ function isDemand(row: Row): row is Demand {
 }
 function isBilling(row: Row): row is Billing {
   return 'kind' in row && (row as Billing).kind === 'billing'
+}
+function isNote(row: Row): row is Note {
+  return 'kind' in row && (row as Note).kind === 'note'
 }
 
 // ── Filters ────────────────────────────────────────────────────────────
@@ -284,6 +312,21 @@ function statusPill(inv: Row): StatusPill {
         return { label: 'En retard',  bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
     }
   }
+  if (isNote(inv)) {
+    switch (inv.status) {
+      case 'paid':
+        return { label: 'Réglée',   bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      case 'processing':
+        return { label: 'En cours', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+      case 'toPay':
+        return {
+          label: inv.dueDate ? `À payer avant ${fmtDate(inv.dueDate)}` : 'À payer',
+          bg: 'bg-[#fefce7]', border: 'border-[#fef08b]', text: 'text-[#c88a04]',
+        }
+      case 'overdue':
+        return { label: 'En retard', bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+    }
+  }
   switch (inv.status) {
     case 'paid':
       return { label: 'Réglé',    bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
@@ -384,7 +427,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
       <!-- KPI card: 3 segments. Outer = card frame (initial fade-in only). Inner = content (cross-fades on tab change). -->
       <div
-        v-if="activeTab !== 'factures' && activeTab !== 'appels-fonds'"
+        v-if="activeTab !== 'factures' && activeTab !== 'appels-fonds' && activeTab !== 'notes-frais'"
         class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] anim-fade-up"
         style="animation-delay: 80ms"
       >
@@ -971,6 +1014,156 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                       <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                         Télécharger l'appel de fonds
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+          </div>
+
+          <!-- Footer inside the card -->
+          <TableFooter
+            :page="page"
+            :page-count="pageCount"
+            :range-start="rangeStart"
+            :range-end="rangeEnd"
+            :total="filtered.length"
+            @update:page="goto"
+          />
+        </div>
+
+        <!-- Table — Notes de frais — Figma 4815-6419. Column widths flex-1 +
+             Figma min-widths (Numéro/Conducteur 250, Net à payer 150, Date
+             104, Période 192, État 216 ; Actions w-[112]). The Numéro cell
+             stacks the number on top and the driver name in secondary. -->
+        <div
+          v-else-if="activeTab === 'notes-frais' && paginated.length > 0"
+          :key="`tbl-notes-frais-${activeTab}`"
+          class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
+        >
+          <!-- Header row -->
+          <div class="flex items-stretch bg-neutral-tertiary">
+            <div class="flex-1 min-w-[250px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Numéro / Conducteur
+            </div>
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Net à payer
+            </div>
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Date
+            </div>
+            <div class="flex-1 min-w-[192px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Période
+            </div>
+            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              État
+            </div>
+            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Actions
+            </div>
+          </div>
+
+          <!-- Body rows -->
+          <div
+            v-for="(row, i) in paginated"
+            :key="row.id"
+            :style="{ animationDelay: `${150 + i * 20}ms` }"
+            :class="[
+              'relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0 transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              openMenuId === row.id ? 'z-30' : 'z-0',
+            ]"
+          >
+            <!-- Numéro / Conducteur -->
+            <div class="flex-1 min-w-[250px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
+                {{ row.number }}
+              </span>
+              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                {{ isNote(row) ? row.driver : '' }}
+              </span>
+            </div>
+            <!-- Net à payer -->
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+              <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
+                {{ fmtAmount(row.amount) }}
+              </span>
+            </div>
+            <!-- Date -->
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
+                {{ fmtDate(row.date) }}
+              </span>
+            </div>
+            <!-- Période -->
+            <div class="flex-1 min-w-[192px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                {{ isNote(row) ? row.period : '' }}
+              </span>
+            </div>
+            <!-- État -->
+            <div class="flex-1 min-w-[216px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+              <span
+                :class="[
+                  'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
+                  statusPill(row).bg,
+                  statusPill(row).border,
+                  statusPill(row).text,
+                ]"
+              >
+                {{ statusPill(row).label }}
+              </span>
+            </div>
+            <!-- Actions -->
+            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] gap-[4px] relative">
+              <button
+                type="button"
+                class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
+                aria-label="Voir le PDF"
+                @click.stop="onViewPdf(row)"
+              >
+                <Icon name="eye" variant="outline" :size="20" />
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'flex items-center justify-center w-[36px] h-[36px] rounded-[8px] transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray',
+                  openMenuId === row.id
+                    ? 'bg-neutral-tertiary text-icon-neutral-primary'
+                    : 'text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary',
+                ]"
+                aria-label="Plus d'actions"
+                :aria-expanded="openMenuId === row.id"
+                aria-haspopup="menu"
+                @click="toggleMenu(row.id, $event)"
+              >
+                <Icon name="ellipsis-vertical" variant="outline" :size="20" />
+              </button>
+
+              <Transition
+                enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+                enter-from-class="opacity-0 scale-[0.96] -translate-y-[4px]"
+                enter-to-class="opacity-100 scale-100 translate-y-0"
+                leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
+                leave-from-class="opacity-100 scale-100 translate-y-0"
+                leave-to-class="opacity-0 scale-[0.96] -translate-y-[4px]"
+              >
+                <div
+                  v-if="openMenuId === row.id"
+                  class="absolute top-[calc(100%-8px)] right-[16px] z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[8px] flex flex-col gap-[2px] min-w-[240px]"
+                  role="menu"
+                  @click.stop
+                >
+                  <div class="px-[4px] py-[2px]">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onDownload(row); closeMenus()"
+                    >
+                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
+                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        Télécharger la note de frais
                       </span>
                     </button>
                   </div>
