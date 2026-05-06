@@ -58,7 +58,7 @@ const variantClasses = computed(() => {
   if (isDisabled.value) {
     return {
       primary:      'bg-neutral-disabled text-text-neutral-disabled cursor-not-allowed',
-      secondary:    'bg-transparent border border-neutral-disabled text-text-neutral-disabled cursor-not-allowed',
+      secondary:    'bg-neutral-disabled border border-border-neutral text-text-neutral-disabled cursor-not-allowed',
       tertiaryColor:'bg-transparent text-text-neutral-disabled cursor-not-allowed',
       tertiaryGray: 'bg-transparent text-text-neutral-disabled cursor-not-allowed',
       destructive:  'bg-neutral-disabled text-text-neutral-disabled cursor-not-allowed',
@@ -82,7 +82,7 @@ const variantClasses = computed(() => {
 
   return {
     primary:      `bg-brand text-white hover:bg-brand-hover active:scale-[0.97] focus:shadow-ring-brand ${focusRingBrand}`,
-    secondary:    `bg-transparent border border-border-neutral text-text-neutral hover:bg-neutral-secondary active:scale-[0.97] focus:shadow-ring-gray ${focusRingGray}`,
+    secondary:    `bg-neutral border border-border-neutral text-text-neutral-secondary hover:bg-neutral-hover active:scale-[0.97] focus:shadow-ring-gray ${focusRingGray}`,
     tertiaryColor:`bg-transparent text-text-brand-medium hover:bg-brand-surface active:scale-[0.97] focus:shadow-ring-brand ${focusRingBrand}`,
     tertiaryGray: `bg-transparent text-text-neutral-secondary hover:bg-neutral-secondary active:scale-[0.97] focus:shadow-ring-gray ${focusRingGray}`,
     destructive:  `bg-danger text-white hover:bg-danger-hover active:scale-[0.97] focus:shadow-ring-error ${focusRingError}`,

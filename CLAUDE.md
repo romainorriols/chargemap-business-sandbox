@@ -14,6 +14,24 @@ Project-scoped skills live under `.claude/skills/`. They auto-trigger when their
 
 ---
 
+# Project conventions
+
+## Always reach for the component lib first
+
+Before writing inline markup for tabs, buttons, dropdowns, inputs, alerts, banners, sidebars, toasts, etc. — **check `src/components/ui/` (auto-imported in Nuxt) and pick the existing component**. The same components live in the `Storybook B2B` repo (read-only source of truth) and are mirrored here.
+
+Concretely:
+- Need page tabs with the brand underline? → `<HorizontalTabs variant="underline" v-model="activeTab" :tabs="tabs" />` (not a hand-rolled flex+absolute span).
+- Pill/segmented tabs? → same component, default `variant="pill"`.
+- Need a button? → `<Button type="…" size="…" />`. Don't roll a custom `<button class="px-... py-... bg-...">` unless the lib genuinely doesn't cover the case.
+- Need a dropdown / input / banner / alert / toast? → check the lib first.
+
+Why: animations (sliding indicators, focus rings), keyboard handling, ARIA, and design-token consistency are baked into the lib components. Inline markup misses them and drifts visually over time.
+
+If the lib component is missing a variant the design needs, **extend the component** (add a prop) rather than hand-rolling a one-off. Mirror the change in the Storybook B2B source so both stay in sync.
+
+---
+
 # Behavioral guidelines
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.

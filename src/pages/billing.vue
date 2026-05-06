@@ -374,36 +374,17 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
       </div>
 
       <!-- Tabs -->
-      <div
-        class="flex items-end gap-[12px] border-b border-border-neutral-secondary anim-fade-up"
+      <HorizontalTabs
+        v-model="activeTab"
+        :tabs="tabs"
+        variant="underline"
+        class="anim-fade-up"
         style="animation-delay: 40ms"
-        role="tablist"
-      >
-        <button
-          v-for="t in tabs"
-          :key="t.id"
-          type="button"
-          role="tab"
-          :aria-selected="activeTab === t.id"
-          :class="[
-            'relative pb-[8px] px-[4px] font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray rounded-[4px]',
-            activeTab === t.id
-              ? 'text-text-brand-medium'
-              : 'text-text-neutral-secondary hover:text-text-neutral',
-          ]"
-          @click="activeTab = t.id"
-        >
-          {{ t.label }}
-          <span
-            v-if="activeTab === t.id"
-            class="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-brand"
-          />
-        </button>
-      </div>
+      />
 
       <!-- KPI card: 3 segments. Outer = card frame (initial fade-in only). Inner = content (cross-fades on tab change). -->
       <div
-        v-if="activeTab !== 'factures'"
+        v-if="activeTab !== 'factures' && activeTab !== 'appels-fonds'"
         class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[24px] anim-fade-up"
         style="animation-delay: 80ms"
       >
@@ -866,24 +847,24 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           :key="`tbl-appels-fonds-${activeTab}`"
           class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
         >
-          <!-- Header row -->
+          <!-- Header row — column widths match Figma 4719-15530 (flex-1 + Figma min-widths). -->
           <div class="flex items-stretch bg-neutral-tertiary">
-            <div class="w-[250px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[235px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Numéro
             </div>
-            <div class="w-[120px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Net à payer
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Organisation / BU
             </div>
-            <div class="flex-1 min-w-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               Date
             </div>
-            <div class="w-[150px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Moyen de paiement
             </div>
-            <div class="w-[215px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[215px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -901,17 +882,17 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               openMenuId === row.id ? 'z-30' : 'z-0',
             ]"
           >
-            <div class="w-[250px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[235px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ row.number }}
               </span>
             </div>
-            <div class="w-[120px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
-            <div class="flex-1 min-w-0 flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <div class="flex-1 min-w-[150px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ row.bu }}
               </span>
@@ -919,17 +900,17 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ row.organization }}
               </span>
             </div>
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(row.date) }}
               </span>
             </div>
-            <div class="w-[150px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                 {{ isDemand(row) ? row.paymentMethod : '' }}
               </span>
             </div>
-            <div class="w-[215px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[215px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',

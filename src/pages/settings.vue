@@ -333,32 +333,13 @@ watch(newTokenOpen, isOpen => {
     </div>
 
     <!-- Horizontal tabs -->
-    <div
-      class="w-full max-w-[800px] flex items-end gap-[12px] h-[36px] border-b border-border-neutral-secondary anim-fade-up"
+    <HorizontalTabs
+      v-model="activeTab"
+      :tabs="tabs"
+      variant="underline"
+      class="w-full max-w-[800px] anim-fade-up"
       style="animation-delay: 40ms"
-      role="tablist"
-    >
-      <button
-        v-for="t in tabs"
-        :key="t.id"
-        type="button"
-        role="tab"
-        :aria-selected="activeTab === t.id"
-        :class="[
-          'relative pb-[8px] px-[4px] font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray rounded-[4px]',
-          activeTab === t.id
-            ? 'text-text-brand-medium'
-            : 'text-text-neutral-secondary hover:text-text-neutral',
-        ]"
-        @click="activeTab = t.id"
-      >
-        {{ t.label }}
-        <span
-          v-if="activeTab === t.id"
-          class="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-brand"
-        />
-      </button>
-    </div>
+    />
 
     <!-- Tab content — canonical tab-fade animation (see main.css). -->
     <Transition mode="out-in" name="tab-fade">
