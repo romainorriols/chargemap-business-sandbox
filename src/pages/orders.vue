@@ -167,14 +167,14 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         </div>
       </section>
 
-      <!-- Toolbar — search on the left, status dropdown on the right.
-           relative + z-20 so the Dropdown's absolutely-positioned menu paints
-           above the table section that follows it in DOM order. -->
+      <!-- Toolbar — Figma 4832-35736: search + dropdown with 8px outer gap.
+           Stacks full-width below sm. relative + z-20 so the Dropdown's
+           absolutely-positioned menu paints above the table that follows. -->
       <div
-        class="relative z-20 w-full flex items-center justify-between gap-[16px] flex-wrap anim-fade-up"
+        class="relative z-20 w-full flex flex-col sm:flex-row sm:items-center gap-[8px] flex-wrap anim-fade-up"
         style="animation-delay: 80ms"
       >
-        <div class="w-[311px] max-w-full">
+        <div class="w-full sm:w-[311px]">
           <Input
             v-model="search"
             type="leadingIcon"
@@ -182,7 +182,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             placeholder="Recherche"
           />
         </div>
-        <div class="w-[250px]">
+        <div class="w-full sm:w-[250px]">
           <Dropdown
             v-model="statusFilter"
             :items="statusItems"

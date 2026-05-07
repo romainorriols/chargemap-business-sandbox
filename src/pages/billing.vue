@@ -614,9 +614,10 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         </Transition>
 
 
-        <!-- Filters toolbar -->
-        <div class="flex items-center justify-between gap-[16px] flex-wrap">
-          <div class="w-[311px] max-w-full">
+        <!-- Filters toolbar — Figma 4832-35736: search + dropdown cluster with
+             8px outer gap, 16px gap between dropdowns. Stacks full-width below sm. -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-[8px] flex-wrap">
+          <div class="w-full sm:w-[311px]">
             <Input
               v-model="search"
               type="leadingIcon"
@@ -624,8 +625,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               placeholder="Recherche"
             />
           </div>
-          <div class="flex items-center gap-[16px] flex-wrap">
-            <div class="w-[250px]">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-[16px] flex-wrap">
+            <div class="w-full sm:w-[250px]">
               <Dropdown
                 v-model="dateFilter"
                 :items="dateItems"
@@ -637,7 +638,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 :show-hint="false"
               />
             </div>
-            <div class="w-[250px]">
+            <div class="w-full sm:w-[250px]">
               <Dropdown
                 v-model="statusFilter"
                 :items="statusItems"
@@ -1504,12 +1505,11 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <Icon name="x-mark" variant="solid" :size="18" />
           </button>
         </div>
-        <!-- Inline format buttons. One shared download icon up front, "Exporter en"
-             label hides under sm; on tiny viewports only the 3 format buttons remain. -->
+        <!-- Inline format buttons. "Exporter en:" prefix hides under sm; on tiny
+             viewports only the 3 format buttons remain. -->
         <div class="flex items-center gap-[8px] min-w-0">
-          <Icon name="arrow-down-tray" variant="solid" :size="18" class="text-[#94a3b8] shrink-0" />
-          <span class="hidden sm:inline font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-[#94a3b8] whitespace-nowrap">
-            Exporter en
+          <span class="hidden sm:inline font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9] whitespace-nowrap">
+            Exporter en :
           </span>
           <div class="flex items-center gap-[2px]">
             <button

@@ -682,11 +682,13 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
       />
 
       <!-- Filter row -->
+      <!-- Filter row — Figma 4832-35736: search + dropdown cluster with 8px
+           outer gap, 16px gap between dropdowns. Stacks full-width below sm. -->
       <div
-        class="relative z-20 flex items-center gap-[16px] flex-wrap anim-fade-up"
+        class="relative z-20 flex flex-col sm:flex-row sm:items-center gap-[8px] flex-wrap anim-fade-up"
         style="animation-delay: 80ms"
       >
-        <div class="w-[260px]">
+        <div class="w-full sm:w-[260px]">
           <Input
             v-model="search"
             type="leadingIcon"
@@ -695,7 +697,8 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             @input="resetPage"
           />
         </div>
-        <div class="w-[260px]">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-[16px] flex-wrap">
+        <div class="w-full sm:w-[260px]">
           <Dropdown
             v-model="dateFilter"
             :items="dateItems"
@@ -708,7 +711,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             @update:model-value="resetPage"
           />
         </div>
-        <div v-if="isHomeDomain" class="w-[260px]">
+        <div v-if="isHomeDomain" class="w-full sm:w-[260px]">
           <Dropdown
             v-model="statusFilter"
             :items="statusItems"
@@ -722,7 +725,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             @update:model-value="resetPage"
           />
         </div>
-        <div v-if="isCable" class="w-[260px]">
+        <div v-if="isCable" class="w-full sm:w-[260px]">
           <Dropdown
             v-model="locationFilter"
             :items="locationItems"
@@ -736,7 +739,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             @update:model-value="resetPage"
           />
         </div>
-        <div v-if="isInProgressTab" class="w-[260px]">
+        <div v-if="isInProgressTab" class="w-full sm:w-[260px]">
           <Dropdown
             v-model="liveKindFilter"
             :items="liveKindItems"
@@ -750,7 +753,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             @update:model-value="resetPage"
           />
         </div>
-        <div v-if="isAuthJournalTab" class="w-[260px]">
+        <div v-if="isAuthJournalTab" class="w-full sm:w-[260px]">
           <Dropdown
             v-model="badgeKnownFilter"
             :items="badgeKnownItems"
@@ -764,7 +767,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             @update:model-value="resetPage"
           />
         </div>
-        <div v-if="isAuthJournalTab" class="w-[260px]">
+        <div v-if="isAuthJournalTab" class="w-full sm:w-[260px]">
           <Dropdown
             v-model="authorizationFilter"
             :items="authorizationItems"
@@ -777,6 +780,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             :show-hint="false"
             @update:model-value="resetPage"
           />
+        </div>
         </div>
       </div>
 
