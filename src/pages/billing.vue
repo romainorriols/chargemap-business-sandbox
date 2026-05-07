@@ -700,6 +700,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           :key="`tbl-factures-${activeTab}`"
           class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
         >
+          <div class="overflow-x-auto">
           <!-- Header row -->
           <div class="flex items-stretch bg-neutral-tertiary">
             <div
@@ -887,6 +888,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
           </div>
 
+          </div>
+
           <!-- Footer inside the card -->
           <TableFooter
             :page="page"
@@ -904,6 +907,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           :key="`tbl-appels-fonds-${activeTab}`"
           class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
         >
+          <div class="overflow-x-auto">
           <!-- Header row — column widths match Figma 4719-15530 (flex-1 + Figma min-widths). -->
           <div class="flex items-stretch bg-neutral-tertiary">
             <div class="flex-1 min-w-[235px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -1036,6 +1040,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
           </div>
 
+          </div>
+
           <!-- Footer inside the card -->
           <TableFooter
             :page="page"
@@ -1056,6 +1062,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           :key="`tbl-notes-frais-${activeTab}`"
           class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
         >
+          <div class="overflow-x-auto">
           <!-- Header row -->
           <div class="flex items-stretch bg-neutral-tertiary">
             <div class="flex-1 min-w-[250px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -1186,6 +1193,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
           </div>
 
+          </div>
+
           <!-- Footer inside the card -->
           <TableFooter
             :page="page"
@@ -1203,6 +1212,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           :key="`tbl-appels-facturation-${activeTab}`"
           class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden"
         >
+          <div class="overflow-x-auto">
           <!-- Header row — column widths match Figma 4815-8482 (flex-1 + Figma min-widths). -->
           <div class="flex items-stretch bg-neutral-tertiary">
             <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -1325,6 +1335,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 </div>
               </Transition>
             </div>
+          </div>
+
           </div>
 
           <!-- Footer inside the card -->
