@@ -450,7 +450,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
            Factures tab: "Exporter" (primary) toggles export mode; once
            activated, it morphs into "Quitter l'export" (secondary). -->
       <div
-        class="flex items-center gap-[16px] anim-fade-up"
+        class="flex items-center gap-[16px] min-h-[44px] anim-fade-up"
         style="animation-delay: 0ms"
       >
         <h1 :class="['flex-1 min-w-0', V1_PAGE_HEADING]">
@@ -736,23 +736,23 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               ri === skeletonRows.length - 1 ? 'border-b-0' : '',
             ]"
           >
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <Skeleton width="180px" height="14px" />
             </div>
-            <div class="w-[120px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="w-[120px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <Skeleton width="70px" height="14px" />
             </div>
-            <div class="flex-1 min-w-0 flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-[6px]">
+            <div class="flex-1 min-w-0 flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[6px]">
               <Skeleton width="80px" height="14px" />
               <Skeleton width="110px" height="14px" />
             </div>
-            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <Skeleton width="90px" height="14px" />
             </div>
-            <div class="w-[215px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="w-[215px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <Skeleton width="110px" height="22px" rounded="9999px" />
             </div>
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] gap-[8px]">
+            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[8px]">
               <Skeleton width="28px" height="28px" rounded="8px" />
               <Skeleton width="28px" height="28px" rounded="8px" />
             </div>
@@ -825,14 +825,14 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             :key="inv.id"
             :style="{ animationDelay: `${150 + i * 20}ms` }"
             :class="[
-              'relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0 transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'group/row relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0',
               openMenuId === inv.id ? 'z-30' : 'z-0',
             ]"
           >
             <!-- Checkbox cell -->
             <div
               v-if="exportMode"
-              class="w-[48px] shrink-0 flex items-center justify-center px-[16px] py-[12px] min-h-[64px]"
+              class="w-[48px] shrink-0 flex items-center justify-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary"
             >
               <button
                 type="button"
@@ -852,35 +852,35 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
 
             <!-- Numéro -->
-            <div class="flex-1 min-w-[169px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[169px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ inv.number }}
               </span>
             </div>
 
             <!-- Net à payer -->
-            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(inv.amount) }}
               </span>
             </div>
 
             <!-- Business unit -->
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ inv.bu }}
               </span>
             </div>
 
             <!-- Date -->
-            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(inv.date) }}
               </span>
             </div>
 
             <!-- État -->
-            <div class="flex-1 min-w-[216px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[216px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -894,7 +894,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             </div>
 
             <!-- Actions -->
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] gap-[4px] relative">
+            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
               <button
                 type="button"
                 class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
@@ -1004,36 +1004,36 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             :key="row.id"
             :style="{ animationDelay: `${150 + i * 20}ms` }"
             :class="[
-              'relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0 transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'group/row relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0',
               openMenuId === row.id ? 'z-30' : 'z-0',
             ]"
           >
-            <div class="flex-1 min-w-[235px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[235px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ row.number }}
               </span>
             </div>
-            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ row.bu }}
               </span>
             </div>
-            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(row.date) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                 {{ isDemand(row) ? row.paymentMethod : '' }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1045,7 +1045,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ statusPill(row).label }}
               </span>
             </div>
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] gap-[4px] relative">
+            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
               <button
                 type="button"
                 class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
@@ -1155,12 +1155,12 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             :key="row.id"
             :style="{ animationDelay: `${150 + i * 20}ms` }"
             :class="[
-              'relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0 transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'group/row relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0',
               openMenuId === row.id ? 'z-30' : 'z-0',
             ]"
           >
             <!-- Numéro / Conducteur -->
-            <div class="flex-1 min-w-[250px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <div class="flex-1 min-w-[250px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-0">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ row.number }}
               </span>
@@ -1169,25 +1169,25 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <!-- Net à payer -->
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
             <!-- Date -->
-            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(row.date) }}
               </span>
             </div>
             <!-- Période -->
-            <div class="flex-1 min-w-[192px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[192px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                 {{ isNote(row) ? row.period : '' }}
               </span>
             </div>
             <!-- État -->
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1200,7 +1200,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <!-- Actions -->
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] gap-[4px] relative">
+            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
               <button
                 type="button"
                 class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
@@ -1307,31 +1307,31 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             :key="row.id"
             :style="{ animationDelay: `${150 + i * 20}ms` }"
             :class="[
-              'relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0 transition-colors duration-150 ease-out hover:bg-neutral-secondary',
+              'group/row relative flex items-stretch anim-fade-up border-b border-border-neutral-tertiary last:border-b-0',
               openMenuId === row.id ? 'z-30' : 'z-0',
             ]"
           >
-            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ row.number }}
               </span>
             </div>
-            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate tabular-nums">
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ row.bu }}
               </span>
             </div>
-            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
                 {{ fmtDate(row.date) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1343,7 +1343,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ statusPill(row).label }}
               </span>
             </div>
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] gap-[4px] relative">
+            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
               <button
                 type="button"
                 class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
