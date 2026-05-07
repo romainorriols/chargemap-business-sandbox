@@ -82,11 +82,8 @@ const alertDismissedFacturation = ref(false)
 // Per Figma 5593-54767, demands surface 4 statuses: paid / processing /
 // overdue / toPay (with dueDate inlined in the pill).
 //
-// Each demand groups 0..N notes de frais via the appelDeFondsId on Note.
-// The amount below equals the sum of linked notes' amounts (computed at
-// runtime by demandTotal()). Demands without linked notes (d7, d9, d12,
-// d15, d17) keep their seed amount — they represent demands not yet
-// fed by any expense report.
+// Every demand groups at least one note de frais via the Note.appelDeFondsId
+// link. The amount below equals the sum of linked notes' amounts.
 const demands: Demand[] = [
   { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 12.45,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 9.85,   bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'toPay'      },
@@ -94,17 +91,17 @@ const demands: Demand[] = [
   { id: 'd4',  number: 'AF-20251001-9D3F6C7A1B0E', amount: 111.30, bu: 'Brakson',         organization: 'Brakson', date: '2026-08-01', dueDate: '2027-02-01', paymentMethod: 'Carte de crédit', status: 'processing' },
   { id: 'd5',  number: 'AF-20251012-2F8E1A4B6C90', amount: 145.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-08-12', dueDate: '2027-02-12', paymentMethod: 'Mandat SEPA',     status: 'processing' },
   { id: 'd6',  number: 'AF-20251023-3A7C5D2F1E08', amount: 92.15,  bu: 'Saabre',          organization: 'Brakson', date: '2026-08-23',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
-  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 78.40,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd8',  number: 'AF-20251115-8E1D7C5A9B23', amount: 18.60,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-15',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
-  { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 10.65,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
+  { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 65.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
   { id: 'd10', number: 'AF-20251208-4C2E9F6A1D75', amount: 124.40, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-10-08',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
   { id: 'd11', number: 'AF-20251220-9D6E3B7C8F41', amount: 45.75,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-10-20',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
-  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10,  bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 145.85, bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 130.50, bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'       },
   { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 99.25,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'processing' },
-  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25,  bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 38.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 38.65,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
-  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,   bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12', dueDate: '2027-04-12', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
+  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 92.30,  bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12', dueDate: '2027-04-12', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
 ]
 
 // ── Appels à facturation data ──────────────────────────────────────────
@@ -131,10 +128,10 @@ const billings: Billing[] = [
 // Per Figma 5593-66539, Notes de frais surface only 3 statuses:
 // processing → "En cours", toPay → "En attente", refunded → "Remboursée".
 //
-// Each note is linked to an Appel de fonds via appelDeFondsId. Status
-// coherence: AdF.paid → notes.refunded ; AdF.processing → notes.processing ;
-// AdF.toPay → notes.toPay (driver still waiting). The parent demand's BU
-// also matches the note's BU.
+// Every note is linked to an Appel de fonds via appelDeFondsId, and every
+// AdF has at least one note. Status coherence: AdF.paid → notes.refunded ;
+// AdF.processing → notes.processing ; AdF.toPay / AdF.overdue → notes.toPay
+// (driver still waiting in both cases). BU matches the parent demand.
 const notes: Note[] = [
   { id: 'nf1',  kind: 'note', appelDeFondsId: 'd1',  number: 'NDF-20260405-69D1D1CC2E9CC', amount: 12.45,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
   { id: 'nf2',  kind: 'note', appelDeFondsId: 'd4',  number: 'NDF-20260404-58E2C1BB4F7B1', amount: 87.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-08',                         driver: 'Camille Laurent',  period: '15/02/2026 - 15/03/2026', status: 'processing' },
@@ -151,6 +148,11 @@ const notes: Note[] = [
   { id: 'nf13', kind: 'note', appelDeFondsId: 'd3',  number: 'NDF-20260324-47CDFCFE52842', amount: 156.40, bu: 'Brakson',         organization: 'Brakson', date: '2026-04-04', dueDate: '2026-10-24', driver: 'Antoine Lefevre',  period: '01/02/2026 - 28/02/2026', status: 'toPay'      },
   { id: 'nf14', kind: 'note', appelDeFondsId: 'd13', number: 'NDF-20260323-36DEFD0F63953', amount: 52.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-02-15',                         driver: 'Sarah Lemaire',    period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
   { id: 'nf15', kind: 'note', appelDeFondsId: 'd16', number: 'NDF-20260322-25EFFE10A4A64', amount: 38.65,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-20',                         driver: 'Lucas Petit',      period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
+  { id: 'nf16', kind: 'note', appelDeFondsId: 'd7',  number: 'NDF-20260321-14D2E5B8F37A1', amount: 78.40,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-04-06', dueDate: '2027-03-04', driver: 'Carlos Costa',     period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf17', kind: 'note', appelDeFondsId: 'd9',  number: 'NDF-20260320-23E1D6C9A48B2', amount: 65.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-04-03', dueDate: '2026-10-28', driver: 'Hugo Mercier',     period: '15/02/2026 - 15/03/2026', status: 'toPay'      },
+  { id: 'nf18', kind: 'note', appelDeFondsId: 'd12', number: 'NDF-20260319-32F2C7BAB59C3', amount: 145.85, bu: 'Marketing',       organization: 'Brakson', date: '2026-04-07', dueDate: '2027-05-04', driver: 'Justine Garnier',  period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf19', kind: 'note', appelDeFondsId: 'd15', number: 'NDF-20260318-41A3D8CBC6AD4', amount: 38.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-10', dueDate: '2027-06-15', driver: 'Vincent Marchand', period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf20', kind: 'note', appelDeFondsId: 'd17', number: 'NDF-20260317-50B4E9DCD7BE5', amount: 92.30,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-12', dueDate: '2027-04-12', driver: 'Manon Guillon',    period: '01/02/2026 - 28/02/2026', status: 'toPay'      },
 ]
 
 const currentRows = computed<Row[]>(() => {
