@@ -714,17 +714,16 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         >
           <div
             v-if="linkedFilter && linkedDemand && (activeTab === 'notes-frais' || activeTab === 'appels-fonds')"
-            class="flex items-center gap-[12px] px-[16px] py-[12px] bg-brand-surface border border-border-brand-medium rounded-[8px]"
+            class="flex items-center gap-[12px] p-[16px] bg-brand-surface border border-border-brand-medium rounded-[8px] shadow-sm"
             role="status"
           >
-            <Icon name="link" variant="outline" :size="18" class="shrink-0 text-icon-brand-deep" />
-            <p class="flex-1 min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep">
-              {{ activeTab === 'notes-frais' ? 'Notes de frais liées à' : 'Appel de fonds' }}
-              <span class="font-medium tabular-nums">{{ linkedDemand.number }}</span>
+            <Icon name="link" variant="outline" :size="22" class="shrink-0 text-icon-brand-deep" />
+            <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep">
+              {{ activeTab === 'notes-frais' ? 'Notes de frais liées à ' : 'Appel de fonds ' }}<span class="font-semibold tabular-nums">{{ linkedDemand.number }}</span>
             </p>
             <button
               type="button"
-              class="shrink-0 inline-flex items-center justify-center px-[10px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep hover:bg-black/5 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              class="shrink-0 inline-flex items-center justify-center px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep hover:bg-black/5 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
               @click="clearLinkedFilter"
             >
               Effacer le filtre
