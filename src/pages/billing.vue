@@ -734,22 +734,22 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 />
               </button>
             </div>
-            <div class="flex-1 min-w-[169px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[169px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Numéro
             </div>
-            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Net à payer
             </div>
-            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Organisation / BU
             </div>
-            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
             </div>
-            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Actions
             </div>
           </div>
@@ -913,25 +913,25 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <div style="transform: rotateX(180deg);">
           <!-- Header row — column widths match Figma 4719-15530 (flex-1 + Figma min-widths). -->
           <div class="flex items-stretch bg-neutral-tertiary">
-            <div class="flex-1 min-w-[235px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[235px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Numéro
             </div>
-            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Net à payer
             </div>
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Organisation / BU
             </div>
-            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
             </div>
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Moyen de paiement
             </div>
-            <div class="flex-1 min-w-[215px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[215px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Actions
             </div>
           </div>
@@ -1070,22 +1070,22 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <div style="transform: rotateX(180deg);">
           <!-- Header row -->
           <div class="flex items-stretch bg-neutral-tertiary">
-            <div class="flex-1 min-w-[250px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[250px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Numéro / Conducteur
             </div>
-            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Net à payer
             </div>
-            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
             </div>
-            <div class="flex-1 min-w-[192px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[192px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Période
             </div>
-            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Actions
             </div>
           </div>
@@ -1222,22 +1222,22 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <div style="transform: rotateX(180deg);">
           <!-- Header row — column widths match Figma 4815-8482 (flex-1 + Figma min-widths). -->
           <div class="flex items-stretch bg-neutral-tertiary">
-            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Numéro
             </div>
-            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Net à payer
             </div>
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Organisation / BU
             </div>
-            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
             </div>
-            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Actions
             </div>
           </div>
