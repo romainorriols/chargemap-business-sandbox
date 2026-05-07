@@ -281,7 +281,6 @@ const rangeEnd = computed(() => Math.min(page.value * perPage, filtered.value.le
 // one row is selected. Tab change resets both.
 const exportMode = ref(false)
 const selected = ref<Set<string>>(new Set())
-const exportMenuOpen = ref(false)
 
 watch([search, statusFilter, dateFilter, activeTab], () => {
   page.value = 1
@@ -301,7 +300,6 @@ function enterExportMode() {
 function exitExportMode() {
   exportMode.value = false
   selected.value = new Set()
-  exportMenuOpen.value = false
 }
 
 const allSelected = computed(() =>
@@ -411,16 +409,11 @@ function onViewPdf(_inv: Row) {
 function onDownload(_inv: Row) {
   // Hook télécharger la facture here
 }
-// Export format menu — pops up above the bulk action bar's "Exporter"
-// button. Picking a format triggers the export hook and exits export mode.
+// Format buttons live inline on the bulk action bar; clicking one triggers
+// the export hook and exits export mode.
 type ExportFormat = 'csv' | 'xlsx' | 'pdf'
-function toggleExportMenu(e: MouseEvent) {
-  e.stopPropagation()
-  exportMenuOpen.value = !exportMenuOpen.value
-}
 function onExportSelection(_format: ExportFormat) {
   // Hook exporter la sélection au format _format here
-  exportMenuOpen.value = false
   exitExportMode()
 }
 
@@ -432,7 +425,6 @@ function toggleMenu(id: string, e: MouseEvent) {
 }
 function closeMenus() {
   openMenuId.value = null
-  exportMenuOpen.value = false
 }
 
 // ── Export de facture V2 toggle (Factures bandeau) ─────────────────────
@@ -1512,65 +1504,36 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <Icon name="x-mark" variant="solid" :size="18" />
           </button>
         </div>
-        <div class="relative">
-          <button
-            type="button"
-            class="inline-flex items-center justify-center gap-[8px] p-0 rounded-[8px] outline-none focus-visible:shadow-ring-gray transition-colors duration-150 ease-out hover:opacity-90"
-            :aria-expanded="exportMenuOpen"
-            aria-haspopup="menu"
-            @click="toggleExportMenu"
-          >
-            <Icon name="arrow-down-tray" variant="solid" :size="20" class="text-[#f1f5f9]" />
-            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9]">
-              Exporter
-            </span>
-          </button>
-
-          <!-- Format picker — pops up above the bulk bar so it doesn't get
-               clipped by the viewport bottom. Light card on the dark bar. -->
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-            enter-from-class="opacity-0 scale-[0.96] translate-y-[4px]"
-            enter-to-class="opacity-100 scale-100 translate-y-0"
-            leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
-            leave-from-class="opacity-100 scale-100 translate-y-0"
-            leave-to-class="opacity-0 scale-[0.96] translate-y-[4px]"
-          >
-            <div
-              v-if="exportMenuOpen"
-              class="absolute bottom-[calc(100%+12px)] right-0 z-30 origin-bottom-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[8px] flex flex-col gap-[2px] min-w-[200px]"
-              role="menu"
-              @click.stop
+        <!-- Inline format buttons. One shared download icon up front, "Exporter en"
+             label hides under sm; on tiny viewports only the 3 format buttons remain. -->
+        <div class="flex items-center gap-[8px] min-w-0">
+          <Icon name="arrow-down-tray" variant="solid" :size="18" class="text-[#94a3b8] shrink-0" />
+          <span class="hidden sm:inline font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-[#94a3b8] whitespace-nowrap">
+            Exporter en
+          </span>
+          <div class="flex items-center gap-[2px]">
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-[10px] py-[6px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9] hover:bg-white/10 active:bg-white/15 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              @click="onExportSelection('csv')"
             >
-              <button
-                type="button"
-                role="menuitem"
-                class="mx-[4px] flex items-center justify-between gap-[12px] px-[8px] py-[8px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                @click="onExportSelection('csv')"
-              >
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">CSV</span>
-                <span class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">.csv</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                class="mx-[4px] flex items-center justify-between gap-[12px] px-[8px] py-[8px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                @click="onExportSelection('xlsx')"
-              >
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">Excel</span>
-                <span class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">.xlsx</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                class="mx-[4px] flex items-center justify-between gap-[12px] px-[8px] py-[8px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                @click="onExportSelection('pdf')"
-              >
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">PDF</span>
-                <span class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">.pdf</span>
-              </button>
-            </div>
-          </Transition>
+              CSV
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-[10px] py-[6px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9] hover:bg-white/10 active:bg-white/15 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              @click="onExportSelection('xlsx')"
+            >
+              Excel
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center justify-center px-[10px] py-[6px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9] hover:bg-white/10 active:bg-white/15 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              @click="onExportSelection('pdf')"
+            >
+              PDF
+            </button>
+          </div>
         </div>
       </div>
     </Transition>
