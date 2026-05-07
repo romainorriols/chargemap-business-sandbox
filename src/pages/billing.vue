@@ -950,10 +950,9 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                     <button
                       type="button"
                       role="menuitem"
-                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
                       @click="onDownloadFactureFormat(inv, 'csv'); closeMenus()"
                     >
-                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                         Exporter en CSV
                       </span>
@@ -961,10 +960,9 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                     <button
                       type="button"
                       role="menuitem"
-                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
                       @click="onDownloadFactureFormat(inv, 'xlsx'); closeMenus()"
                     >
-                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                         Exporter en XLSX
                       </span>
