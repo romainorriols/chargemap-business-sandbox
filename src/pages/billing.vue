@@ -409,6 +409,9 @@ function onViewPdf(_inv: Row) {
 function onDownload(_inv: Row) {
   // Hook télécharger la facture here
 }
+function onDownloadFactureFormat(_inv: Row, _format: 'csv' | 'xlsx') {
+  // Hook exporter la facture au format _format here
+}
 // Format buttons live inline on the bulk action bar; clicking one triggers
 // the export hook and exits export mode.
 type ExportFormat = 'csv' | 'xlsx' | 'pdf'
@@ -895,14 +898,24 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
             <!-- Actions -->
             <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
-              <button
-                type="button"
-                class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                aria-label="Voir le PDF"
-                @click.stop="onViewPdf(inv)"
-              >
-                <Icon name="eye" variant="outline" :size="20" />
-              </button>
+              <span class="relative inline-flex group/eye-tip">
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Voir la facture"
+                  @click.stop="onViewPdf(inv)"
+                >
+                  <Icon name="eye" variant="outline" :size="20" />
+                </button>
+                <span
+                  role="tooltip"
+                  class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-30 w-max px-[10px] py-[6px] rounded-[6px] bg-text-neutral whitespace-nowrap shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out group-hover/eye-tip:opacity-100 group-hover/eye-tip:translate-y-0 group-focus-visible/eye-tip:opacity-100 group-focus-visible/eye-tip:translate-y-0 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:size-0 after:border-l-[6px] after:border-r-[6px] after:border-t-[5px] after:border-l-transparent after:border-r-transparent after:border-t-text-neutral"
+                >
+                  <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#f1f5f9]">
+                    Voir la facture
+                  </span>
+                </span>
+              </span>
               <button
                 type="button"
                 :class="[
@@ -933,16 +946,27 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                   role="menu"
                   @click.stop
                 >
-                  <div class="px-[4px] py-[2px]">
+                  <div class="px-[4px] py-[2px] flex flex-col gap-[2px]">
                     <button
                       type="button"
                       role="menuitem"
                       class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                      @click="onDownload(inv); closeMenus()"
+                      @click="onDownloadFactureFormat(inv, 'csv'); closeMenus()"
                     >
                       <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                        Télécharger la facture
+                        Exporter en CSV
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onDownloadFactureFormat(inv, 'xlsx'); closeMenus()"
+                    >
+                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
+                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        Exporter en XLSX
                       </span>
                     </button>
                   </div>
