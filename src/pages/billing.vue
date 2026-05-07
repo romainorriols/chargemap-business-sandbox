@@ -717,7 +717,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             class="flex items-center gap-[12px] p-[16px] bg-brand-surface border border-border-brand-medium rounded-[8px] shadow-sm"
             role="status"
           >
-            <Icon name="link" variant="outline" :size="22" class="shrink-0 text-icon-brand-deep" />
+            <Icon name="link" variant="outline" :size="20" class="shrink-0 text-icon-brand-deep" />
             <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep">
               {{ activeTab === 'notes-frais' ? 'Notes de frais liées à ' : 'Appel de fonds ' }}<span class="font-semibold tabular-nums">{{ linkedDemand.number }}</span>
             </p>
