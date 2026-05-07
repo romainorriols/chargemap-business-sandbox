@@ -398,19 +398,18 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-[4px]"
         >
-          <button
+          <Button
             v-if="activeTab === 'factures' && exportMode"
             key="quit"
-            type="button"
-            class="shrink-0 inline-flex items-center justify-center px-[12px] py-[8px] gap-[8px] rounded-[8px] bg-neutral border border-border-neutral-secondary text-text-neutral-secondary font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
+            type="secondary"
+            size="md"
+            label="Quitter l'export"
             @click="exitExportMode"
-          >
-            Quitter l'export
-          </button>
+          />
           <Button
             v-else-if="activeTab === 'factures'"
             key="enter"
-            type="primary"
+            type="secondary"
             size="md"
             label="Exporter"
             icon-left="arrow-down-tray"
