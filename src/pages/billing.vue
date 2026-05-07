@@ -76,24 +76,25 @@ const alertDismissedFonds = ref(false)
 const alertDismissedFacturation = ref(false)
 
 // ── Appels de fonds data ───────────────────────────────────────────────
+// Per Figma 5593-54767, demands surface only 3 statuses: paid / processing / overdue.
 const demands: Demand[] = [
-  { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 8.75,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 6.30,  bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd3',  number: 'AF-20250919-5B1A8E4C2D7F', amount: 7.10,  bu: 'Brakson',         organization: 'Brakson', date: '2026-07-15', dueDate: '2027-01-15', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd4',  number: 'AF-20251001-9D3F6C7A1B0E', amount: 9.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-08-01', dueDate: '2027-02-01', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd5',  number: 'AF-20251012-2F8E1A4B6C90', amount: 11.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-08-12', dueDate: '2027-02-12', paymentMethod: 'Mandat SEPA',     status: 'toPay' },
-  { id: 'd6',  number: 'AF-20251023-3A7C5D2F1E08', amount: 4.85,  bu: 'Saabre',          organization: 'Brakson', date: '2026-08-23',                         paymentMethod: 'Mandat SEPA',     status: 'paid'  },
-  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40, bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd8',  number: 'AF-20251115-8E1D7C5A9B23', amount: 5.95,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-15',                         paymentMethod: 'Carte de crédit', status: 'paid'  },
-  { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 10.65, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue' },
-  { id: 'd10', number: 'AF-20251208-4C2E9F6A1D75', amount: 8.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-10-08',                         paymentMethod: 'Carte de crédit', status: 'paid'  },
-  { id: 'd11', number: 'AF-20251220-9D6E3B7C8F41', amount: 7.45,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-10-20',                         paymentMethod: 'Mandat SEPA',     status: 'paid'  },
-  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10, bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 6.75,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'  },
-  { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 9.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'toPay' },
-  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25, bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay' },
-  { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 8.40,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'refunded' },
-  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,  bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12',                         paymentMethod: 'Mandat SEPA',     status: 'cancelled' },
+  { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 8.75,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 6.30,  bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd3',  number: 'AF-20250919-5B1A8E4C2D7F', amount: 7.10,  bu: 'Brakson',         organization: 'Brakson', date: '2026-07-15', dueDate: '2027-01-15', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd4',  number: 'AF-20251001-9D3F6C7A1B0E', amount: 9.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-08-01', dueDate: '2027-02-01', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd5',  number: 'AF-20251012-2F8E1A4B6C90', amount: 11.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-08-12', dueDate: '2027-02-12', paymentMethod: 'Mandat SEPA',     status: 'processing' },
+  { id: 'd6',  number: 'AF-20251023-3A7C5D2F1E08', amount: 4.85,  bu: 'Saabre',          organization: 'Brakson', date: '2026-08-23',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
+  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40, bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd8',  number: 'AF-20251115-8E1D7C5A9B23', amount: 5.95,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-15',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
+  { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 10.65, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
+  { id: 'd10', number: 'AF-20251208-4C2E9F6A1D75', amount: 8.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-10-08',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
+  { id: 'd11', number: 'AF-20251220-9D6E3B7C8F41', amount: 7.45,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-10-20',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
+  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10, bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 6.75,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'       },
+  { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 9.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'processing' },
+  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25, bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 8.40,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
+  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,  bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12', dueDate: '2027-04-12', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
 ]
 
 // ── Appels à facturation data ──────────────────────────────────────────
@@ -162,15 +163,26 @@ const dateFilter = ref<string>('')
 
 // Empty-string value on "Tous" clears the model so the trigger falls back to
 // the placeholder ("États: Tous") — same trick for the date "Toutes" option.
-const statusItems = [
-  { value: '',           label: 'Tous' },
-  { value: 'toPay',      label: 'À payer' },
-  { value: 'processing', label: 'En cours' },
-  { value: 'paid',       label: 'Réglé' },
-  { value: 'overdue',    label: 'En retard' },
-  { value: 'refunded',   label: 'Remboursé' },
-  { value: 'cancelled',  label: 'Annulé' },
-]
+// Appels de fonds is restricted to 3 statuses per Figma 5593-54767.
+const statusItems = computed(() => {
+  if (activeTab.value === 'appels-fonds') {
+    return [
+      { value: '',           label: 'Tous' },
+      { value: 'paid',       label: 'Réglée' },
+      { value: 'processing', label: 'En cours' },
+      { value: 'overdue',    label: 'En retard' },
+    ]
+  }
+  return [
+    { value: '',           label: 'Tous' },
+    { value: 'toPay',      label: 'À payer' },
+    { value: 'processing', label: 'En cours' },
+    { value: 'paid',       label: 'Réglé' },
+    { value: 'overdue',    label: 'En retard' },
+    { value: 'refunded',   label: 'Remboursé' },
+    { value: 'cancelled',  label: 'Annulé' },
+  ]
+})
 
 const dateItems = [
   { value: '',       label: 'Toutes' },
@@ -353,12 +365,22 @@ function statusPill(inv: Row): StatusPill {
         return { label: 'Annulée',     bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
   }
-  // Default branch — Invoice (factures, fem.) or Demand (appels de fonds, masc.).
-  // Demands carry `paymentMethod`; everything else is treated as feminine.
-  const isFem = !isDemand(inv)
+  // Demands (appels de fonds): Figma 5593-54767 limits the surface to 3
+  // pills — Réglée / En cours / En retard — with feminine labels.
+  if (isDemand(inv)) {
+    switch (inv.status) {
+      case 'paid':
+        return { label: 'Réglée',    bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      case 'overdue':
+        return { label: 'En retard', bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+      default:
+        return { label: 'En cours',  bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+    }
+  }
+  // Default branch — Invoice (factures, feminine).
   switch (inv.status) {
     case 'paid':
-      return { label: isFem ? 'Réglée' : 'Réglé',   bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      return { label: 'Réglée',                      bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
     case 'processing':
       return { label: 'En cours',                    bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     case 'toPay':
@@ -369,9 +391,9 @@ function statusPill(inv: Row): StatusPill {
     case 'overdue':
       return { label: 'En retard',                   bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
     case 'refunded':
-      return { label: isFem ? 'Remboursée' : 'Remboursé', bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      return { label: 'Remboursée',                  bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
     case 'cancelled':
-      return { label: isFem ? 'Annulée' : 'Annulé', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+      return { label: 'Annulée',                     bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
   }
 }
 
