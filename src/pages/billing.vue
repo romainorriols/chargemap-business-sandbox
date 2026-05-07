@@ -1303,9 +1303,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[68px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
-              Actions
-            </div>
+            <div class="w-[68px] shrink-0 px-[16px] py-[8px] min-h-[40px] bg-neutral-tertiary" aria-hidden="true" />
           </div>
 
           <!-- Body rows -->
@@ -1466,9 +1464,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[68px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
-              Actions
-            </div>
+            <div class="w-[68px] shrink-0 px-[16px] py-[8px] min-h-[40px] bg-neutral-tertiary" aria-hidden="true" />
           </div>
 
           <!-- Body rows -->
