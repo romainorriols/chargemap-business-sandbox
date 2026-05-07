@@ -76,23 +76,24 @@ const alertDismissedFonds = ref(false)
 const alertDismissedFacturation = ref(false)
 
 // ── Appels de fonds data ───────────────────────────────────────────────
-// Per Figma 5593-54767, demands surface only 3 statuses: paid / processing / overdue.
+// Per Figma 5593-54767, demands surface 4 statuses: paid / processing /
+// overdue / toPay (with dueDate inlined in the pill).
 const demands: Demand[] = [
-  { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 8.75,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'processing' },
-  { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 6.30,  bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'processing' },
-  { id: 'd3',  number: 'AF-20250919-5B1A8E4C2D7F', amount: 7.10,  bu: 'Brakson',         organization: 'Brakson', date: '2026-07-15', dueDate: '2027-01-15', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 8.75,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 6.30,  bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd3',  number: 'AF-20250919-5B1A8E4C2D7F', amount: 7.10,  bu: 'Brakson',         organization: 'Brakson', date: '2026-07-15', dueDate: '2027-01-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd4',  number: 'AF-20251001-9D3F6C7A1B0E', amount: 9.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-08-01', dueDate: '2027-02-01', paymentMethod: 'Carte de crédit', status: 'processing' },
   { id: 'd5',  number: 'AF-20251012-2F8E1A4B6C90', amount: 11.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-08-12', dueDate: '2027-02-12', paymentMethod: 'Mandat SEPA',     status: 'processing' },
   { id: 'd6',  number: 'AF-20251023-3A7C5D2F1E08', amount: 4.85,  bu: 'Saabre',          organization: 'Brakson', date: '2026-08-23',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
-  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40, bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40, bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd8',  number: 'AF-20251115-8E1D7C5A9B23', amount: 5.95,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-15',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
   { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 10.65, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
   { id: 'd10', number: 'AF-20251208-4C2E9F6A1D75', amount: 8.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-10-08',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
   { id: 'd11', number: 'AF-20251220-9D6E3B7C8F41', amount: 7.45,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-10-20',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
-  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10, bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10, bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 6.75,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'       },
   { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 9.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'processing' },
-  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25, bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25, bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
   { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 8.40,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
   { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,  bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12', dueDate: '2027-04-12', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
 ]
@@ -172,6 +173,7 @@ const statusItems = computed(() => {
       { value: 'paid',       label: 'Réglée' },
       { value: 'processing', label: 'En cours' },
       { value: 'overdue',    label: 'En retard' },
+      { value: 'toPay',      label: 'À payer' },
     ]
   }
   if (activeTab.value === 'notes-frais') {
@@ -370,14 +372,19 @@ function statusPill(inv: Row): StatusPill {
         return { label: 'En cours',   bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
   }
-  // Demands (appels de fonds): Figma 5593-54767 limits the surface to 3
-  // pills — Réglée / En cours / En retard — with feminine labels.
+  // Demands (appels de fonds): Figma 5593-54767 — 4 pills: Réglée / En cours /
+  // En retard / À payer avant DD/MM/YYYY (yellow, with the dueDate inlined).
   if (isDemand(inv)) {
     switch (inv.status) {
       case 'paid':
         return { label: 'Réglée',    bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
       case 'overdue':
         return { label: 'En retard', bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+      case 'toPay':
+        return {
+          label: inv.dueDate ? `À payer avant ${fmtDate(inv.dueDate)}` : 'À payer',
+          bg: 'bg-[#fefce7]', border: 'border-[#fef08b]', text: 'text-[#c88a04]',
+        }
       default:
         return { label: 'En cours',  bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
@@ -411,6 +418,12 @@ function onDownload(_inv: Row) {
 }
 function onDownloadFactureFormat(_inv: Row, _format: 'csv' | 'xlsx') {
   // Hook exporter la facture au format _format here
+}
+function onViewNotesFrais(_row: Row) {
+  // Hook voir les notes de frais associées here
+}
+function onViewRecharges(_row: Row) {
+  // Hook voir les recharges associées here
 }
 // Format buttons live inline on the bulk action bar; clicking one triggers
 // the export hook and exits export mode.
@@ -1012,7 +1025,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Moyen de paiement
             </div>
-            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
+            <div class="flex-1 min-w-[215px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
@@ -1055,7 +1068,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ isDemand(row) ? row.paymentMethod : '' }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
+            <div class="flex-1 min-w-[215px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1071,10 +1084,10 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               <button
                 type="button"
                 class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                aria-label="Voir le PDF"
-                @click.stop="onViewPdf(row)"
+                aria-label="Télécharger l'appel de fonds"
+                @click.stop="onDownload(row)"
               >
-                <Icon name="eye" variant="outline" :size="20" />
+                <Icon name="arrow-down-tray" variant="outline" :size="20" />
               </button>
               <button
                 type="button"
@@ -1106,16 +1119,25 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                   role="menu"
                   @click.stop
                 >
-                  <div class="px-[4px] py-[2px]">
+                  <div class="px-[4px] py-[2px] flex flex-col gap-[2px]">
                     <button
                       type="button"
                       role="menuitem"
-                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                      @click="onDownload(row); closeMenus()"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onViewNotesFrais(row); closeMenus()"
                     >
-                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                        Télécharger l'appel de fonds
+                        Voir les notes de frais
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onViewRecharges(row); closeMenus()"
+                    >
+                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        Voir les recharges
                       </span>
                     </button>
                   </div>
