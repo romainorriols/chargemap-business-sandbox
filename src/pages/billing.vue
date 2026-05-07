@@ -400,6 +400,15 @@ const fmtDate = (iso: string) => {
   return `${d}/${m}/${y}`
 }
 
+// Resolve a BU display name to its dashboard URL via the shared bus store.
+// Falls back to '#' for names that don't match (shouldn't happen — every
+// row's bu maps to an entry in the store).
+const busStore = useBusStore()
+function buHref(name: string): string {
+  const match = busStore.bus.find(b => b.name === name)
+  return match ? `/bu/${match.id}/home` : '#'
+}
+
 // ── Status presentation ────────────────────────────────────────────────
 interface StatusPill {
   label: string
@@ -518,9 +527,43 @@ function closeMenus() {
 }
 
 // ── Export de facture V2 toggle (Factures bandeau) ─────────────────────
-// Click "Activer" flips the banner copy + CTA. Idempotent click toggles back.
+// Click "Activer" flips the banner copy + CTA, animates the wording change
+// (Transition keyed on the active state), and surfaces a toast confirming
+// what the user just did.
 const exportV2Active = ref(false)
-function toggleExportV2() { exportV2Active.value = !exportV2Active.value }
+
+interface ToastConfig {
+  type: 'success' | 'neutral'
+  title: string
+  description: string
+}
+const toastVisible = ref(false)
+const toastConfig = ref<ToastConfig>({ type: 'success', title: '', description: '' })
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function showToast(cfg: ToastConfig) {
+  if (toastTimer) clearTimeout(toastTimer)
+  toastConfig.value = cfg
+  toastVisible.value = true
+  toastTimer = setTimeout(() => { toastVisible.value = false }, 4000)
+}
+
+function toggleExportV2() {
+  exportV2Active.value = !exportV2Active.value
+  showToast(
+    exportV2Active.value
+      ? {
+          type: 'success',
+          title: 'Export V2 activé',
+          description: 'Les rééditions, remboursements et factures à 0 € sont désormais inclus dans vos exports.',
+        }
+      : {
+          type: 'neutral',
+          title: 'Export V2 désactivé',
+          description: 'Vos exports utilisent à nouveau le format classique.',
+        },
+  )
+}
 
 // ── Loading state ──────────────────────────────────────────────────────
 // Simulated fetch delay (~600ms) so the skeleton reads on mount. Swap this
@@ -786,7 +829,18 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <div class="flex flex-1 min-w-0 items-center gap-[8px]">
             <Icon name="arrow-down-tray" variant="solid" :size="18" class="text-icon-neutral-secondary shrink-0" />
             <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-              Export de facture V2 <span class="font-medium">{{ exportV2Active ? 'activé' : 'désactivé' }}</span>
+              Export de facture V2
+              <Transition
+                mode="out-in"
+                enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+                enter-from-class="opacity-0 translate-y-[3px]"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-[3px]"
+              >
+                <span :key="String(exportV2Active)" class="font-medium inline-block">{{ exportV2Active ? 'activé' : 'désactivé' }}</span>
+              </Transition>
             </p>
             <span
               tabindex="0"
@@ -816,7 +870,17 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep hover:underline outline-none rounded-[4px] focus-visible:shadow-ring-brand transition-colors"
             @click="toggleExportV2"
           >
-            {{ exportV2Active ? 'Désactiver' : 'Activer' }}
+            <Transition
+              mode="out-in"
+              enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+              enter-from-class="opacity-0 translate-y-[3px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-[3px]"
+            >
+              <span :key="String(exportV2Active)" class="inline-block">{{ exportV2Active ? 'Désactiver' : 'Activer' }}</span>
+            </Transition>
           </button>
         </div>
 
@@ -986,11 +1050,14 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
 
-            <!-- Business unit -->
+            <!-- Business unit (clickable → BU dashboard) -->
             <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
-              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
+              <NuxtLink
+                :to="buHref(inv.bu)"
+                class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate hover:underline underline-offset-2 outline-none focus-visible:shadow-ring-gray rounded-[2px]"
+              >
                 {{ inv.bu }}
-              </span>
+              </NuxtLink>
             </div>
 
             <!-- Date -->
@@ -1159,9 +1226,12 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
-              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
+              <NuxtLink
+                :to="buHref(row.bu)"
+                class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate hover:underline underline-offset-2 outline-none focus-visible:shadow-ring-gray rounded-[2px]"
+              >
                 {{ row.bu }}
-              </span>
+              </NuxtLink>
             </div>
             <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
@@ -1488,9 +1558,12 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
-              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
+              <NuxtLink
+                :to="buHref(row.bu)"
+                class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate hover:underline underline-offset-2 outline-none focus-visible:shadow-ring-gray rounded-[2px]"
+              >
                 {{ row.bu }}
-              </span>
+              </NuxtLink>
             </div>
             <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums">
@@ -1707,5 +1780,20 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         </div>
       </div>
     </Transition>
+
+    <!-- Toast slot — used by toggleExportV2 (and any future hook). Sits in the
+         top-right corner above the table content. -->
+    <div class="fixed top-[24px] right-[24px] z-50 pointer-events-none">
+      <div class="pointer-events-auto">
+        <Toast
+          v-model="toastVisible"
+          :type="toastConfig.type"
+          :title="toastConfig.title"
+          :description="toastConfig.description"
+          :dismissable="true"
+          @dismiss="toastVisible = false"
+        />
+      </div>
+    </div>
   </div>
 </template>
