@@ -811,7 +811,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               Net à payer
             </div>
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
-              Organisation / BU
+              Business unit
             </div>
             <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
@@ -870,13 +870,10 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
 
-            <!-- BU / Organisation -->
-            <div class="flex-1 min-w-[150px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <!-- Business unit -->
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ inv.bu }}
-              </span>
-              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
-                {{ inv.organization }}
               </span>
             </div>
 
@@ -990,7 +987,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               Net à payer
             </div>
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-              Organisation / BU
+              Business unit
             </div>
             <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
@@ -1026,12 +1023,9 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ row.bu }}
-              </span>
-              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
-                {{ row.organization }}
               </span>
             </div>
             <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
@@ -1299,7 +1293,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               Net à payer
             </div>
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-              Organisation / BU
+              Business unit
             </div>
             <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
@@ -1332,12 +1326,9 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ fmtAmount(row.amount) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[150px] flex flex-col justify-center px-[16px] py-[12px] min-h-[64px] gap-0">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
                 {{ row.bu }}
-              </span>
-              <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep truncate">
-                {{ row.organization }}
               </span>
             </div>
             <div class="flex-1 min-w-[104px] flex items-center px-[16px] py-[12px] min-h-[64px]">
