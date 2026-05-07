@@ -1304,7 +1304,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[104px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Date
             </div>
-            <div class="flex-1 min-w-[100px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
@@ -1345,7 +1345,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ fmtDate(row.date) }}
               </span>
             </div>
-            <div class="flex-1 min-w-[100px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
