@@ -365,6 +365,11 @@ function toggleMenu(id: string, e: MouseEvent) {
 }
 function closeMenus() { openMenuId.value = null }
 
+// ── Export de facture V2 toggle (Factures bandeau) ─────────────────────
+// Click "Activer" flips the banner copy + CTA. Idempotent click toggles back.
+const exportV2Active = ref(false)
+function toggleExportV2() { exportV2Active.value = !exportV2Active.value }
+
 // ── Loading state ──────────────────────────────────────────────────────
 // Simulated fetch delay (~600ms) so the skeleton reads on mount. Swap this
 // for a real promise when wiring the API.
@@ -585,16 +590,17 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           </div>
         </div>
 
-        <!-- Export V2 banner — Factures tab only. Always visible; the info icon
-             surfaces a tooltip explaining the V2 differences. -->
+        <!-- Export V2 banner — Factures tab only. Tooltip sits above the
+             info icon. "Activer" toggles the bandeau into the active state
+             (copy → "activé", CTA → "Désactiver"). -->
         <div
           v-if="activeTab === 'factures'"
-          class="flex items-center gap-[16px] px-[16px] py-[16px] bg-neutral-tertiary rounded-[16px] overflow-clip"
+          class="flex items-center gap-[16px] px-[16px] py-[16px] bg-neutral-tertiary rounded-[16px]"
         >
           <div class="flex flex-1 min-w-0 items-center gap-[8px]">
             <Icon name="arrow-down-tray" variant="solid" :size="18" class="text-icon-neutral-secondary shrink-0" />
             <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-              Export de facture V2 <span class="font-medium">désactivé</span>
+              Export de facture V2 <span class="font-medium">{{ exportV2Active ? 'activé' : 'désactivé' }}</span>
             </p>
             <span
               tabindex="0"
@@ -605,7 +611,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               <span
                 id="tip-export-v2"
                 role="tooltip"
-                class="pointer-events-none absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-30 w-max max-w-[320px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral whitespace-normal flex flex-col gap-[4px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] opacity-0 translate-y-[2px] transition-[opacity,transform] duration-150 ease-out group-hover/exptip:opacity-100 group-hover/exptip:translate-y-0 group-focus-visible/exptip:opacity-100 group-focus-visible/exptip:translate-y-0 before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:size-0 before:border-l-[8px] before:border-r-[8px] before:border-b-[6px] before:border-l-transparent before:border-r-transparent before:border-b-text-neutral"
+                class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-30 w-max max-w-[320px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral whitespace-normal flex flex-col gap-[4px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out group-hover/exptip:opacity-100 group-hover/exptip:translate-y-0 group-focus-visible/exptip:opacity-100 group-focus-visible/exptip:translate-y-0 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:size-0 after:border-l-[8px] after:border-r-[8px] after:border-t-[6px] after:border-l-transparent after:border-r-transparent after:border-t-text-neutral"
               >
                 <span class="font-sans font-semibold text-[12px] leading-[1.5] tracking-[-0.36px] text-[#f1f5f9]">
                   Export de facture V2
@@ -622,8 +628,9 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
           <button
             type="button"
             class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep hover:underline outline-none rounded-[4px] focus-visible:shadow-ring-brand transition-colors"
+            @click="toggleExportV2"
           >
-            Activer
+            {{ exportV2Active ? 'Désactiver' : 'Activer' }}
           </button>
         </div>
 
