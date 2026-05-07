@@ -122,21 +122,21 @@ const billings: Billing[] = [
 // Per Figma 5593-66539, Notes de frais surface only 3 statuses:
 // processing → "En cours", toPay → "En attente", refunded → "Remboursée".
 const notes: Note[] = [
-  { id: 'nf1',  kind: 'note', number: 'NDF-20260405-69D1D1CC2E9CC', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
-  { id: 'nf2',  kind: 'note', number: 'NDF-20260404-58E2C1BB4F7B1', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Camille Laurent',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf3',  kind: 'note', number: 'NDF-20260403-47F3D2AA5E8A2', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Nicolas Mercier',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf4',  kind: 'note', number: 'NDF-20260402-36A4E3BB6F9B3', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Léa Dubois',       period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf5',  kind: 'note', number: 'NDF-20260401-25B5F4CC7A0C4', amount: 4.92, bu: 'Saabre',  organization: 'Brakson', date: '2026-04-11',                         driver: 'Antoine Robert',   period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf6',  kind: 'note', number: 'NDF-20260331-14C6A5DD8B1D5', amount: 4.92, bu: 'Saabre',  organization: 'Brakson', date: '2026-04-11',                         driver: 'Sophie Moreau',    period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf7',  kind: 'note', number: 'NDF-20260330-03D7B6EE9C2E6', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Julien Bernard',   period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf8',  kind: 'note', number: 'NDF-20260329-92E8C7FF0D3F7', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Émilie Faure',     period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf9',  kind: 'note', number: 'NDF-20260328-81F9D8AA1E408', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Maxime Colas',     period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf10', kind: 'note', number: 'NDF-20260327-70AAE9BB2F519', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Romain Orriols',   period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 4.92, bu: 'Responsible Ads', organization: 'Brakson', date: '2026-04-11',                 driver: 'Marie Dubois',     period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 4.92, bu: 'Marketing',        organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-25', driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
-  { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 4.92, bu: 'Chargemap',        organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-24', driver: 'Antoine Lefevre',  period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
-  { id: 'nf14', kind: 'note', number: 'NDF-20260323-36DEFD0F63953', amount: 4.92, bu: 'Saabre',           organization: 'Brakson', date: '2026-04-11',                 driver: 'Sarah Lemaire',    period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf15', kind: 'note', number: 'NDF-20260322-25EFFE10A4A64', amount: 4.92, bu: 'Mister EV',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Lucas Petit',      period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf1',  kind: 'note', number: 'NDF-20260405-69D1D1CC2E9CC', amount: 12.45,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf2',  kind: 'note', number: 'NDF-20260404-58E2C1BB4F7B1', amount: 87.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-08',                         driver: 'Camille Laurent',  period: '15/02/2026 - 15/03/2026', status: 'processing' },
+  { id: 'nf3',  kind: 'note', number: 'NDF-20260403-47F3D2AA5E8A2', amount: 23.80,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-05',                         driver: 'Nicolas Mercier',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf4',  kind: 'note', number: 'NDF-20260402-36A4E3BB6F9B3', amount: 145.20, bu: 'Brakson',         organization: 'Brakson', date: '2026-03-28',                         driver: 'Léa Dubois',       period: '01/02/2026 - 28/02/2026', status: 'processing' },
+  { id: 'nf5',  kind: 'note', number: 'NDF-20260401-25B5F4CC7A0C4', amount: 67.30,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-25',                         driver: 'Antoine Robert',   period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf6',  kind: 'note', number: 'NDF-20260331-14C6A5DD8B1D5', amount: 31.95,  bu: 'Saabre',          organization: 'Brakson', date: '2026-04-02',                         driver: 'Sophie Moreau',    period: '15/03/2026 - 15/04/2026', status: 'processing' },
+  { id: 'nf7',  kind: 'note', number: 'NDF-20260330-03D7B6EE9C2E6', amount: 92.15,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-15',                         driver: 'Julien Bernard',   period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
+  { id: 'nf8',  kind: 'note', number: 'NDF-20260329-92E8C7FF0D3F7', amount: 18.60,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-02-28',                         driver: 'Émilie Faure',     period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
+  { id: 'nf9',  kind: 'note', number: 'NDF-20260328-81F9D8AA1E408', amount: 124.40, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-03-10',                         driver: 'Maxime Colas',     period: '15/01/2026 - 15/02/2026', status: 'refunded'   },
+  { id: 'nf10', kind: 'note', number: 'NDF-20260327-70AAE9BB2F519', amount: 45.75,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-02-22',                         driver: 'Romain Orriols',   period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
+  { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 78.20,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-03-18',                         driver: 'Marie Dubois',     period: '15/02/2026 - 15/03/2026', status: 'refunded'   },
+  { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 9.85,   bu: 'Marketing',       organization: 'Brakson', date: '2026-04-09', dueDate: '2026-10-25', driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 156.40, bu: 'Chargemap',       organization: 'Brakson', date: '2026-04-04', dueDate: '2026-10-24', driver: 'Antoine Lefevre',  period: '01/02/2026 - 28/02/2026', status: 'toPay'      },
+  { id: 'nf14', kind: 'note', number: 'NDF-20260323-36DEFD0F63953', amount: 52.30,  bu: 'Saabre',          organization: 'Brakson', date: '2026-02-15',                         driver: 'Sarah Lemaire',    period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
+  { id: 'nf15', kind: 'note', number: 'NDF-20260322-25EFFE10A4A64', amount: 38.65,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-20',                         driver: 'Lucas Petit',      period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
 ]
 
 const currentRows = computed<Row[]>(() => {
@@ -424,6 +424,12 @@ function onViewNotesFrais(_row: Row) {
 }
 function onViewRecharges(_row: Row) {
   // Hook voir les recharges associées here
+}
+function onViewAppelDeFonds(_row: Row) {
+  // Hook voir l'appel de fonds associé here
+}
+function onExportNoteCsv(_row: Row) {
+  // Hook exporter la note de frais en CSV here
 }
 // Format buttons live inline on the bulk action bar; clicking one triggers
 // the export hook and exits export mode.
@@ -1253,16 +1259,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ statusPill(row).label }}
               </span>
             </div>
-            <!-- Actions -->
+            <!-- Actions — only the kebab here per Figma 5531-7418. -->
             <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
-              <button
-                type="button"
-                class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                aria-label="Voir le PDF"
-                @click.stop="onViewPdf(row)"
-              >
-                <Icon name="eye" variant="outline" :size="20" />
-              </button>
               <button
                 type="button"
                 :class="[
@@ -1293,16 +1291,35 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                   role="menu"
                   @click.stop
                 >
-                  <div class="px-[4px] py-[2px]">
+                  <div class="px-[4px] py-[2px] flex flex-col gap-[2px]">
                     <button
                       type="button"
                       role="menuitem"
-                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                      @click="onDownload(row); closeMenus()"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onViewRecharges(row); closeMenus()"
                     >
-                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                        Télécharger la note de frais
+                        Voir les recharges
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onViewAppelDeFonds(row); closeMenus()"
+                    >
+                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        Voir l'appel de fonds
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onExportNoteCsv(row); closeMenus()"
+                    >
+                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        Exporter en CSV
                       </span>
                     </button>
                   </div>
