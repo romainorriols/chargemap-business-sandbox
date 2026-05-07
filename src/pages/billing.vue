@@ -482,6 +482,9 @@ function onDownload(_inv: Row) {
 function onDownloadFactureFormat(_inv: Row, _format: 'csv' | 'xlsx') {
   // Hook exporter la facture au format _format here
 }
+function onExportBillingFormat(_row: Row, _format: 'csv' | 'xlsx') {
+  // Hook exporter l'appel à facturation au format _format here
+}
 function onViewNotesFrais(row: Row) {
   // From an Appel de fonds row → cross-tab nav to its linked notes.
   if (isDemand(row)) viewLinkedNotes(row)
@@ -1510,15 +1513,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ statusPill(row).label }}
               </span>
             </div>
+            <!-- Actions — kebab only; menu offers CSV / XLSX export. -->
             <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
-              <button
-                type="button"
-                class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                aria-label="Voir le PDF"
-                @click.stop="onViewPdf(row)"
-              >
-                <Icon name="eye" variant="outline" :size="20" />
-              </button>
               <button
                 type="button"
                 :class="[
@@ -1549,16 +1545,25 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                   role="menu"
                   @click.stop
                 >
-                  <div class="px-[4px] py-[2px]">
+                  <div class="px-[4px] py-[2px] flex flex-col gap-[2px]">
                     <button
                       type="button"
                       role="menuitem"
-                      class="w-full flex items-center gap-[8px] p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                      @click="onDownload(row); closeMenus()"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onExportBillingFormat(row, 'csv'); closeMenus()"
                     >
-                      <Icon name="arrow-down-tray" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                        Télécharger l'appel
+                        Exporter en CSV
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      class="w-full flex items-center p-[8px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                      @click="onExportBillingFormat(row, 'xlsx'); closeMenus()"
+                    >
+                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        Exporter en XLSX
                       </span>
                     </button>
                   </div>
