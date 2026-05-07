@@ -114,12 +114,12 @@ const billings: Billing[] = [
   { id: 'b13', kind: 'billing', number: '36379641', amount: 5.85,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-03-30', status: 'paid' },
   { id: 'b14', kind: 'billing', number: '36379642', amount: 7.40,  bu: 'Brakson',         organization: 'Brakson', date: '2026-03-29', status: 'paid' },
   { id: 'b15', kind: 'billing', number: '36379643', amount: 4.60,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-28', status: 'paid' },
-  { id: 'b16', kind: 'billing', number: '36379644', amount: 5.10,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-27', status: 'refunded' },
-  { id: 'b17', kind: 'billing', number: '36379645', amount: 3.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-03-26', status: 'cancelled' },
+  { id: 'b16', kind: 'billing', number: '36379644', amount: 5.10,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-27', status: 'processing' },
+  { id: 'b17', kind: 'billing', number: '36379645', amount: 3.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-03-26', status: 'paid' },
 ]
 
-// ── Notes de frais data — Figma 4815-6419. Each note has a driver + a billing
-// period; statuses follow the same toPay/processing/paid/overdue scheme.
+// Per Figma 5593-66539, Notes de frais surface only 3 statuses:
+// processing → "En cours", toPay → "En attente", refunded → "Remboursée".
 const notes: Note[] = [
   { id: 'nf1',  kind: 'note', number: 'NDF-20260405-69D1D1CC2E9CC', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
   { id: 'nf2',  kind: 'note', number: 'NDF-20260404-58E2C1BB4F7B1', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Camille Laurent',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
@@ -127,15 +127,15 @@ const notes: Note[] = [
   { id: 'nf4',  kind: 'note', number: 'NDF-20260402-36A4E3BB6F9B3', amount: 4.92, bu: 'Brakson', organization: 'Brakson', date: '2026-04-11',                         driver: 'Léa Dubois',       period: '01/03/2026 - 31/03/2026', status: 'processing' },
   { id: 'nf5',  kind: 'note', number: 'NDF-20260401-25B5F4CC7A0C4', amount: 4.92, bu: 'Saabre',  organization: 'Brakson', date: '2026-04-11',                         driver: 'Antoine Robert',   period: '01/03/2026 - 31/03/2026', status: 'processing' },
   { id: 'nf6',  kind: 'note', number: 'NDF-20260331-14C6A5DD8B1D5', amount: 4.92, bu: 'Saabre',  organization: 'Brakson', date: '2026-04-11',                         driver: 'Sophie Moreau',    period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf7',  kind: 'note', number: 'NDF-20260330-03D7B6EE9C2E6', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Julien Bernard',   period: '01/03/2026 - 31/03/2026', status: 'paid'       },
-  { id: 'nf8',  kind: 'note', number: 'NDF-20260329-92E8C7FF0D3F7', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Émilie Faure',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
-  { id: 'nf9',  kind: 'note', number: 'NDF-20260328-81F9D8AA1E408', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Maxime Colas',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
-  { id: 'nf10', kind: 'note', number: 'NDF-20260327-70AAE9BB2F519', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Romain Orriols',   period: '01/03/2026 - 31/03/2026', status: 'paid'       },
-  { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 4.92, bu: 'Responsible Ads', organization: 'Brakson', date: '2026-04-11',                 driver: 'Marie Dubois',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
-  { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 4.92, bu: 'Marketing',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'paid'       },
-  { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 4.92, bu: 'Chargemap',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Antoine Lefevre',  period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf7',  kind: 'note', number: 'NDF-20260330-03D7B6EE9C2E6', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Julien Bernard',   period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf8',  kind: 'note', number: 'NDF-20260329-92E8C7FF0D3F7', amount: 4.92, bu: 'Mister EV', organization: 'Brakson', date: '2026-04-11',                       driver: 'Émilie Faure',     period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf9',  kind: 'note', number: 'NDF-20260328-81F9D8AA1E408', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Maxime Colas',     period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf10', kind: 'note', number: 'NDF-20260327-70AAE9BB2F519', amount: 4.92, bu: 'Cleanrider', organization: 'Brakson', date: '2026-04-11',                      driver: 'Romain Orriols',   period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 4.92, bu: 'Responsible Ads', organization: 'Brakson', date: '2026-04-11',                 driver: 'Marie Dubois',     period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 4.92, bu: 'Marketing',        organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-25', driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 4.92, bu: 'Chargemap',        organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-24', driver: 'Antoine Lefevre',  period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
   { id: 'nf14', kind: 'note', number: 'NDF-20260323-36DEFD0F63953', amount: 4.92, bu: 'Saabre',           organization: 'Brakson', date: '2026-04-11',                 driver: 'Sarah Lemaire',    period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
-  { id: 'nf15', kind: 'note', number: 'NDF-20260322-25EFFE10A4A64', amount: 4.92, bu: 'Mister EV',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Lucas Petit',      period: '01/03/2026 - 31/03/2026', status: 'cancelled'  },
+  { id: 'nf15', kind: 'note', number: 'NDF-20260322-25EFFE10A4A64', amount: 4.92, bu: 'Mister EV',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Lucas Petit',      period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
 ]
 
 const currentRows = computed<Row[]>(() => {
@@ -163,7 +163,8 @@ const dateFilter = ref<string>('')
 
 // Empty-string value on "Tous" clears the model so the trigger falls back to
 // the placeholder ("États: Tous") — same trick for the date "Toutes" option.
-// Appels de fonds is restricted to 3 statuses per Figma 5593-54767.
+// Appels de fonds is restricted to 3 statuses per Figma 5593-54767;
+// Notes de frais to 3 statuses per Figma 5593-66539.
 const statusItems = computed(() => {
   if (activeTab.value === 'appels-fonds') {
     return [
@@ -171,6 +172,22 @@ const statusItems = computed(() => {
       { value: 'paid',       label: 'Réglée' },
       { value: 'processing', label: 'En cours' },
       { value: 'overdue',    label: 'En retard' },
+    ]
+  }
+  if (activeTab.value === 'notes-frais') {
+    return [
+      { value: '',           label: 'Tous' },
+      { value: 'processing', label: 'En cours' },
+      { value: 'toPay',      label: 'En attente' },
+      { value: 'refunded',   label: 'Remboursée' },
+    ]
+  }
+  if (activeTab.value === 'appels-facturation') {
+    return [
+      { value: '',           label: 'Tous' },
+      { value: 'processing', label: 'Reçu' },
+      { value: 'toPay',      label: 'En attente' },
+      { value: 'paid',       label: 'Payé' },
     ]
   }
   return [
@@ -249,7 +266,7 @@ const filtered = computed<Row[]>(() => {
 
 // ── Pagination ─────────────────────────────────────────────────────────
 const page = ref(1)
-const perPage = 15
+const perPage = 20
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / perPage)))
 const paginated = computed(() => {
   const start = (page.value - 1) * perPage
@@ -331,38 +348,28 @@ function statusPill(inv: Row): StatusPill {
   // Per-status pill colors (Figma 5593-48647): same palette across row
   // types, only the label varies (gendered noun: facture/note → "Remboursée"
   // /"Annulée" ; appel de fonds/à facturation → "Remboursé"/"Annulé").
+  // Appels à facturation (Figma 5594-3871): only 3 pills — Reçu / En attente
+  // (both gray) / Payé (turquoise, masculine).
   if (isBilling(inv)) {
     switch (inv.status) {
       case 'paid':
-        return { label: 'Payée',       bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
-      case 'processing':
+        return { label: 'Payé',       bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
       case 'toPay':
-        return { label: 'En attente',  bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
-      case 'overdue':
-        return { label: 'En retard',   bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
-      case 'refunded':
-        return { label: 'Remboursé',   bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
-      case 'cancelled':
-        return { label: 'Annulé',      bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+        return { label: 'En attente', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+      default:
+        return { label: 'Reçu',       bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
   }
+  // Notes de frais (Figma 5593-66539): only 3 pills — En cours / En attente
+  // (both gray) / Remboursée (turquoise).
   if (isNote(inv)) {
     switch (inv.status) {
-      case 'paid':
-        return { label: 'Réglée',      bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
-      case 'processing':
-        return { label: 'En cours',    bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
       case 'toPay':
-        return {
-          label: inv.dueDate ? `À payer avant ${fmtDate(inv.dueDate)}` : 'À payer',
-          bg: 'bg-[#fefce7]', border: 'border-[#fef08b]', text: 'text-[#c88a04]',
-        }
-      case 'overdue':
-        return { label: 'En retard',   bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+        return { label: 'En attente', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
       case 'refunded':
-        return { label: 'Remboursée',  bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
-      case 'cancelled':
-        return { label: 'Annulée',     bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+        return { label: 'Remboursée', bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      default:
+        return { label: 'En cours',   bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
   }
   // Demands (appels de fonds): Figma 5593-54767 limits the surface to 3
@@ -591,7 +598,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px]">
                   {{ activeTab === 'appels-fonds'
-                    ? 'Vos recharges sont automatiquement facturées à votre entreprise, puis vous êtes remboursé sans aucune démarche de votre part.'
+                    ? 'Les recharges à domicile sont automatiquement facturées à votre entreprise, puis vous êtes remboursé sans aucune démarche de votre part.'
                     : "Les recharges sur site d'entreprise sont automatiquement facturées à votre entreprise, puis vous êtes remboursé sans aucune démarche de votre part." }}
                 </p>
               </div>
@@ -991,7 +998,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
               Moyen de paiement
             </div>
-            <div class="flex-1 min-w-[215px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
@@ -1037,7 +1044,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 {{ isDemand(row) ? row.paymentMethod : '' }}
               </span>
             </div>
-            <div class="flex-1 min-w-[215px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1145,7 +1152,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[192px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Période
             </div>
-            <div class="flex-1 min-w-[216px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
+            <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
             <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
@@ -1191,7 +1198,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <!-- État -->
-            <div class="flex-1 min-w-[216px] flex items-center px-[16px] py-[12px] min-h-[64px]">
+            <div class="flex-1 min-w-[150px] flex items-center px-[16px] py-[12px] min-h-[64px]">
               <span
                 :class="[
                   'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
@@ -1526,12 +1533,6 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#f1f5f9]">
               Exporter
             </span>
-            <Icon
-              name="chevron-down"
-              variant="solid"
-              :size="16"
-              :class="['text-[#f1f5f9] transition-transform duration-150 ease-out', exportMenuOpen ? '-rotate-180' : '']"
-            />
           </button>
 
           <!-- Format picker — pops up above the bulk bar so it doesn't get
@@ -1550,9 +1551,6 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               role="menu"
               @click.stop
             >
-              <div class="px-[8px] pt-[4px] pb-[2px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">
-                Exporter au format
-              </div>
               <button
                 type="button"
                 role="menuitem"
