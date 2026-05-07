@@ -1081,14 +1081,24 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
-              <button
-                type="button"
-                class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                aria-label="Télécharger l'appel de fonds"
-                @click.stop="onDownload(row)"
-              >
-                <Icon name="arrow-down-tray" variant="outline" :size="20" />
-              </button>
+              <span class="relative inline-flex group/dl-tip">
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-[36px] h-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary transition-[background-color,color,transform] duration-150 ease-out active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Télécharger l'archive"
+                  @click.stop="onDownload(row)"
+                >
+                  <Icon name="arrow-down-tray" variant="outline" :size="20" />
+                </button>
+                <span
+                  role="tooltip"
+                  class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-30 w-max px-[10px] py-[6px] rounded-[6px] bg-text-neutral whitespace-nowrap shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out group-hover/dl-tip:opacity-100 group-hover/dl-tip:translate-y-0 group-focus-visible/dl-tip:opacity-100 group-focus-visible/dl-tip:translate-y-0 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:size-0 after:border-l-[6px] after:border-r-[6px] after:border-t-[5px] after:border-l-transparent after:border-r-transparent after:border-t-text-neutral"
+                >
+                  <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#f1f5f9]">
+                    Télécharger l'archive
+                  </span>
+                </span>
+              </span>
               <button
                 type="button"
                 :class="[
