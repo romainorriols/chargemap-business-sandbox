@@ -615,9 +615,11 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
 
         <!-- Filters toolbar — Figma 4832-35736: search + dropdown cluster with
-             8px outer gap, 16px gap between dropdowns. Stacks full-width below sm. -->
-        <div class="flex flex-col sm:flex-row sm:items-center gap-[8px] flex-wrap">
-          <div class="w-full sm:w-[311px]">
+             8px outer gap, 16px gap between dropdowns. Below xl: search takes
+             its own full-width row, dropdowns split row 2 with flex-1 so
+             everything stays visually balanced. Below sm: full vertical stack. -->
+        <div class="flex flex-col xl:flex-row xl:items-center gap-[8px]">
+          <div class="w-full xl:w-[311px]">
             <Input
               v-model="search"
               type="leadingIcon"
@@ -625,8 +627,8 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               placeholder="Recherche"
             />
           </div>
-          <div class="flex flex-col sm:flex-row sm:items-center gap-[16px] flex-wrap">
-            <div class="w-full sm:w-[250px]">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-[16px]">
+            <div class="w-full sm:flex-1 xl:w-[250px] xl:flex-none">
               <Dropdown
                 v-model="dateFilter"
                 :items="dateItems"
@@ -638,7 +640,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
                 :show-hint="false"
               />
             </div>
-            <div class="w-full sm:w-[250px]">
+            <div class="w-full sm:flex-1 xl:w-[250px] xl:flex-none">
               <Dropdown
                 v-model="statusFilter"
                 :items="statusItems"

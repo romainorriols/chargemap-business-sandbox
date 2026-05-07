@@ -167,14 +167,16 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         </div>
       </section>
 
-      <!-- Toolbar — Figma 4832-35736: search + dropdown with 8px outer gap.
-           Stacks full-width below sm. relative + z-20 so the Dropdown's
-           absolutely-positioned menu paints above the table that follows. -->
+      <!-- Toolbar — Figma 4832-35736 spacing: 8px gap. Below xl, each filter
+           takes its own full-width row so search and the status dropdown stay
+           visually balanced (no asymmetric "search + half-empty row" look).
+           relative + z-20 so the Dropdown's absolutely-positioned menu paints
+           above the table that follows. -->
       <div
-        class="relative z-20 w-full flex flex-col sm:flex-row sm:items-center gap-[8px] flex-wrap anim-fade-up"
+        class="relative z-20 w-full flex flex-col xl:flex-row xl:items-center gap-[8px] anim-fade-up"
         style="animation-delay: 80ms"
       >
-        <div class="w-full sm:w-[311px]">
+        <div class="w-full xl:w-[311px]">
           <Input
             v-model="search"
             type="leadingIcon"
@@ -182,7 +184,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             placeholder="Recherche"
           />
         </div>
-        <div class="w-full sm:w-[250px]">
+        <div class="w-full xl:w-[250px]">
           <Dropdown
             v-model="statusFilter"
             :items="statusItems"
