@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-type Status = 'paid' | 'processing' | 'toPay' | 'overdue'
+type Status = 'paid' | 'processing' | 'toPay' | 'overdue' | 'refunded' | 'cancelled'
 
 interface Invoice {
   id: string
@@ -55,6 +55,8 @@ const invoices: Invoice[] = [
   { id: '22', number: '20260417-98732156', amount: 31.05, bu: 'Responsible Ads', organization: 'Brakson', date: '2026-04-11',                         status: 'paid' },
   { id: '23', number: '20260416-87654329', amount: 26.85, bu: 'Chargemap',       organization: 'Brakson', date: '2026-04-10',                         status: 'paid' },
   { id: '24', number: '20260415-76543218', amount: 40.20, bu: 'Brakson',         organization: 'Brakson', date: '2026-04-09',                         status: 'paid' },
+  { id: '25', number: '20260414-65432107', amount: 17.40, bu: 'Saabre',          organization: 'Brakson', date: '2026-04-08',                         status: 'refunded' },
+  { id: '26', number: '20260413-54320996', amount: 12.30, bu: 'Mister EV',       organization: 'Brakson', date: '2026-04-07',                         status: 'cancelled' },
 ]
 
 // ── Tabs ───────────────────────────────────────────────────────────────
@@ -90,6 +92,8 @@ const demands: Demand[] = [
   { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 6.75,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'  },
   { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 9.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'toPay' },
   { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25, bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay' },
+  { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 8.40,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'refunded' },
+  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,  bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12',                         paymentMethod: 'Mandat SEPA',     status: 'cancelled' },
 ]
 
 // ── Appels à facturation data ──────────────────────────────────────────
@@ -109,6 +113,8 @@ const billings: Billing[] = [
   { id: 'b13', kind: 'billing', number: '36379641', amount: 5.85,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-03-30', status: 'paid' },
   { id: 'b14', kind: 'billing', number: '36379642', amount: 7.40,  bu: 'Brakson',         organization: 'Brakson', date: '2026-03-29', status: 'paid' },
   { id: 'b15', kind: 'billing', number: '36379643', amount: 4.60,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-28', status: 'paid' },
+  { id: 'b16', kind: 'billing', number: '36379644', amount: 5.10,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-27', status: 'refunded' },
+  { id: 'b17', kind: 'billing', number: '36379645', amount: 3.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-03-26', status: 'cancelled' },
 ]
 
 // ── Notes de frais data — Figma 4815-6419. Each note has a driver + a billing
@@ -127,6 +133,8 @@ const notes: Note[] = [
   { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 4.92, bu: 'Responsible Ads', organization: 'Brakson', date: '2026-04-11',                 driver: 'Marie Dubois',     period: '01/03/2026 - 31/03/2026', status: 'paid'       },
   { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 4.92, bu: 'Marketing',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'paid'       },
   { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 4.92, bu: 'Chargemap',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Antoine Lefevre',  period: '01/03/2026 - 31/03/2026', status: 'paid'       },
+  { id: 'nf14', kind: 'note', number: 'NDF-20260323-36DEFD0F63953', amount: 4.92, bu: 'Saabre',           organization: 'Brakson', date: '2026-04-11',                 driver: 'Sarah Lemaire',    period: '01/03/2026 - 31/03/2026', status: 'refunded'   },
+  { id: 'nf15', kind: 'note', number: 'NDF-20260322-25EFFE10A4A64', amount: 4.92, bu: 'Mister EV',        organization: 'Brakson', date: '2026-04-11',                 driver: 'Lucas Petit',      period: '01/03/2026 - 31/03/2026', status: 'cancelled'  },
 ]
 
 const currentRows = computed<Row[]>(() => {
@@ -160,6 +168,8 @@ const statusItems = [
   { value: 'processing', label: 'En cours' },
   { value: 'paid',       label: 'Réglé' },
   { value: 'overdue',    label: 'En retard' },
+  { value: 'refunded',   label: 'Remboursé' },
+  { value: 'cancelled',  label: 'Annulé' },
 ]
 
 const dateItems = [
@@ -304,44 +314,62 @@ interface StatusPill {
   text: string
 }
 function statusPill(inv: Row): StatusPill {
+  // Per-status pill colors (Figma 5593-48647): same palette across row
+  // types, only the label varies (gendered noun: facture/note → "Remboursée"
+  // /"Annulée" ; appel de fonds/à facturation → "Remboursé"/"Annulé").
   if (isBilling(inv)) {
     switch (inv.status) {
       case 'paid':
-        return { label: 'Payée',      bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+        return { label: 'Payée',       bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
       case 'processing':
       case 'toPay':
-        return { label: 'En attente', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+        return { label: 'En attente',  bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
       case 'overdue':
-        return { label: 'En retard',  bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+        return { label: 'En retard',   bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+      case 'refunded':
+        return { label: 'Remboursé',   bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      case 'cancelled':
+        return { label: 'Annulé',      bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
   }
   if (isNote(inv)) {
     switch (inv.status) {
       case 'paid':
-        return { label: 'Réglée',   bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+        return { label: 'Réglée',      bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
       case 'processing':
-        return { label: 'En cours', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+        return { label: 'En cours',    bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
       case 'toPay':
         return {
           label: inv.dueDate ? `À payer avant ${fmtDate(inv.dueDate)}` : 'À payer',
           bg: 'bg-[#fefce7]', border: 'border-[#fef08b]', text: 'text-[#c88a04]',
         }
       case 'overdue':
-        return { label: 'En retard', bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+        return { label: 'En retard',   bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+      case 'refunded':
+        return { label: 'Remboursée',  bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      case 'cancelled':
+        return { label: 'Annulée',     bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     }
   }
+  // Default branch — Invoice (factures, fem.) or Demand (appels de fonds, masc.).
+  // Demands carry `paymentMethod`; everything else is treated as feminine.
+  const isFem = !isDemand(inv)
   switch (inv.status) {
     case 'paid':
-      return { label: 'Réglé',    bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+      return { label: isFem ? 'Réglée' : 'Réglé',   bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
     case 'processing':
-      return { label: 'En cours', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
+      return { label: 'En cours',                    bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
     case 'toPay':
       return {
         label: inv.dueDate ? `À payer avant ${fmtDate(inv.dueDate)}` : 'À payer',
         bg: 'bg-[#fefce7]', border: 'border-[#fef08b]', text: 'text-[#c88a04]',
       }
     case 'overdue':
-      return { label: 'En retard', bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+      return { label: 'En retard',                   bg: 'bg-[#fff6eb]', border: 'border-[#fed6a9]', text: 'text-[#e9590c]' }
+    case 'refunded':
+      return { label: isFem ? 'Remboursée' : 'Remboursé', bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' }
+    case 'cancelled':
+      return { label: isFem ? 'Annulée' : 'Annulé', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' }
   }
 }
 
