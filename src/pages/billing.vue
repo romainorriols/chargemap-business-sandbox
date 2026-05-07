@@ -25,6 +25,9 @@ interface Note extends Invoice {
   kind: 'note'
   driver: string
   period: string
+  // Link to the parent Appel de fonds. Notes are grouped under one AdF;
+  // amounts and statuses are kept coherent with the parent.
+  appelDeFondsId?: string
 }
 
 type Row = Invoice | Demand | Billing | Note
@@ -78,24 +81,30 @@ const alertDismissedFacturation = ref(false)
 // ── Appels de fonds data ───────────────────────────────────────────────
 // Per Figma 5593-54767, demands surface 4 statuses: paid / processing /
 // overdue / toPay (with dueDate inlined in the pill).
+//
+// Each demand groups 0..N notes de frais via the appelDeFondsId on Note.
+// The amount below equals the sum of linked notes' amounts (computed at
+// runtime by demandTotal()). Demands without linked notes (d7, d9, d12,
+// d15, d17) keep their seed amount — they represent demands not yet
+// fed by any expense report.
 const demands: Demand[] = [
-  { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 8.75,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'toPay'      },
-  { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 6.30,  bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'toPay'      },
-  { id: 'd3',  number: 'AF-20250919-5B1A8E4C2D7F', amount: 7.10,  bu: 'Brakson',         organization: 'Brakson', date: '2026-07-15', dueDate: '2027-01-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
-  { id: 'd4',  number: 'AF-20251001-9D3F6C7A1B0E', amount: 9.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-08-01', dueDate: '2027-02-01', paymentMethod: 'Carte de crédit', status: 'processing' },
-  { id: 'd5',  number: 'AF-20251012-2F8E1A4B6C90', amount: 11.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-08-12', dueDate: '2027-02-12', paymentMethod: 'Mandat SEPA',     status: 'processing' },
-  { id: 'd6',  number: 'AF-20251023-3A7C5D2F1E08', amount: 4.85,  bu: 'Saabre',          organization: 'Brakson', date: '2026-08-23',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
-  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40, bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
-  { id: 'd8',  number: 'AF-20251115-8E1D7C5A9B23', amount: 5.95,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-15',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
-  { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 10.65, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
-  { id: 'd10', number: 'AF-20251208-4C2E9F6A1D75', amount: 8.20,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-10-08',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
-  { id: 'd11', number: 'AF-20251220-9D6E3B7C8F41', amount: 7.45,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-10-20',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
-  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10, bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
-  { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 6.75,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'       },
-  { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 9.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'processing' },
-  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25, bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
-  { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 8.40,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
-  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,  bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12', dueDate: '2027-04-12', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
+  { id: 'd1',  number: 'AF-20250823-7A9F2D3C9B12', amount: 12.45,  bu: 'Brakson',         organization: 'Brakson', date: '2026-05-22', dueDate: '2026-11-22', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd2',  number: 'AF-20250905-C4E2B7F89D90', amount: 9.85,   bu: 'Brakson',         organization: 'Brakson', date: '2026-06-30', dueDate: '2026-12-30', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd3',  number: 'AF-20250919-5B1A8E4C2D7F', amount: 156.40, bu: 'Brakson',         organization: 'Brakson', date: '2026-07-15', dueDate: '2027-01-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd4',  number: 'AF-20251001-9D3F6C7A1B0E', amount: 111.30, bu: 'Brakson',         organization: 'Brakson', date: '2026-08-01', dueDate: '2027-02-01', paymentMethod: 'Carte de crédit', status: 'processing' },
+  { id: 'd5',  number: 'AF-20251012-2F8E1A4B6C90', amount: 145.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-08-12', dueDate: '2027-02-12', paymentMethod: 'Mandat SEPA',     status: 'processing' },
+  { id: 'd6',  number: 'AF-20251023-3A7C5D2F1E08', amount: 92.15,  bu: 'Saabre',          organization: 'Brakson', date: '2026-08-23',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
+  { id: 'd7',  number: 'AF-20251104-6B9F8D4A2C71', amount: 13.40,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-04', dueDate: '2027-03-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd8',  number: 'AF-20251115-8E1D7C5A9B23', amount: 18.60,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-09-15',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
+  { id: 'd9',  number: 'AF-20251128-1A5B3D7F2E84', amount: 10.65,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-09-28', dueDate: '2026-10-28', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
+  { id: 'd10', number: 'AF-20251208-4C2E9F6A1D75', amount: 124.40, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-10-08',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
+  { id: 'd11', number: 'AF-20251220-9D6E3B7C8F41', amount: 45.75,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-10-20',                         paymentMethod: 'Mandat SEPA',     status: 'paid'       },
+  { id: 'd12', number: 'AF-20260104-2B8F5A1E9C36', amount: 12.10,  bu: 'Marketing',       organization: 'Brakson', date: '2026-11-04', dueDate: '2027-05-04', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd13', number: 'AF-20260118-7E4A9C2D5B81', amount: 130.50, bu: 'Chargemap',       organization: 'Brakson', date: '2026-11-18',                         paymentMethod: 'Virement',        status: 'paid'       },
+  { id: 'd14', number: 'AF-20260201-3F1C8E6A4D29', amount: 99.25,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-12-01', dueDate: '2027-06-01', paymentMethod: 'Mandat SEPA',     status: 'processing' },
+  { id: 'd15', number: 'AF-20260215-5D9B2A7C1E48', amount: 14.25,  bu: 'Brakson',         organization: 'Brakson', date: '2026-12-15', dueDate: '2027-06-15', paymentMethod: 'Carte de crédit', status: 'toPay'      },
+  { id: 'd16', number: 'AF-20260301-1A2B3C4D5E6F', amount: 38.65,  bu: 'Saabre',          organization: 'Brakson', date: '2027-01-05',                         paymentMethod: 'Carte de crédit', status: 'paid'       },
+  { id: 'd17', number: 'AF-20260315-9F8E7D6C5B4A', amount: 5.20,   bu: 'Mister EV',       organization: 'Brakson', date: '2027-01-12', dueDate: '2027-04-12', paymentMethod: 'Mandat SEPA',     status: 'overdue'    },
 ]
 
 // ── Appels à facturation data ──────────────────────────────────────────
@@ -121,22 +130,27 @@ const billings: Billing[] = [
 
 // Per Figma 5593-66539, Notes de frais surface only 3 statuses:
 // processing → "En cours", toPay → "En attente", refunded → "Remboursée".
+//
+// Each note is linked to an Appel de fonds via appelDeFondsId. Status
+// coherence: AdF.paid → notes.refunded ; AdF.processing → notes.processing ;
+// AdF.toPay → notes.toPay (driver still waiting). The parent demand's BU
+// also matches the note's BU.
 const notes: Note[] = [
-  { id: 'nf1',  kind: 'note', number: 'NDF-20260405-69D1D1CC2E9CC', amount: 12.45,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
-  { id: 'nf2',  kind: 'note', number: 'NDF-20260404-58E2C1BB4F7B1', amount: 87.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-08',                         driver: 'Camille Laurent',  period: '15/02/2026 - 15/03/2026', status: 'processing' },
-  { id: 'nf3',  kind: 'note', number: 'NDF-20260403-47F3D2AA5E8A2', amount: 23.80,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-05',                         driver: 'Nicolas Mercier',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf4',  kind: 'note', number: 'NDF-20260402-36A4E3BB6F9B3', amount: 145.20, bu: 'Brakson',         organization: 'Brakson', date: '2026-03-28',                         driver: 'Léa Dubois',       period: '01/02/2026 - 28/02/2026', status: 'processing' },
-  { id: 'nf5',  kind: 'note', number: 'NDF-20260401-25B5F4CC7A0C4', amount: 67.30,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-25',                         driver: 'Antoine Robert',   period: '01/03/2026 - 31/03/2026', status: 'processing' },
-  { id: 'nf6',  kind: 'note', number: 'NDF-20260331-14C6A5DD8B1D5', amount: 31.95,  bu: 'Saabre',          organization: 'Brakson', date: '2026-04-02',                         driver: 'Sophie Moreau',    period: '15/03/2026 - 15/04/2026', status: 'processing' },
-  { id: 'nf7',  kind: 'note', number: 'NDF-20260330-03D7B6EE9C2E6', amount: 92.15,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-15',                         driver: 'Julien Bernard',   period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
-  { id: 'nf8',  kind: 'note', number: 'NDF-20260329-92E8C7FF0D3F7', amount: 18.60,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-02-28',                         driver: 'Émilie Faure',     period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
-  { id: 'nf9',  kind: 'note', number: 'NDF-20260328-81F9D8AA1E408', amount: 124.40, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-03-10',                         driver: 'Maxime Colas',     period: '15/01/2026 - 15/02/2026', status: 'refunded'   },
-  { id: 'nf10', kind: 'note', number: 'NDF-20260327-70AAE9BB2F519', amount: 45.75,  bu: 'Cleanrider',      organization: 'Brakson', date: '2026-02-22',                         driver: 'Romain Orriols',   period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
-  { id: 'nf11', kind: 'note', number: 'NDF-20260326-69ABFAEC30620', amount: 78.20,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-03-18',                         driver: 'Marie Dubois',     period: '15/02/2026 - 15/03/2026', status: 'refunded'   },
-  { id: 'nf12', kind: 'note', number: 'NDF-20260325-58BCFBFD41731', amount: 9.85,   bu: 'Marketing',       organization: 'Brakson', date: '2026-04-09', dueDate: '2026-10-25', driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
-  { id: 'nf13', kind: 'note', number: 'NDF-20260324-47CDFCFE52842', amount: 156.40, bu: 'Chargemap',       organization: 'Brakson', date: '2026-04-04', dueDate: '2026-10-24', driver: 'Antoine Lefevre',  period: '01/02/2026 - 28/02/2026', status: 'toPay'      },
-  { id: 'nf14', kind: 'note', number: 'NDF-20260323-36DEFD0F63953', amount: 52.30,  bu: 'Saabre',          organization: 'Brakson', date: '2026-02-15',                         driver: 'Sarah Lemaire',    period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
-  { id: 'nf15', kind: 'note', number: 'NDF-20260322-25EFFE10A4A64', amount: 38.65,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-03-20',                         driver: 'Lucas Petit',      period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
+  { id: 'nf1',  kind: 'note', appelDeFondsId: 'd1',  number: 'NDF-20260405-69D1D1CC2E9CC', amount: 12.45,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-11', dueDate: '2026-10-12', driver: 'John Doe',         period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf2',  kind: 'note', appelDeFondsId: 'd4',  number: 'NDF-20260404-58E2C1BB4F7B1', amount: 87.50,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-08',                         driver: 'Camille Laurent',  period: '15/02/2026 - 15/03/2026', status: 'processing' },
+  { id: 'nf3',  kind: 'note', appelDeFondsId: 'd4',  number: 'NDF-20260403-47F3D2AA5E8A2', amount: 23.80,  bu: 'Brakson',         organization: 'Brakson', date: '2026-04-05',                         driver: 'Nicolas Mercier',  period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf4',  kind: 'note', appelDeFondsId: 'd5',  number: 'NDF-20260402-36A4E3BB6F9B3', amount: 145.20, bu: 'Saabre',          organization: 'Brakson', date: '2026-03-28',                         driver: 'Léa Dubois',       period: '01/02/2026 - 28/02/2026', status: 'processing' },
+  { id: 'nf5',  kind: 'note', appelDeFondsId: 'd14', number: 'NDF-20260401-25B5F4CC7A0C4', amount: 67.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-03-25',                         driver: 'Antoine Robert',   period: '01/03/2026 - 31/03/2026', status: 'processing' },
+  { id: 'nf6',  kind: 'note', appelDeFondsId: 'd14', number: 'NDF-20260331-14C6A5DD8B1D5', amount: 31.95,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-04-02',                         driver: 'Sophie Moreau',    period: '15/03/2026 - 15/04/2026', status: 'processing' },
+  { id: 'nf7',  kind: 'note', appelDeFondsId: 'd6',  number: 'NDF-20260330-03D7B6EE9C2E6', amount: 92.15,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-15',                         driver: 'Julien Bernard',   period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
+  { id: 'nf8',  kind: 'note', appelDeFondsId: 'd8',  number: 'NDF-20260329-92E8C7FF0D3F7', amount: 18.60,  bu: 'Mister EV',       organization: 'Brakson', date: '2026-02-28',                         driver: 'Émilie Faure',     period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
+  { id: 'nf9',  kind: 'note', appelDeFondsId: 'd10', number: 'NDF-20260328-81F9D8AA1E408', amount: 124.40, bu: 'Cleanrider',      organization: 'Brakson', date: '2026-03-10',                         driver: 'Maxime Colas',     period: '15/01/2026 - 15/02/2026', status: 'refunded'   },
+  { id: 'nf10', kind: 'note', appelDeFondsId: 'd11', number: 'NDF-20260327-70AAE9BB2F519', amount: 45.75,  bu: 'Responsible Ads', organization: 'Brakson', date: '2026-02-22',                         driver: 'Romain Orriols',   period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
+  { id: 'nf11', kind: 'note', appelDeFondsId: 'd13', number: 'NDF-20260326-69ABFAEC30620', amount: 78.20,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-03-18',                         driver: 'Marie Dubois',     period: '15/02/2026 - 15/03/2026', status: 'refunded'   },
+  { id: 'nf12', kind: 'note', appelDeFondsId: 'd2',  number: 'NDF-20260325-58BCFBFD41731', amount: 9.85,   bu: 'Brakson',         organization: 'Brakson', date: '2026-04-09', dueDate: '2026-10-25', driver: 'Pierre Martin',    period: '01/03/2026 - 31/03/2026', status: 'toPay'      },
+  { id: 'nf13', kind: 'note', appelDeFondsId: 'd3',  number: 'NDF-20260324-47CDFCFE52842', amount: 156.40, bu: 'Brakson',         organization: 'Brakson', date: '2026-04-04', dueDate: '2026-10-24', driver: 'Antoine Lefevre',  period: '01/02/2026 - 28/02/2026', status: 'toPay'      },
+  { id: 'nf14', kind: 'note', appelDeFondsId: 'd13', number: 'NDF-20260323-36DEFD0F63953', amount: 52.30,  bu: 'Chargemap',       organization: 'Brakson', date: '2026-02-15',                         driver: 'Sarah Lemaire',    period: '01/01/2026 - 31/01/2026', status: 'refunded'   },
+  { id: 'nf15', kind: 'note', appelDeFondsId: 'd16', number: 'NDF-20260322-25EFFE10A4A64', amount: 38.65,  bu: 'Saabre',          organization: 'Brakson', date: '2026-03-20',                         driver: 'Lucas Petit',      period: '01/02/2026 - 28/02/2026', status: 'refunded'   },
 ]
 
 const currentRows = computed<Row[]>(() => {
@@ -156,6 +170,34 @@ function isBilling(row: Row): row is Billing {
 function isNote(row: Row): row is Note {
   return 'kind' in row && (row as Note).kind === 'note'
 }
+
+// ── Linked filter (cross-tab navigation) ──────────────────────────────
+// When set, restricts the active table to the rows tied to this AdF id:
+// - on appels-fonds: only the matching demand
+// - on notes-frais:  only notes whose appelDeFondsId matches
+// Cleared automatically when the user switches tabs manually; preserved
+// when our viewLinked* helpers programmatically navigate.
+const linkedFilter = ref<string | null>(null)
+const _preserveLinkedOnTabChange = ref(false)
+
+function viewLinkedNotes(demand: Demand) {
+  _preserveLinkedOnTabChange.value = true
+  linkedFilter.value = demand.id
+  activeTab.value = 'notes-frais'
+}
+function viewLinkedDemand(note: Note) {
+  if (!note.appelDeFondsId) return
+  _preserveLinkedOnTabChange.value = true
+  linkedFilter.value = note.appelDeFondsId
+  activeTab.value = 'appels-fonds'
+}
+function clearLinkedFilter() {
+  linkedFilter.value = null
+}
+
+const linkedDemand = computed<Demand | null>(() =>
+  linkedFilter.value ? demands.find(d => d.id === linkedFilter.value) ?? null : null
+)
 
 // ── Filters ────────────────────────────────────────────────────────────
 const search = ref('')
@@ -255,6 +297,15 @@ const kpiOverdue = computed(() =>
 const filtered = computed<Row[]>(() => {
   const q = search.value.trim().toLowerCase()
   return currentRows.value.filter(row => {
+    // Cross-tab linked filter: restrict to the row that matches the linked
+    // demand id (notes match via appelDeFondsId; demands match via id).
+    if (linkedFilter.value) {
+      if (activeTab.value === 'notes-frais') {
+        if (!isNote(row) || row.appelDeFondsId !== linkedFilter.value) return false
+      } else if (activeTab.value === 'appels-fonds') {
+        if (!isDemand(row) || row.id !== linkedFilter.value) return false
+      }
+    }
     if (statusFilter.value && row.status !== statusFilter.value) return false
     if (!matchesDate(row.date)) return false
     if (!q) return true
@@ -288,6 +339,16 @@ watch([search, statusFilter, dateFilter, activeTab], () => {
   page.value = 1
   selected.value = new Set()
   exportMode.value = false
+})
+
+// Tab change is the only signal we use to clear linkedFilter — preserve
+// it when our cross-tab nav helpers triggered the switch themselves.
+watch(activeTab, () => {
+  if (_preserveLinkedOnTabChange.value) {
+    _preserveLinkedOnTabChange.value = false
+  } else {
+    linkedFilter.value = null
+  }
 })
 
 function goto(n: number) {
@@ -419,14 +480,16 @@ function onDownload(_inv: Row) {
 function onDownloadFactureFormat(_inv: Row, _format: 'csv' | 'xlsx') {
   // Hook exporter la facture au format _format here
 }
-function onViewNotesFrais(_row: Row) {
-  // Hook voir les notes de frais associées here
+function onViewNotesFrais(row: Row) {
+  // From an Appel de fonds row → cross-tab nav to its linked notes.
+  if (isDemand(row)) viewLinkedNotes(row)
 }
 function onViewRecharges(_row: Row) {
-  // Hook voir les recharges associées here
+  // Hook voir les recharges associées here (out-of-scope module).
 }
-function onViewAppelDeFonds(_row: Row) {
-  // Hook voir l'appel de fonds associé here
+function onViewAppelDeFonds(row: Row) {
+  // From a Note row → cross-tab nav to the parent demand.
+  if (isNote(row)) viewLinkedDemand(row)
 }
 function onExportNoteCsv(_row: Row) {
   // Hook exporter la note de frais en CSV here
@@ -631,6 +694,38 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               @click="activeTab === 'appels-fonds' ? alertDismissedFonds = true : alertDismissedFacturation = true"
             >
               <Icon name="x-mark" variant="solid" :size="20" />
+            </button>
+          </div>
+        </Transition>
+
+        <!-- Cross-tab linked filter banner. Shows when a row's "Voir les
+             notes de frais" / "Voir l'appel de fonds" action narrowed the
+             current table to a single AdF context. Click "Effacer" to drop
+             the filter; switching tabs manually also clears it. -->
+        <Transition
+          enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+          enter-from-class="opacity-0 -translate-y-[4px]"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition-[opacity,transform] duration-[140ms] ease-out"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-[4px]"
+        >
+          <div
+            v-if="linkedFilter && linkedDemand && (activeTab === 'notes-frais' || activeTab === 'appels-fonds')"
+            class="flex items-center gap-[12px] px-[16px] py-[12px] bg-brand-surface border border-border-brand-medium rounded-[8px]"
+            role="status"
+          >
+            <Icon name="link" variant="outline" :size="18" class="shrink-0 text-icon-brand-deep" />
+            <p class="flex-1 min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep">
+              {{ activeTab === 'notes-frais' ? 'Notes de frais liées à' : 'Appel de fonds' }}
+              <span class="font-medium tabular-nums">{{ linkedDemand.number }}</span>
+            </p>
+            <button
+              type="button"
+              class="shrink-0 inline-flex items-center justify-center px-[10px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-deep hover:bg-black/5 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              @click="clearLinkedFilter"
+            >
+              Effacer le filtre
             </button>
           </div>
         </Transition>
