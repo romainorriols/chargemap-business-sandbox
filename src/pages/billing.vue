@@ -1303,7 +1303,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
+            <div class="w-[68px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Actions
             </div>
           </div>
@@ -1359,7 +1359,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <!-- Actions — only the kebab here per Figma 5531-7418. -->
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
+            <div class="w-[68px] shrink-0 flex items-center justify-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary relative">
               <button
                 type="button"
                 :class="[
@@ -1466,7 +1466,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
             <div class="flex-1 min-w-[150px] px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               État
             </div>
-            <div class="w-[112px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
+            <div class="w-[68px] shrink-0 px-[16px] py-[8px] min-h-[40px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary bg-neutral-tertiary">
               Actions
             </div>
           </div>
@@ -1514,7 +1514,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
               </span>
             </div>
             <!-- Actions — kebab only; menu offers CSV / XLSX export. -->
-            <div class="w-[112px] shrink-0 flex items-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary gap-[4px] relative">
+            <div class="w-[68px] shrink-0 flex items-center justify-center px-[16px] py-[12px] min-h-[64px] transition-colors duration-150 ease-out group-hover/row:bg-neutral-secondary relative">
               <button
                 type="button"
                 :class="[
