@@ -215,12 +215,17 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
       <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] gap-[32px] xl:flex-1 xl:min-h-0">
 
         <!-- ─── Master: orders list ─────────────────────────────────────── -->
+        <!-- The outer <section> is intentionally NOT clipped: the Dropdown
+             menu opens downward into the body area and would otherwise be
+             chopped off at the card edge. The inner wrapper carries the
+             clip + bottom radius so the scrolling list still tucks neatly
+             under the rounded corners. -->
         <section
-          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
+          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm flex flex-col anim-fade-up"
           style="animation-delay: 60ms"
         >
           <!-- Header (search + state filter) — pinned via flex, never scrolls -->
-          <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary p-[16px] flex flex-col gap-[16px]">
+          <div class="relative z-[2] shrink-0 bg-neutral border-b border-border-neutral-secondary rounded-t-[16px] p-[16px] flex flex-col gap-[16px]">
             <Input
               v-model="search"
               type="leadingIcon"
@@ -239,8 +244,10 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             />
           </div>
 
+          <!-- Clipped wrapper for the scrolling list + footer -->
+          <div class="flex-1 min-h-0 overflow-hidden rounded-b-[16px] flex flex-col">
           <!-- Scrollable list body -->
-          <div class="flex-1 min-h-0 overflow-y-auto p-[16px] flex flex-col">
+          <div class="scrollbar-hide flex-1 min-h-0 overflow-y-auto p-[16px] flex flex-col">
             <!-- Skeleton state -->
             <template v-if="isLoading">
               <template v-for="(row, ri) in skeletonRows" :key="`sk-${row}`">
@@ -318,6 +325,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             class="shrink-0"
             @update:page="(n: number) => (page = n)"
           />
+          </div>
         </section>
 
         <!-- ─── Detail: selected order ──────────────────────────────────── -->
@@ -325,8 +333,10 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
           class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
           style="animation-delay: 100ms"
         >
-          <!-- Header: title + Facture button — pinned via flex -->
-          <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary px-[16px] py-[16px] flex items-center gap-[16px]">
+          <!-- Header: title + actions — pinned via flex.
+               "Suivre la commande" only renders for shipped orders since
+               only those have a tracking link to follow. -->
+          <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary px-[16px] py-[16px] flex items-center gap-[8px]">
             <p class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
               Détails de la commande
             </p>
@@ -337,10 +347,16 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
               label="Facture"
               :disabled="!selected"
             />
+            <Button
+              v-if="selected?.status === 'expediee'"
+              type="primary"
+              size="sm"
+              label="Suivre la commande"
+            />
           </div>
 
           <!-- Scrollable detail body — cross-fades on selection change -->
-          <div class="flex-1 min-h-0 overflow-y-auto">
+          <div class="scrollbar-hide flex-1 min-h-0 overflow-y-auto">
             <Transition
               mode="out-in"
               enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
@@ -540,3 +556,16 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Hide native scrollbars on the master/detail panels — the cards still
+   scroll, just without a visible track. Native gesture/wheel scrolling
+   is preserved. */
+.scrollbar-hide {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* legacy Edge */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;                  /* WebKit (Chrome, Safari) */
+}
+</style>
