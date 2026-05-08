@@ -48,60 +48,86 @@ const VARIANTS: Record<OrderStatus, StatusVariant> = {
   'terminee':         { label: 'Terminée',            bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' },
 }
 
+// Varied seed: 14 orders, mixed statuses, dates spread across April–May 2026,
+// realistic French recipients/cities, several SKUs (Pack itinérance, Badge
+// Business / Classic, Adaptateur Type 2, Carte multi-réseaux) plus optional
+// shipping. amountTtc is the displayed total and equals the sum of items.
 const orders: Order[] = [
-  { id: 'o1', number: '20260417-00169850', date: '06/05/2026', amountTtc: 5.13, status: 'expediee',
+  { id: 'o1', number: '20260506-00170128', date: '06/05/2026', amountTtc: 137.97, status: 'expediee',
     paymentMethod: 'Prélèvement SEPA', bu: 'Chargemap',
-    recipient: { initials: 'JD', name: 'John Doe',      bu: 'Brakson', address1: '7 Allée Ceres',         address2: '67000 Strasbourg, France' },
+    recipient: { initials: 'JD', name: 'John Doe',         bu: 'Brakson', address1: '7 Allée Cérès',          address2: '67000 Strasbourg, France' },
     items: [
       { label: 'Pack itinérance',          qty: 1, price: 45.99 },
-      { label: 'Badge Chargemap Business', qty: 1, price: 45.99 },
+      { label: 'Badge Chargemap Business', qty: 2, price: 45.99 },
     ] },
-  { id: 'o2', number: '20260416-00169849', date: '05/05/2026', amountTtc: 5.13, status: 'validee',
-    paymentMethod: 'Prélèvement SEPA', bu: 'Saabre',
-    recipient: { initials: 'AM', name: 'Anne Martin',   bu: 'Brakson', address1: '12 Rue du Marché',      address2: '69001 Lyon, France' },
-    items: [{ label: 'Badge Chargemap Business', qty: 2, price: 45.99 }] },
-  { id: 'o3', number: '20260415-00169848', date: '04/05/2026', amountTtc: 5.13, status: 'validee',
-    paymentMethod: 'Carte bancaire',   bu: 'Chargemap',
-    recipient: { initials: 'PD', name: 'Pierre Durand', bu: 'Brakson', address1: '3 Boulevard Haussmann', address2: '75009 Paris, France' },
-    items: [{ label: 'Pack itinérance', qty: 1, price: 45.99 }] },
-  { id: 'o4', number: '20260414-00169847', date: '04/05/2026', amountTtc: 5.13, status: 'prete',
-    paymentMethod: 'Prélèvement SEPA', bu: 'Mister EV',
-    recipient: { initials: 'CL', name: 'Camille Leroy', bu: 'Brakson', address1: '9 Place Bellecour',     address2: '69002 Lyon, France' },
+  { id: 'o2', number: '20260505-00170121', date: '05/05/2026', amountTtc: 53.89, status: 'validee',
+    paymentMethod: 'Carte bancaire', bu: 'Saabre',
+    recipient: { initials: 'AM', name: 'Anne Martin',      bu: 'Brakson', address1: '12 Rue du Marché',       address2: '69001 Lyon, France' },
     items: [
-      { label: 'Pack itinérance',          qty: 2, price: 45.99 },
       { label: 'Badge Chargemap Business', qty: 1, price: 45.99 },
+      { label: 'Frais de port',            qty: 1, price:  7.90 },
     ] },
-  { id: 'o5', number: '20260410-00169846', date: '03/05/2026', amountTtc: 5.13, status: 'paiement-attente',
-    paymentMethod: 'Prélèvement SEPA', bu: 'Brakson',
-    recipient: { initials: 'JD', name: 'John Doe',      bu: 'Brakson', address1: '7 Allée Ceres',         address2: '67000 Strasbourg, France' },
-    items: [{ label: 'Badge Chargemap Business', qty: 1, price: 45.99 }] },
-  { id: 'o6', number: '20260409-00169845', date: '03/05/2026', amountTtc: 5.13, status: 'terminee',
-    paymentMethod: 'Carte bancaire',   bu: 'Chargemap',
-    recipient: { initials: 'AM', name: 'Anne Martin',   bu: 'Brakson', address1: '12 Rue du Marché',      address2: '69001 Lyon, France' },
-    items: [{ label: 'Pack itinérance', qty: 3, price: 45.99 }] },
-  { id: 'o7', number: '20260405-00169844', date: '02/05/2026', amountTtc: 5.13, status: 'expediee',
+  { id: 'o3', number: '20260504-00170117', date: '04/05/2026', amountTtc: 277.94, status: 'prete',
+    paymentMethod: 'Prélèvement SEPA', bu: 'Mister EV',
+    recipient: { initials: 'PD', name: 'Pierre Durand',    bu: 'Brakson', address1: '3 Boulevard Haussmann',  address2: '75009 Paris, France' },
+    items: [
+      { label: 'Adaptateur Type 2',        qty: 1, price: 89.00 },
+      { label: 'Pack itinérance',          qty: 4, price: 45.99 },
+      { label: 'Frais de port',            qty: 1, price:  4.98 },
+    ] },
+  { id: 'o4', number: '20260502-00170102', date: '02/05/2026', amountTtc: 19.90, status: 'paiement-attente',
+    paymentMethod: 'Virement bancaire', bu: 'Brakson',
+    recipient: { initials: 'CL', name: 'Camille Leroy',    bu: 'Brakson', address1: '9 Place Bellecour',      address2: '69002 Lyon, France' },
+    items: [{ label: 'Badge Chargemap Classic', qty: 1, price: 19.90 }] },
+  { id: 'o5', number: '20260430-00170091', date: '30/04/2026', amountTtc: 91.98, status: 'terminee',
+    paymentMethod: 'Carte bancaire', bu: 'Chargemap',
+    recipient: { initials: 'EM', name: 'Élise Moreau',     bu: 'Brakson', address1: '5 Rue des Martyrs',      address2: '38000 Grenoble, France' },
+    items: [{ label: 'Pack itinérance', qty: 2, price: 45.99 }] },
+  { id: 'o6', number: '20260428-00170076', date: '28/04/2026', amountTtc: 183.96, status: 'validee',
     paymentMethod: 'Prélèvement SEPA', bu: 'Cleanrider',
-    recipient: { initials: 'TR', name: 'Thomas Roux',   bu: 'Brakson', address1: '21 Cours Lafayette',    address2: '69003 Lyon, France' },
+    recipient: { initials: 'TR', name: 'Thomas Roux',      bu: 'Brakson', address1: '21 Cours Lafayette',     address2: '69003 Lyon, France' },
     items: [{ label: 'Badge Chargemap Business', qty: 4, price: 45.99 }] },
-  { id: 'o8', number: '20260402-00169843', date: '02/05/2026', amountTtc: 5.13, status: 'terminee',
+  { id: 'o7', number: '20260425-00170059', date: '25/04/2026', amountTtc: 60.49, status: 'expediee',
+    paymentMethod: 'Prélèvement SEPA', bu: 'Saabre',
+    recipient: { initials: 'NR', name: 'Nina Rey',         bu: 'Brakson', address1: '8 Rue Sainte-Catherine', address2: '33000 Bordeaux, France' },
+    items: [
+      { label: 'Badge Chargemap Business', qty: 1, price: 45.99 },
+      { label: 'Carte multi-réseaux',      qty: 1, price: 14.50 },
+    ] },
+  { id: 'o8', number: '20260422-00170044', date: '22/04/2026', amountTtc: 322.93, status: 'prete',
+    paymentMethod: 'Carte bancaire', bu: 'Marketing',
+    recipient: { initials: 'LB', name: 'Laure Bernard',    bu: 'Brakson', address1: '17 Avenue Foch',         address2: '67000 Strasbourg, France' },
+    items: [
+      { label: 'Adaptateur Type 2',        qty: 2, price: 89.00 },
+      { label: 'Pack itinérance',          qty: 3, price: 45.99 },
+      { label: 'Frais de port',            qty: 1, price:  6.96 },
+    ] },
+  { id: 'o9', number: '20260420-00170033', date: '20/04/2026', amountTtc: 45.99, status: 'terminee',
     paymentMethod: 'Prélèvement SEPA', bu: 'Chargemap',
-    recipient: { initials: 'EM', name: 'Élise Moreau',  bu: 'Brakson', address1: '5 Rue des Martyrs',     address2: '38000 Grenoble, France' },
+    recipient: { initials: 'JD', name: 'John Doe',         bu: 'Brakson', address1: '7 Allée Cérès',          address2: '67000 Strasbourg, France' },
     items: [{ label: 'Pack itinérance', qty: 1, price: 45.99 }] },
-  { id: 'o9', number: '20260330-00169842', date: '01/05/2026', amountTtc: 5.13, status: 'validee',
-    paymentMethod: 'Carte bancaire',   bu: 'Chargemap',
-    recipient: { initials: 'JD', name: 'John Doe',      bu: 'Brakson', address1: '7 Allée Ceres',         address2: '67000 Strasbourg, France' },
+  { id: 'o10', number: '20260417-00170018', date: '17/04/2026', amountTtc: 39.80, status: 'paiement-attente',
+    paymentMethod: 'Virement bancaire', bu: 'Responsible Ads',
+    recipient: { initials: 'JM', name: 'Julien Müller',    bu: 'Brakson', address1: '14 Rue de la Paix',      address2: '13001 Marseille, France' },
+    items: [{ label: 'Badge Chargemap Classic', qty: 2, price: 19.90 }] },
+  { id: 'o11', number: '20260415-00170006', date: '15/04/2026', amountTtc: 137.97, status: 'expediee',
+    paymentMethod: 'Carte bancaire', bu: 'Mister EV',
+    recipient: { initials: 'AL', name: 'Adrien Laurent',   bu: 'Brakson', address1: '6 Quai Saint-Antoine',   address2: '69005 Lyon, France' },
+    items: [{ label: 'Pack itinérance', qty: 3, price: 45.99 }] },
+  { id: 'o12', number: '20260412-00169995', date: '12/04/2026', amountTtc: 91.98, status: 'validee',
+    paymentMethod: 'Prélèvement SEPA', bu: 'Brakson',
+    recipient: { initials: 'SG', name: 'Sophie Garcia',    bu: 'Brakson', address1: '23 Avenue Jean Jaurès',  address2: '31000 Toulouse, France' },
     items: [{ label: 'Badge Chargemap Business', qty: 2, price: 45.99 }] },
-  { id: 'o10', number: '20260328-00169841', date: '30/04/2026', amountTtc: 5.13, status: 'prete',
-    paymentMethod: 'Prélèvement SEPA', bu: 'Marketing',
-    recipient: { initials: 'LB', name: 'Laure Bernard', bu: 'Brakson', address1: '17 Avenue Foch',        address2: '67000 Strasbourg, France' },
-    items: [{ label: 'Pack itinérance', qty: 1, price: 45.99 }] },
-  { id: 'o11', number: '20260326-00169840', date: '28/04/2026', amountTtc: 5.13, status: 'expediee',
-    paymentMethod: 'Prélèvement SEPA', bu: 'Responsible Ads',
-    recipient: { initials: 'NR', name: 'Nina Rey',      bu: 'Brakson', address1: '8 Rue Sainte-Catherine', address2: '33000 Bordeaux, France' },
-    items: [{ label: 'Pack itinérance', qty: 1, price: 45.99 }] },
-  { id: 'o12', number: '20260324-00169839', date: '26/04/2026', amountTtc: 5.13, status: 'terminee',
-    paymentMethod: 'Carte bancaire',   bu: 'Chargemap',
-    recipient: { initials: 'JD', name: 'John Doe',      bu: 'Brakson', address1: '7 Allée Ceres',         address2: '67000 Strasbourg, France' },
+  { id: 'o13', number: '20260410-00169982', date: '10/04/2026', amountTtc: 29.40, status: 'terminee',
+    paymentMethod: 'Carte bancaire', bu: 'Cleanrider',
+    recipient: { initials: 'MV', name: 'Marc Vidal',       bu: 'Brakson', address1: '11 Rue de la République', address2: '44000 Nantes, France' },
+    items: [
+      { label: 'Carte multi-réseaux', qty: 2, price: 14.50 },
+      { label: 'Frais de port',       qty: 1, price:  0.40 },
+    ] },
+  { id: 'o14', number: '20260407-00169968', date: '07/04/2026', amountTtc: 45.99, status: 'terminee',
+    paymentMethod: 'Prélèvement SEPA', bu: 'Chargemap',
+    recipient: { initials: 'CD', name: 'Chloé Dupont',     bu: 'Brakson', address1: '4 Rue du Stade',         address2: '59000 Lille, France' },
     items: [{ label: 'Badge Chargemap Business', qty: 1, price: 45.99 }] },
 ]
 
@@ -162,12 +188,15 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
 </script>
 
 <template>
-  <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[2560px] flex flex-col gap-[32px]">
+  <!-- Outer page locks to the layout's <main> height (xl+) so neither column
+       can grow past the viewport. Below xl the layout collapses to a single
+       column and falls back to natural flow. -->
+  <div class="min-h-full xl:h-full px-[32px] pt-[44px] pb-[32px] xl:flex xl:flex-col">
+    <div class="mx-auto w-full max-w-[2192px] flex flex-col gap-[32px] xl:flex-1 xl:min-h-0">
 
       <!-- Page header -->
       <div
-        class="flex items-center gap-[16px] anim-fade-up"
+        class="shrink-0 flex items-center gap-[16px] anim-fade-up"
         style="animation-delay: 0ms"
       >
         <h1 :class="['flex-1 min-w-0', V1_PAGE_HEADING]">Commandes</h1>
@@ -180,18 +209,18 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
       </div>
 
       <!-- Master / detail grid. Left ~37.5%, right ~62.5% (Figma 0.6fr/1fr).
-           Below xl the layout collapses to a single column so the detail
-           panel falls underneath the list — keeps everything readable on
-           narrower screens without forcing horizontal scroll. -->
-      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] gap-[32px] items-start">
+           At xl+, the grid takes the remaining viewport height (flex-1
+           min-h-0) and each card scrolls internally. Below xl the layout
+           collapses to a single stacked column with natural flow. -->
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] gap-[32px] xl:flex-1 xl:min-h-0">
 
         <!-- ─── Master: orders list ─────────────────────────────────────── -->
         <section
-          class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip flex flex-col anim-fade-up"
+          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
           style="animation-delay: 60ms"
         >
-          <!-- Sticky header with search + state filter -->
-          <div class="sticky top-0 z-[2] bg-neutral border-b border-border-neutral-secondary p-[16px] flex flex-col gap-[16px]">
+          <!-- Header (search + state filter) — pinned via flex, never scrolls -->
+          <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary p-[16px] flex flex-col gap-[16px]">
             <Input
               v-model="search"
               type="leadingIcon"
@@ -210,8 +239,8 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             />
           </div>
 
-          <!-- List body -->
-          <div class="p-[16px] flex flex-col">
+          <!-- Scrollable list body -->
+          <div class="flex-1 min-h-0 overflow-y-auto p-[16px] flex flex-col">
             <!-- Skeleton state -->
             <template v-if="isLoading">
               <template v-for="(row, ri) in skeletonRows" :key="`sk-${row}`">
@@ -270,7 +299,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       </span>
                     </div>
                   </div>
-                  <p class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                  <p class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap tabular-nums">
                     {{ fmtAmount(order.amountTtc) }} €
                   </p>
                 </button>
@@ -278,7 +307,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             </template>
           </div>
 
-          <!-- Footer pagination (inside the card) -->
+          <!-- Footer pagination — pinned, never scrolls -->
           <TableFooter
             v-if="!isLoading && filteredOrders.length"
             :page="page"
@@ -286,17 +315,18 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             :range-start="rangeStart"
             :range-end="rangeEnd"
             :total="filteredOrders.length"
+            class="shrink-0"
             @update:page="(n: number) => (page = n)"
           />
         </section>
 
         <!-- ─── Detail: selected order ──────────────────────────────────── -->
         <section
-          class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip flex flex-col anim-fade-up"
+          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
           style="animation-delay: 100ms"
         >
-          <!-- Sticky header -->
-          <div class="sticky top-0 z-[2] bg-neutral border-b border-border-neutral-secondary px-[16px] py-[16px] flex items-center gap-[16px]">
+          <!-- Header: title + Facture button — pinned via flex -->
+          <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary px-[16px] py-[16px] flex items-center gap-[16px]">
             <p class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
               Détails de la commande
             </p>
@@ -309,8 +339,8 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             />
           </div>
 
-          <!-- Body — cross-fades when the selected order changes -->
-          <div class="relative">
+          <!-- Scrollable detail body — cross-fades on selection change -->
+          <div class="flex-1 min-h-0 overflow-y-auto">
             <Transition
               mode="out-in"
               enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
@@ -365,22 +395,21 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       >
                         <div
                           :class="[
-                            'size-[32px] shrink-0 rounded-[8px] flex items-center justify-center',
+                            'size-[40px] shrink-0 rounded-[8px] flex items-center justify-center',
                             si <= stepReached[selected.status] ? 'bg-[#f7fee7]' : 'bg-[#f8fafc]',
                           ]"
                         >
                           <Icon
                             :name="si <= stepReached[selected.status] ? 'check-circle' : 'clock'"
                             variant="solid"
-                            :size="16"
+                            :size="18"
                             :class="si <= stepReached[selected.status] ? 'text-[#65a30d]' : 'text-[#48566a]'"
                           />
                         </div>
-                        <!-- Vertical connector to next step icon -->
                         <span
                           v-if="si < STEPS.length - 1"
                           aria-hidden="true"
-                          class="absolute left-[15.5px] top-[36px] bottom-[4px] w-px bg-border-neutral-secondary"
+                          class="absolute left-[19.5px] top-[42px] bottom-[2px] w-px bg-border-neutral-secondary"
                         />
                         <div class="flex-1 min-w-0 flex flex-col gap-[4px]">
                           <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -428,7 +457,6 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                     </p>
                   </header>
                   <div class="p-[16px] flex flex-col">
-                    <!-- Statut row (badge value) -->
                     <div class="flex items-center justify-between py-[2px] gap-[16px]">
                       <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Statut

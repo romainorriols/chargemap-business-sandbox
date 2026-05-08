@@ -10,7 +10,7 @@ const orgaSections: SidebarV1Section[] = [
   [
     { id: 'dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
     { id: 'billing', label: 'Facturation', icon: 'wallet' },
-    { id: 'orders', label: 'Commandes', icon: 'truck' },
+    { id: 'orders', label: 'Commandes', icon: 'inbox-stack' },
     { id: 'bus', label: 'Business units', icon: 'building-office-2' },
     { id: 'install-project', label: "Projet d'installation", icon: 'charging-station' },
   ],
@@ -26,7 +26,7 @@ const buSections: SidebarV1Section[] = [
     { id: 'bu-dashboard', label: 'Tableau de bord', icon: 'chart-pie' },
     { id: 'bu-shop', label: 'Boutique', icon: 'shopping-bag' },
     { id: 'bu-billing', label: 'Facturation', icon: 'wallet' },
-    { id: 'bu-orders', label: 'Commandes', icon: 'truck' },
+    { id: 'bu-orders', label: 'Commandes', icon: 'inbox-stack' },
   ],
   [
     {
