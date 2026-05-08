@@ -215,17 +215,12 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
       <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] gap-[32px] xl:flex-1 xl:min-h-0">
 
         <!-- ─── Master: orders list ─────────────────────────────────────── -->
-        <!-- The outer <section> is intentionally NOT clipped: the Dropdown
-             menu opens downward into the body area and would otherwise be
-             chopped off at the card edge. The inner wrapper carries the
-             clip + bottom radius so the scrolling list still tucks neatly
-             under the rounded corners. -->
         <section
-          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm flex flex-col anim-fade-up"
+          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
           style="animation-delay: 60ms"
         >
           <!-- Header (search + state filter) — pinned via flex, never scrolls -->
-          <div class="relative z-[2] shrink-0 bg-neutral border-b border-border-neutral-secondary rounded-t-[16px] p-[16px] flex flex-col gap-[16px]">
+          <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary p-[16px] flex flex-col gap-[16px]">
             <Input
               v-model="search"
               type="leadingIcon"
@@ -241,11 +236,10 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
               placeholder="États: Tous"
               :show-label="false"
               :show-hint="false"
+              teleport
             />
           </div>
 
-          <!-- Clipped wrapper for the scrolling list + footer -->
-          <div class="flex-1 min-h-0 overflow-hidden rounded-b-[16px] flex flex-col">
           <!-- Scrollable list body -->
           <div class="scrollbar-hide flex-1 min-h-0 overflow-y-auto p-[16px] flex flex-col">
             <!-- Skeleton state -->
@@ -325,7 +319,6 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             class="shrink-0"
             @update:page="(n: number) => (page = n)"
           />
-          </div>
         </section>
 
         <!-- ─── Detail: selected order ──────────────────────────────────── -->
