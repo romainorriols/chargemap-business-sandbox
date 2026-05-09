@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { V1_PAGE_HEADING } from '../utils/typography'
+import { V1_PAGE_HEADING, V2_PAGE_HEADING } from '../utils/typography'
+
+const navStore = useNavStore()
+const headingClass = computed(() => navStore.isNavV2 ? V2_PAGE_HEADING : V1_PAGE_HEADING)
 
 type OrderStatus = 'paiement-attente' | 'validee' | 'prete' | 'expediee' | 'terminee'
 
@@ -249,7 +252,7 @@ function closeMobileDetail() {
         class="shrink-0 flex items-center gap-[16px] anim-fade-up"
         style="animation-delay: 0ms"
       >
-        <h1 :class="['flex-1 min-w-0', V1_PAGE_HEADING]">Commandes</h1>
+        <h1 :class="['flex-1 min-w-0', headingClass]">Commandes</h1>
         <Button
           type="primary"
           size="md"
@@ -337,7 +340,7 @@ function closeMobileDetail() {
                     <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate w-full">
                       #{{ order.number }}
                     </p>
-                    <div class="flex items-center gap-[8px] w-full">
+                    <div class="flex flex-wrap items-center gap-[8px] w-full">
                       <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border bg-[var(--bg-accent-gray)] border-[var(--border-accent-gray)] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[var(--text-accent-gray)] whitespace-nowrap">
                         {{ order.date }}
                       </span>
