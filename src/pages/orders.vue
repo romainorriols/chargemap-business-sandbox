@@ -392,9 +392,10 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                         v-for="(step, si) in STEPS"
                         :key="si"
                         :class="[
-                          'flex gap-[8px] items-start relative',
+                          'step flex gap-[8px] items-start relative',
                           si < STEPS.length - 1 ? 'pb-[32px]' : '',
                         ]"
+                        :style="{ '--step-i': si }"
                       >
                         <div
                           :class="[
@@ -412,7 +413,8 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                         <span
                           v-if="si < STEPS.length - 1"
                           aria-hidden="true"
-                          class="absolute left-[19.5px] top-[42px] bottom-[2px] w-px bg-border-neutral-secondary"
+                          class="step-line absolute left-[19.5px] top-[42px] bottom-[2px] w-px bg-border-neutral-secondary"
+                          :style="{ '--step-i': si }"
                         />
                         <div class="flex-1 min-w-0 flex flex-col gap-[4px]">
                           <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -548,5 +550,38 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;                  /* WebKit (Chrome, Safari) */
+}
+
+/* Steps timeline cascade: each step fades up + the connecting line draws
+   from top, staggered 60ms per index. Total ~520ms, ease-out-quint to
+   match the project convention. Re-runs on every selection swap because
+   the parent uses :key="selected.id". */
+.step {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: step-in 280ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--step-i) * 60ms);
+  will-change: transform, opacity;
+}
+.step-line {
+  transform-origin: top;
+  transform: scaleY(0);
+  animation: step-line-in 240ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--step-i) * 60ms + 140ms);
+  will-change: transform;
+}
+@keyframes step-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes step-line-in {
+  to { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step,
+  .step-line {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>
