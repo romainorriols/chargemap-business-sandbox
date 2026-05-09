@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { V1_PAGE_HEADING, V2_PAGE_HEADING } from '../utils/typography'
 
 const navStore = useNavStore()
+const uiStore = useUiStore()
 const headingClass = computed(() => navStore.isNavV2 ? V2_PAGE_HEADING : V1_PAGE_HEADING)
 
 type OrderStatus = 'paiement-attente' | 'validee' | 'prete' | 'expediee' | 'terminee'
@@ -149,7 +150,10 @@ const statusItems = [
   { value: 'terminee',          label: 'Terminée' },
 ]
 
+// The empty-state toggle short-circuits here so the master body
+// renders the first-time empty UI and the pagination footer hides.
 const filteredOrders = computed(() => {
+  if (uiStore.showEmptyState) return []
   const q = search.value.trim().toLowerCase()
   return orders.filter(o => {
     const matchesSearch = !q
@@ -315,7 +319,39 @@ function closeMobileDetail() {
               </template>
             </template>
 
-            <!-- Empty state -->
+            <!-- Empty state — first-time experience (Figma 5667-12105).
+                 Toggled via the global Empty-state switch (uiStore). -->
+            <div
+              v-else-if="uiStore.showEmptyState"
+              class="flex-1 min-h-0 flex items-center justify-center px-[16px] py-[24px]"
+            >
+              <div class="flex flex-col items-center gap-[16px] max-w-[320px] w-full">
+                <div class="relative size-[200px] flex items-center justify-center">
+                  <svg
+                    class="absolute inset-0 text-border-neutral-secondary"
+                    viewBox="0 0 200 200"
+                    aria-hidden="true"
+                  >
+                    <circle cx="100" cy="100" r="98" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" />
+                    <circle cx="100" cy="100" r="74" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" />
+                    <circle cx="100" cy="100" r="50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" />
+                  </svg>
+                  <div class="size-[80px] rounded-full bg-neutral border border-border-neutral-secondary flex items-center justify-center shadow-sm relative z-10">
+                    <Icon name="inbox-stack" :size="36" variant="solid" class="text-icon-neutral-secondary" />
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-[4px]">
+                  <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                    Aucune commande pour le moment
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary text-center">
+                    Consulter ici le détails de vos commandes de badges et licences
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filter empty state -->
             <div
               v-else-if="!filteredOrders.length"
               class="flex items-center justify-center min-h-[200px] px-[16px] py-[24px] font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary"
@@ -395,13 +431,14 @@ function closeMobileDetail() {
               Détails de la commande
             </p>
             <Button
+              v-if="!uiStore.showEmptyState"
               type="secondary"
               size="sm"
               icon-left="arrow-down-tray"
               label="Facture"
             />
             <Button
-              v-if="selected?.status === 'expediee'"
+              v-if="!uiStore.showEmptyState && selected?.status === 'expediee'"
               type="primary"
               size="sm"
               label="Suivre la commande"
@@ -438,6 +475,51 @@ function closeMobileDetail() {
                     <Skeleton width="70%" height="14px" />
                   </div>
                 </div>
+              </div>
+
+              <!-- Empty state: onboarding "Trois étapes" panel (Figma 5667-12105) -->
+              <div
+                v-else-if="uiStore.showEmptyState"
+                key="empty"
+                class="p-[16px] flex flex-col gap-[24px] h-full"
+              >
+                <div class="flex flex-col gap-[56px] p-[24px] bg-neutral-secondary rounded-[16px]">
+                  <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral text-center">
+                    Trois étapes pour débuter
+                  </p>
+                  <div
+                    v-for="(s, si) in [
+                      { title: 'Commandez un badge et une licence', desc: 'Dans l’onglet Boutique, commandez un badge Chargemap Business ainsi qu’une licence permettant la recharge.' },
+                      { title: 'Assignez le badge',                 desc: 'Une fois votre commande reçue, le badge apparaît dans l’interface. Ouvrez son détail pour l’assigner à un conducteur ou un véhicule.' },
+                      { title: 'Activez la licence',                desc: 'Toujours dans le détail du badge, activez la licence depuis le menu en haut à gauche. Les recharges remonteront automatiquement dans l’interface.' },
+                    ]"
+                    :key="si"
+                    class="flex items-start gap-[8px]"
+                  >
+                    <div class="size-[32px] shrink-0 rounded-[8px] bg-brand-surface flex items-center justify-center">
+                      <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-medium">
+                        {{ si + 1 }}
+                      </span>
+                    </div>
+                    <div class="flex-1 min-w-0 flex flex-col gap-[4px]">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                        {{ s.title }}
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                        {{ s.desc }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary text-center">
+                  Des questions ou besoin d’aide ?
+                  <a
+                    href="https://chargemap-business.frontkb.com/fr"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-text-brand-deep underline-offset-2 hover:underline"
+                  >Consultez la documentation</a>
+                </p>
               </div>
 
               <div

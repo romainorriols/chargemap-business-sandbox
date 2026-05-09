@@ -12,10 +12,8 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div
-    class="fixed bottom-[16px] right-[16px] z-50 flex items-center gap-[12px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_0px_rgba(0,0,0,0.1),0px_4px_6px_0px_rgba(0,0,0,0.1)]"
-  >
-    <span class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral whitespace-nowrap">
+  <div class="flex items-center gap-[12px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_0px_rgba(0,0,0,0.1),0px_4px_6px_0px_rgba(0,0,0,0.1)]">
+    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
       Nav V2
     </span>
     <Toggle
