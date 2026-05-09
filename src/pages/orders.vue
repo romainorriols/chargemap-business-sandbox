@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { V1_PAGE_HEADING } from '../utils/typography'
 
 type OrderStatus = 'paiement-attente' | 'validee' | 'prete' | 'expediee' | 'terminee'
@@ -186,14 +187,51 @@ const isLoading = ref(true)
 onMounted(() => { setTimeout(() => { isLoading.value = false }, 600) })
 const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
 
+// Deep-link selection to the URL (?id=oN). The mobile push pattern uses
+// the same URL state so back/forward and refresh restore the right view.
+// Pagination stays in component state and survives the back trip because
+// the master section is hidden via display:none, not unmounted.
+const route = useRoute()
+const router = useRouter()
+
+const syncSelectedFromRoute = () => {
+  const id = route.query.id
+  if (typeof id === 'string' && orders.find(o => o.id === id)) {
+    selectedId.value = id
+  }
+}
+syncSelectedFromRoute()
+watch(() => route.query.id, syncSelectedFromRoute)
+
 // Below xl the master/detail collapses to a push pattern: the user lands
-// on the list, taps an order, the detail takes over. The back button in
-// the detail header restores the list. At xl+ both panes are visible as
-// today and this flag is irrelevant.
-const mobileDetailOpen = ref(false)
+// on the list, taps an order, the detail takes over. At xl+ both panes
+// are visible and this flag is effectively always true once an order is
+// selected (which we do automatically with selectedId default).
+const mobileDetailOpen = computed(() => Boolean(route.query.id))
+
 function onSelectOrder(id: string) {
   selectedId.value = id
-  mobileDetailOpen.value = true
+  const wasOpen = Boolean(route.query.id)
+  const nextQuery = { ...route.query, id }
+  // Push when opening detail (so back returns to the list); replace when
+  // already in detail and just switching orders (no extra history entry).
+  if (wasOpen) {
+    router.replace({ query: nextQuery })
+  } else {
+    router.push({ query: nextQuery })
+  }
+}
+
+function closeMobileDetail() {
+  // Prefer router.back so the history entry from onSelectOrder pops cleanly.
+  // Fall back to replace when the page was opened directly via deeplink
+  // (no prior router-tracked entry to go back to).
+  if (window.history.state?.back) {
+    router.back()
+  } else {
+    const { id: _, ...rest } = route.query
+    router.replace({ query: rest })
+  }
 }
 </script>
 
@@ -344,7 +382,7 @@ function onSelectOrder(id: string) {
               type="button"
               class="xl:hidden flex items-center justify-center -ml-[4px] p-[8px] rounded-[8px] outline-none transition-colors duration-150 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray motion-reduce:transition-none"
               aria-label="Retour à la liste"
-              @click="mobileDetailOpen = false"
+              @click="closeMobileDetail"
             >
               <Icon name="chevron-left" :size="20" class="text-icon-neutral-secondary" />
             </button>
