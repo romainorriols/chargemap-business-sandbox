@@ -56,6 +56,10 @@
   --bg-warning-medium: #fcb972;
 
   --bg-accent-cyan: #ebfeff;
+  --bg-accent-yellow: #fefce7;
+  --bg-accent-turquoise: #f2fdf9;
+  --bg-accent-brand: #f6f5ff;
+  --bg-accent-gray: #fafafa;
 
   /* ─────────────────────────────────────────────────────────
    * Semantic — Text
@@ -84,6 +88,10 @@
   --text-warning-deep: #7c2c11;
 
   --text-accent-cyan: #088eaf;
+  --text-accent-yellow: #c88a04;
+  --text-accent-turquoise: #18b97e;
+  --text-accent-brand: #7c3bed;
+  --text-accent-gray: #48566a;
 
   /* ─────────────────────────────────────────────────────────
    * Semantic — Borders
@@ -113,6 +121,10 @@
   --border-warning-deep: #7c2c11;
 
   --border-accent-cyan: #a6f4fc;
+  --border-accent-yellow: #fef08b;
+  --border-accent-turquoise: #bdfae3;
+  --border-accent-brand: #c3b4fd;
+  --border-accent-gray: #e4e4e7;
 
   /* ─────────────────────────────────────────────────────────
    * Semantic — Icons

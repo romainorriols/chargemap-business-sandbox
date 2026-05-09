@@ -36,17 +36,17 @@ const stepReached: Record<OrderStatus, number> = {
   'terminee':         3,
 }
 
-interface StatusVariant { label: string; dot: string }
-// New badge style (Figma 5696-18817): neutral white pill with subtle gray
-// border + shadow, dark label text, and a small colored dot encoding the
-// status. Same colors are reused for the larger "Statut" badge in the
-// Informations card (only padding & font-size differ).
+interface StatusVariant { label: string; bg: string; border: string; text: string }
+// Soft tinted pill (Figma 5696-18817): bg/border/text derived from the
+// accent-{tone} token triplet (added in tokens.css). Same colors reused
+// for the larger "Statut" badge in the Informations card (only padding
+// differs). The date badge uses the gray tone too.
 const VARIANTS: Record<OrderStatus, StatusVariant> = {
-  'paiement-attente': { label: 'Paiement en attente', dot: 'bg-icon-accent-yellow' },
-  'validee':          { label: 'Validée',             dot: 'bg-icon-accent-turquoise' },
-  'prete':            { label: 'Prête',               dot: 'bg-[#088eaf]' },
-  'expediee':         { label: 'Expédiée',            dot: 'bg-brand' },
-  'terminee':         { label: 'Terminée',            dot: 'bg-icon-neutral-secondary' },
+  'paiement-attente': { label: 'Paiement en attente', bg: 'bg-[var(--bg-accent-yellow)]',    border: 'border-[var(--border-accent-yellow)]',    text: 'text-[var(--text-accent-yellow)]' },
+  'validee':          { label: 'Validée',             bg: 'bg-[var(--bg-accent-turquoise)]', border: 'border-[var(--border-accent-turquoise)]', text: 'text-[var(--text-accent-turquoise)]' },
+  'prete':            { label: 'Prête',               bg: 'bg-[var(--bg-accent-cyan)]',      border: 'border-[var(--border-accent-cyan)]',      text: 'text-[var(--text-accent-cyan)]' },
+  'expediee':         { label: 'Expédiée',            bg: 'bg-[var(--bg-accent-brand)]',     border: 'border-[var(--border-accent-brand)]',     text: 'text-[var(--text-accent-brand)]' },
+  'terminee':         { label: 'Terminée',            bg: 'bg-[var(--bg-accent-gray)]',      border: 'border-[var(--border-accent-gray)]',      text: 'text-[var(--text-accent-gray)]' },
 }
 
 // Varied seed: 14 orders, mixed statuses, dates spread across April–May 2026,
@@ -286,11 +286,17 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       #{{ order.number }}
                     </p>
                     <div class="flex items-center gap-[8px] w-full">
-                      <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] border bg-neutral border-border-neutral shadow-sm font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                      <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border bg-[var(--bg-accent-gray)] border-[var(--border-accent-gray)] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[var(--text-accent-gray)] whitespace-nowrap">
                         {{ order.date }}
                       </span>
-                      <span class="inline-flex items-center justify-center gap-[6px] pl-[8px] pr-[10px] py-[2px] rounded-[8px] border bg-neutral border-border-neutral shadow-sm font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                        <span :class="['size-[8px] rounded-full shrink-0', VARIANTS[order.status].dot]" aria-hidden="true" />
+                      <span
+                        :class="[
+                          'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
+                          VARIANTS[order.status].bg,
+                          VARIANTS[order.status].border,
+                          VARIANTS[order.status].text,
+                        ]"
+                      >
                         {{ VARIANTS[order.status].label }}
                       </span>
                     </div>
@@ -466,8 +472,14 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Statut
                       </p>
-                      <span class="inline-flex items-center justify-center gap-[6px] pl-[10px] pr-[12px] py-[4px] rounded-[8px] border bg-neutral border-border-neutral shadow-sm font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                        <span :class="['size-[8px] rounded-full shrink-0', VARIANTS[selected.status].dot]" aria-hidden="true" />
+                      <span
+                        :class="[
+                          'inline-flex items-center justify-center px-[12px] py-[4px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
+                          VARIANTS[selected.status].bg,
+                          VARIANTS[selected.status].border,
+                          VARIANTS[selected.status].text,
+                        ]"
+                      >
                         {{ VARIANTS[selected.status].label }}
                       </span>
                     </div>
