@@ -23,9 +23,9 @@ interface Order {
 // otherwise with a clock icon (still upcoming).
 const STEPS = [
   { title: 'Paiement en attente', description: 'Validation du paiement, cela peut prendre quelques jours' },
-  { title: 'Commande validé',     description: 'La commande est prête à être préparée' },
+  { title: 'Commande validée',    description: 'La commande est prête à être préparée' },
   { title: 'Commande prête',      description: 'Commande préparée, badges visibles sur l’interface' },
-  { title: 'Expedition',          description: 'Commande expédié, lien de suivi disponible' },
+  { title: 'Expédition',          description: 'Commande expédiée, lien de suivi disponible' },
 ] as const
 
 const stepReached: Record<OrderStatus, number> = {
@@ -42,11 +42,11 @@ interface StatusVariant { label: string; dot: string }
 // status. Same colors are reused for the larger "Statut" badge in the
 // Informations card (only padding & font-size differ).
 const VARIANTS: Record<OrderStatus, StatusVariant> = {
-  'paiement-attente': { label: 'Paiement en attente', dot: 'bg-[#c88a04]' },
-  'validee':          { label: 'Validée',             dot: 'bg-[#18b97e]' },
+  'paiement-attente': { label: 'Paiement en attente', dot: 'bg-icon-accent-yellow' },
+  'validee':          { label: 'Validée',             dot: 'bg-icon-accent-turquoise' },
   'prete':            { label: 'Prête',               dot: 'bg-[#088eaf]' },
-  'expediee':         { label: 'Expédiée',            dot: 'bg-[#2463eb]' },
-  'terminee':         { label: 'Terminée',            dot: 'bg-[#48566a]' },
+  'expediee':         { label: 'Expédiée',            dot: 'bg-brand' },
+  'terminee':         { label: 'Terminée',            dot: 'bg-icon-neutral-secondary' },
 }
 
 // Varied seed: 14 orders, mixed statuses, dates spread across April–May 2026,
@@ -333,7 +333,6 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
               size="sm"
               icon-left="arrow-down-tray"
               label="Facture"
-              :disabled="!selected"
             />
             <Button
               v-if="selected?.status === 'expediee'"
@@ -407,7 +406,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                             :name="si <= stepReached[selected.status] ? 'check-circle' : 'clock'"
                             variant="solid"
                             :size="18"
-                            :class="si <= stepReached[selected.status] ? 'text-[#65a30d]' : 'text-[#48566a]'"
+                            :class="si <= stepReached[selected.status] ? 'text-[#65a30d]' : 'text-icon-neutral-secondary'"
                           />
                         </div>
                         <span
