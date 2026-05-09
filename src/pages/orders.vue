@@ -320,26 +320,32 @@ function closeMobileDetail() {
             </template>
 
             <!-- Empty state — first-time experience (Figma 5667-12105).
-                 Toggled via the global Empty-state switch (uiStore). -->
+                 Toggled via the global Empty-state switch (uiStore).
+                 Spacing matches the Figma spec: body p-24 (8px wrapper +
+                 16px body padding), empty container p-16 gap-16,
+                 illustration with -mb-16 overlap, info header min-h-49
+                 gap-4. -->
             <div
               v-else-if="uiStore.showEmptyState"
-              class="flex-1 min-h-0 flex items-center justify-center px-[16px] py-[24px]"
+              class="flex-1 min-h-0 flex items-center justify-center p-[8px]"
             >
-              <div class="flex flex-col items-center gap-[16px] max-w-[320px] w-full">
-                <img
-                  src="~/assets/illustrations/empty-orders.svg"
-                  alt=""
-                  width="200"
-                  height="200"
-                  class="size-[200px] shrink-0"
-                />
-                <div class="flex flex-col items-center gap-[4px]">
-                  <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
-                    Aucune commande pour le moment
-                  </p>
-                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary text-center">
-                    Consulter ici le détails de vos commandes de badges et licences
-                  </p>
+              <div class="flex flex-col items-center justify-center gap-[16px] p-[16px] w-full">
+                <div class="flex flex-col items-center w-full">
+                  <img
+                    src="~/assets/illustrations/empty-orders.svg"
+                    alt=""
+                    width="200"
+                    height="200"
+                    class="size-[200px] shrink-0 -mb-[16px]"
+                  />
+                  <div class="flex flex-col items-center justify-center gap-[4px] min-h-[49px] w-full">
+                    <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                      Aucune commande pour le moment
+                    </p>
+                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary text-center w-full">
+                      Consulter ici le détails de vos commandes de badges et licences
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -470,13 +476,19 @@ function closeMobileDetail() {
                 </div>
               </div>
 
-              <!-- Empty state: onboarding "Trois étapes" panel (Figma 5667-12105) -->
+              <!-- Empty state: onboarding "Trois étapes" panel (Figma 5667-12105).
+                   Body uses px-24 py-16 + items-center justify-between so the
+                   trio (top spacer, centered card, bottom doc link) is
+                   distributed vertically. Card maxes at 700px; doc link
+                   maxes at 800px. -->
               <div
                 v-else-if="uiStore.showEmptyState"
                 key="empty"
-                class="p-[16px] flex flex-col gap-[24px] h-full"
+                class="px-[24px] py-[16px] flex flex-col items-center justify-between h-full w-full"
               >
-                <div class="flex flex-col gap-[56px] p-[24px] bg-neutral-secondary rounded-[16px]">
+                <div class="shrink-0 h-[21px] w-full" aria-hidden="true" />
+
+                <div class="flex flex-col gap-[56px] p-[24px] bg-neutral-secondary rounded-[16px] max-w-[700px] w-full">
                   <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral text-center">
                     Trois étapes pour débuter
                   </p>
@@ -487,7 +499,7 @@ function closeMobileDetail() {
                       { title: 'Activez la licence',                desc: 'Toujours dans le détail du badge, activez la licence depuis le menu en haut à gauche. Les recharges remonteront automatiquement dans l’interface.' },
                     ]"
                     :key="si"
-                    class="flex items-start gap-[8px]"
+                    class="flex items-start gap-[8px] w-full"
                   >
                     <div class="size-[32px] shrink-0 rounded-[8px] bg-brand-surface flex items-center justify-center">
                       <span class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-medium">
@@ -504,7 +516,8 @@ function closeMobileDetail() {
                     </div>
                   </div>
                 </div>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary text-center">
+
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary text-center max-w-[800px] w-full">
                   Des questions ou besoin d’aide ?
                   <a
                     href="https://chargemap-business.frontkb.com/fr"
