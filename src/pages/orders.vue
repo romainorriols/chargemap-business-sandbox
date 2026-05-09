@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { V1_PAGE_HEADING, V2_PAGE_HEADING } from '../utils/typography'
+import { usePageHeadingClass } from '../utils/typography'
 
-const navStore = useNavStore()
 const uiStore = useUiStore()
-const headingClass = computed(() => navStore.isNavV2 ? V2_PAGE_HEADING : V1_PAGE_HEADING)
+const headingClass = usePageHeadingClass()
 
 type OrderStatus = 'paiement-attente' | 'validee' | 'prete' | 'expediee' | 'terminee'
 

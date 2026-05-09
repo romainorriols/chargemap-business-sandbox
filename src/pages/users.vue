@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { ref, computed, reactive, watch } from 'vue'
 interface UserRole {
   bu: string
@@ -217,7 +218,7 @@ watch(rolesForm, (rows) => {
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="V1_PAGE_HEADING">
+        <h1 :class="headingClass">
           Utilisateurs
         </h1>
         <Button
@@ -430,7 +431,7 @@ watch(rolesForm, (rows) => {
               Retour
             </span>
           </button>
-          <h1 :class="['whitespace-nowrap', V1_PAGE_HEADING]">
+          <h1 :class="['whitespace-nowrap', headingClass]">
             {{ selectedUser.name }}
           </h1>
         </div>

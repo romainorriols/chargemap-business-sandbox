@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { ref, computed, reactive } from 'vue'
 import type { HorizontalTab } from '../components/ui/HorizontalTabs.vue'
 import buEmptyIllustration from '@/assets/illustrations/bu-empty.svg'
@@ -147,7 +148,7 @@ const showSuccessToast = (title: string, description: string) => {
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="V1_PAGE_HEADING">
+        <h1 :class="headingClass">
           Business units
         </h1>
         <Button
@@ -474,7 +475,7 @@ const showSuccessToast = (title: string, description: string) => {
               Retour
             </span>
           </button>
-          <h1 :class="['whitespace-nowrap', V1_PAGE_HEADING]">
+          <h1 :class="['whitespace-nowrap', headingClass]">
             Nouvelle Business unit
           </h1>
         </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { ref, computed } from 'vue'
 // ─── Colors lifted from Figma variables ────────────────────────
 const COLOR_CYAN_400       = '#20d3ee'
@@ -152,7 +153,7 @@ const supervisionCard = computed(() =>
 
       <!-- Page header -->
       <div class="h-[48px] flex items-center anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="V1_PAGE_HEADING">
+        <h1 :class="headingClass">
           Tableau de bord de Brakson
         </h1>
       </div>

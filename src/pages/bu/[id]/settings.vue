@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { computed, reactive, ref, watch } from 'vue'
 const busStore = useBusStore()
 const tabs = [
@@ -267,7 +268,7 @@ const showSuccessToast = (title: string, description: string) => {
 
     <!-- Page header -->
     <div class="w-full max-w-[800px] flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
-      <h1 :class="V1_PAGE_HEADING">
+      <h1 :class="headingClass">
         {{ pageTitle }}
       </h1>
     </div>

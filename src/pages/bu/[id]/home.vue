@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { computed } from 'vue'
 
 const busStore = useBusStore()
@@ -7,7 +8,7 @@ const currentBu = computed(() => busStore.bus.find(b => b.id === busStore.select
 
 <template>
   <div class="flex flex-col items-center justify-center h-full p-[24px] text-center">
-    <h1 :class="['mb-[8px]', V1_PAGE_HEADING]">
+    <h1 :class="['mb-[8px]', headingClass]">
       {{ currentBu?.name ?? 'Business unit' }}
     </h1>
     <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary max-w-[440px]">

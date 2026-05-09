@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { ref, computed, watch, onMounted } from 'vue'
 type Status = 'paid' | 'processing' | 'toPay' | 'overdue' | 'refunded' | 'cancelled'
 
@@ -586,7 +587,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
         class="flex items-center gap-[16px] min-h-[44px] anim-fade-up"
         style="animation-delay: 0ms"
       >
-        <h1 :class="['flex-1 min-w-0', V1_PAGE_HEADING]">
+        <h1 :class="['flex-1 min-w-0', headingClass]">
           {{ pageTitle }}
         </h1>
         <Transition

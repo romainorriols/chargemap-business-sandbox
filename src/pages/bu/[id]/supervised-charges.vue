@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const headingClass = usePageHeadingClass()
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 const busStore = useBusStore()
@@ -632,7 +633,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
       <!-- Page header -->
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <h1
-          :class="V1_PAGE_HEADING"
+          :class="headingClass"
         >
           {{ isAuthJournalTab ? 'Journal des autorisations'
             : isInProgressTab ? 'Recharges en cours'
