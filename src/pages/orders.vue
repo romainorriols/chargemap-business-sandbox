@@ -236,11 +236,13 @@ function closeMobileDetail() {
 </script>
 
 <template>
-  <!-- Outer page locks to the layout's <main> height (xl+) so neither column
-       can grow past the viewport. Below xl the layout collapses to a single
-       column and falls back to natural flow. -->
-  <div class="min-h-full xl:h-full px-[32px] pt-[44px] pb-[32px] xl:flex xl:flex-col">
-    <div class="mx-auto w-full max-w-[2192px] flex flex-col gap-[32px] xl:flex-1 xl:min-h-0">
+  <!-- Outer page locks to the layout's <main> height at every breakpoint
+       so the visible card always fills the viewport and scrolls internally.
+       At xl+ both master and detail sit side-by-side; below xl the push
+       pattern hides one or the other but the visible one still takes the
+       full height. -->
+  <div class="h-full px-[32px] pt-[44px] pb-[32px] flex flex-col">
+    <div class="mx-auto w-full max-w-[2192px] flex flex-col gap-[32px] flex-1 min-h-0">
 
       <!-- Page header -->
       <div
@@ -260,12 +262,12 @@ function closeMobileDetail() {
            At xl+, the grid takes the remaining viewport height (flex-1
            min-h-0) and each card scrolls internally. Below xl the layout
            collapses to a single stacked column with natural flow. -->
-      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] gap-[32px] xl:flex-1 xl:min-h-0">
+      <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] gap-[32px] flex-1 min-h-0">
 
         <!-- ─── Master: orders list ─────────────────────────────────────── -->
         <section
           :class="[
-            'w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex-col anim-fade-up',
+            'w-full h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex-col anim-fade-up',
             mobileDetailOpen ? 'hidden xl:flex' : 'flex',
           ]"
           style="animation-delay: 60ms"
@@ -368,7 +370,7 @@ function closeMobileDetail() {
         <!-- ─── Detail: selected order ──────────────────────────────────── -->
         <section
           :class="[
-            'w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex-col anim-fade-up',
+            'w-full h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex-col anim-fade-up',
             mobileDetailOpen ? 'flex' : 'hidden xl:flex',
           ]"
           style="animation-delay: 100ms"
