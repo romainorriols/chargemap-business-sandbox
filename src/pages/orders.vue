@@ -326,20 +326,13 @@ function closeMobileDetail() {
               class="flex-1 min-h-0 flex items-center justify-center px-[16px] py-[24px]"
             >
               <div class="flex flex-col items-center gap-[16px] max-w-[320px] w-full">
-                <div class="relative size-[200px] flex items-center justify-center">
-                  <svg
-                    class="absolute inset-0 text-border-neutral-secondary"
-                    viewBox="0 0 200 200"
-                    aria-hidden="true"
-                  >
-                    <circle cx="100" cy="100" r="98" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" />
-                    <circle cx="100" cy="100" r="74" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" />
-                    <circle cx="100" cy="100" r="50" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 4" />
-                  </svg>
-                  <div class="size-[80px] rounded-full bg-neutral border border-border-neutral-secondary flex items-center justify-center shadow-sm relative z-10">
-                    <Icon name="inbox-stack" :size="36" variant="solid" class="text-icon-neutral-secondary" />
-                  </div>
-                </div>
+                <img
+                  src="~/assets/illustrations/empty-orders.svg"
+                  alt=""
+                  width="200"
+                  height="200"
+                  class="size-[200px] shrink-0"
+                />
                 <div class="flex flex-col items-center gap-[4px]">
                   <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
                     Aucune commande pour le moment
