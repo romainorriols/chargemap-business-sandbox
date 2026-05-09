@@ -304,7 +304,7 @@ function closeMobileDetail() {
             <!-- Skeleton state -->
             <template v-if="isLoading">
               <template v-for="(row, ri) in skeletonRows" :key="`sk-${row}`">
-                <div v-if="ri > 0" class="h-px w-full bg-border-neutral-secondary my-[12px]" />
+                <div v-if="ri > 0" class="h-px w-full shrink-0 bg-border-neutral-tertiary my-[12px]" />
                 <div class="flex items-center gap-[16px] p-[12px]">
                   <div class="flex-1 flex flex-col gap-[8px] min-w-0">
                     <Skeleton width="160px" height="14px" />
@@ -360,7 +360,7 @@ function closeMobileDetail() {
             <!-- Order rows -->
             <template v-else>
               <template v-for="(order, oi) in paginated" :key="order.id">
-                <div v-if="oi > 0" class="h-px w-full bg-border-neutral-secondary my-[12px]" />
+                <div v-if="oi > 0" class="h-px w-full shrink-0 bg-border-neutral-tertiary my-[12px]" />
                 <button
                   type="button"
                   :class="[
