@@ -185,6 +185,16 @@ watch([search, statusFilter], () => { page.value = 1 })
 const isLoading = ref(true)
 onMounted(() => { setTimeout(() => { isLoading.value = false }, 600) })
 const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
+
+// Below xl the master/detail collapses to a push pattern: the user lands
+// on the list, taps an order, the detail takes over. The back button in
+// the detail header restores the list. At xl+ both panes are visible as
+// today and this flag is irrelevant.
+const mobileDetailOpen = ref(false)
+function onSelectOrder(id: string) {
+  selectedId.value = id
+  mobileDetailOpen.value = true
+}
 </script>
 
 <template>
@@ -216,7 +226,10 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
 
         <!-- ─── Master: orders list ─────────────────────────────────────── -->
         <section
-          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
+          :class="[
+            'w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex-col anim-fade-up',
+            mobileDetailOpen ? 'hidden xl:flex' : 'flex',
+          ]"
           style="animation-delay: 60ms"
         >
           <!-- Header (search + state filter) — pinned via flex, never scrolls -->
@@ -278,7 +291,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                     'transition-colors duration-150 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray motion-reduce:transition-none',
                     selectedId === order.id ? 'bg-neutral-secondary' : 'bg-neutral',
                   ]"
-                  @click="selectedId = order.id"
+                  @click="onSelectOrder(order.id)"
                 >
                   <div class="flex-1 min-w-0 flex flex-col gap-[8px] items-start">
                     <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate w-full">
@@ -316,13 +329,25 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
 
         <!-- ─── Detail: selected order ──────────────────────────────────── -->
         <section
-          class="w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex flex-col anim-fade-up"
+          :class="[
+            'w-full xl:h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden flex-col anim-fade-up',
+            mobileDetailOpen ? 'flex' : 'hidden xl:flex',
+          ]"
           style="animation-delay: 100ms"
         >
           <!-- Header: title + actions — pinned via flex.
                "Suivre la commande" only renders for shipped orders since
-               only those have a tracking link to follow. -->
+               only those have a tracking link to follow. The back chevron
+               appears below xl to return to the master list. -->
           <div class="shrink-0 bg-neutral border-b border-border-neutral-secondary px-[16px] py-[16px] flex items-center gap-[8px]">
+            <button
+              type="button"
+              class="xl:hidden flex items-center justify-center -ml-[4px] p-[8px] rounded-[8px] outline-none transition-colors duration-150 ease-out hover:bg-neutral-secondary focus-visible:shadow-ring-gray motion-reduce:transition-none"
+              aria-label="Retour à la liste"
+              @click="mobileDetailOpen = false"
+            >
+              <Icon name="chevron-left" :size="20" class="text-icon-neutral-secondary" />
+            </button>
             <p class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
               Détails de la commande
             </p>
