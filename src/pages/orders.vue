@@ -36,16 +36,17 @@ const stepReached: Record<OrderStatus, number> = {
   'terminee':         3,
 }
 
-interface StatusVariant { label: string; bg: string; border: string; text: string }
-// Pill colors taken verbatim from Figma (5667-21229) — accent-gray / cyan /
-// turquoise / brand-purple. Same set is reused for the larger "Statut" badge
-// in the Informations card (only padding & font-size differ).
+interface StatusVariant { label: string; dot: string }
+// New badge style (Figma 5696-18817): neutral white pill with subtle gray
+// border + shadow, dark label text, and a small colored dot encoding the
+// status. Same colors are reused for the larger "Statut" badge in the
+// Informations card (only padding & font-size differ).
 const VARIANTS: Record<OrderStatus, StatusVariant> = {
-  'paiement-attente': { label: 'Paiement en attente', bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' },
-  'validee':          { label: 'Validée',             bg: 'bg-[#ebfeff]', border: 'border-[#a6f4fc]', text: 'text-[#088eaf]' },
-  'prete':            { label: 'Prête',               bg: 'bg-[#f2fdf9]', border: 'border-[#bdfae3]', text: 'text-[#18b97e]' },
-  'expediee':         { label: 'Expédiée',            bg: 'bg-[#f6f5ff]', border: 'border-[#c3b4fd]', text: 'text-[#7c3bed]' },
-  'terminee':         { label: 'Terminée',            bg: 'bg-[#fafafa]', border: 'border-[#e4e4e7]', text: 'text-[#48566a]' },
+  'paiement-attente': { label: 'Paiement en attente', dot: 'bg-[#c88a04]' },
+  'validee':          { label: 'Validée',             dot: 'bg-[#18b97e]' },
+  'prete':            { label: 'Prête',               dot: 'bg-[#088eaf]' },
+  'expediee':         { label: 'Expédiée',            dot: 'bg-[#2463eb]' },
+  'terminee':         { label: 'Terminée',            dot: 'bg-[#48566a]' },
 }
 
 // Varied seed: 14 orders, mixed statuses, dates spread across April–May 2026,
@@ -245,7 +246,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             <!-- Skeleton state -->
             <template v-if="isLoading">
               <template v-for="(row, ri) in skeletonRows" :key="`sk-${row}`">
-                <div v-if="ri > 0" class="h-px w-full bg-border-neutral-tertiary my-[12px]" />
+                <div v-if="ri > 0" class="h-px w-full bg-border-neutral-secondary my-[12px]" />
                 <div class="flex items-center gap-[16px] p-[12px]">
                   <div class="flex-1 flex flex-col gap-[8px] min-w-0">
                     <Skeleton width="160px" height="14px" />
@@ -270,7 +271,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
             <!-- Order rows -->
             <template v-else>
               <template v-for="(order, oi) in paginated" :key="order.id">
-                <div v-if="oi > 0" class="h-px w-full bg-border-neutral-tertiary my-[12px]" />
+                <div v-if="oi > 0" class="h-px w-full bg-border-neutral-secondary my-[12px]" />
                 <button
                   type="button"
                   :class="[
@@ -285,17 +286,11 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       #{{ order.number }}
                     </p>
                     <div class="flex items-center gap-[8px] w-full">
-                      <span class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-full border bg-[#fafafa] border-[#e4e4e7] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#48566a] whitespace-nowrap">
+                      <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] border bg-neutral border-border-neutral shadow-sm font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                         {{ order.date }}
                       </span>
-                      <span
-                        :class="[
-                          'inline-flex items-center justify-center px-[8px] py-[2px] rounded-full border font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] whitespace-nowrap',
-                          VARIANTS[order.status].bg,
-                          VARIANTS[order.status].border,
-                          VARIANTS[order.status].text,
-                        ]"
-                      >
+                      <span class="inline-flex items-center justify-center gap-[6px] pl-[8px] pr-[10px] py-[2px] rounded-[8px] border bg-neutral border-border-neutral shadow-sm font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        <span :class="['size-[8px] rounded-full shrink-0', VARIANTS[order.status].dot]" aria-hidden="true" />
                         {{ VARIANTS[order.status].label }}
                       </span>
                     </div>
@@ -470,14 +465,8 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Statut
                       </p>
-                      <span
-                        :class="[
-                          'inline-flex items-center justify-center px-[10px] py-[2px] rounded-full border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
-                          VARIANTS[selected.status].bg,
-                          VARIANTS[selected.status].border,
-                          VARIANTS[selected.status].text,
-                        ]"
-                      >
+                      <span class="inline-flex items-center justify-center gap-[6px] pl-[10px] pr-[12px] py-[4px] rounded-[8px] border bg-neutral border-border-neutral shadow-sm font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                        <span :class="['size-[8px] rounded-full shrink-0', VARIANTS[selected.status].dot]" aria-hidden="true" />
                         {{ VARIANTS[selected.status].label }}
                       </span>
                     </div>
