@@ -36,17 +36,16 @@ const stepReached: Record<OrderStatus, number> = {
   'terminee':         3,
 }
 
-interface StatusVariant { label: string; bg: string; border: string; text: string }
-// Soft tinted pill (Figma 5696-18817): bg/border/text derived from the
-// accent-{tone} token triplet (added in tokens.css). Same colors reused
-// for the larger "Statut" badge in the Informations card (only padding
-// differs). The date badge uses the gray tone too.
+interface StatusVariant { label: string }
+// Per Figma 5696-18817 update: all status pills use the neutral
+// accent-gray triplet. Same shell reused for the larger "Statut" badge
+// in the Informations card and for the date badge.
 const VARIANTS: Record<OrderStatus, StatusVariant> = {
-  'paiement-attente': { label: 'Paiement en attente', bg: 'bg-[var(--bg-accent-yellow)]',    border: 'border-[var(--border-accent-yellow)]',    text: 'text-[var(--text-accent-yellow)]' },
-  'validee':          { label: 'Validée',             bg: 'bg-[var(--bg-accent-turquoise)]', border: 'border-[var(--border-accent-turquoise)]', text: 'text-[var(--text-accent-turquoise)]' },
-  'prete':            { label: 'Prête',               bg: 'bg-[var(--bg-accent-cyan)]',      border: 'border-[var(--border-accent-cyan)]',      text: 'text-[var(--text-accent-cyan)]' },
-  'expediee':         { label: 'Expédiée',            bg: 'bg-[var(--bg-accent-brand)]',     border: 'border-[var(--border-accent-brand)]',     text: 'text-[var(--text-accent-brand)]' },
-  'terminee':         { label: 'Terminée',            bg: 'bg-[var(--bg-accent-gray)]',      border: 'border-[var(--border-accent-gray)]',      text: 'text-[var(--text-accent-gray)]' },
+  'paiement-attente': { label: 'Paiement en attente' },
+  'validee':          { label: 'Validée' },
+  'prete':            { label: 'Prête' },
+  'expediee':         { label: 'Expédiée' },
+  'terminee':         { label: 'Terminée' },
 }
 
 // Varied seed: 14 orders, mixed statuses, dates spread across April–May 2026,
@@ -289,14 +288,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border bg-[var(--bg-accent-gray)] border-[var(--border-accent-gray)] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[var(--text-accent-gray)] whitespace-nowrap">
                         {{ order.date }}
                       </span>
-                      <span
-                        :class="[
-                          'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
-                          VARIANTS[order.status].bg,
-                          VARIANTS[order.status].border,
-                          VARIANTS[order.status].text,
-                        ]"
-                      >
+                      <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border bg-[var(--bg-accent-gray)] border-[var(--border-accent-gray)] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[var(--text-accent-gray)] whitespace-nowrap">
                         {{ VARIANTS[order.status].label }}
                       </span>
                     </div>
@@ -472,14 +464,7 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
                       <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Statut
                       </p>
-                      <span
-                        :class="[
-                          'inline-flex items-center justify-center px-[12px] py-[4px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
-                          VARIANTS[selected.status].bg,
-                          VARIANTS[selected.status].border,
-                          VARIANTS[selected.status].text,
-                        ]"
-                      >
+                      <span class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-[16px] border bg-[var(--bg-accent-gray)] border-[var(--border-accent-gray)] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[var(--text-accent-gray)] whitespace-nowrap">
                         {{ VARIANTS[selected.status].label }}
                       </span>
                     </div>
