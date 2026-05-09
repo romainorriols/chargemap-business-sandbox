@@ -5,7 +5,6 @@ import type { SidebarV1Section } from '~/components/ui/SidebarV1.vue'
 const orgaStore = useOrgaStore()
 const busStore = useBusStore()
 const navStore = useNavStore()
-const uiStore = useUiStore()
 
 // V2 (white) sidebar groups — orga context only. BU context falls back
 // to the V1 sections list because the BU IA hasn't been redesigned for V2.
@@ -281,9 +280,6 @@ function onSelectOrga() {
       <slot />
     </main>
 
-    <div class="fixed bottom-[16px] right-[16px] z-50 flex flex-col gap-[12px] items-end">
-      <EmptyStateToggle v-model="uiStore.showEmptyState" />
-      <NavVersionToggle v-model="navStore.isNavV2" />
-    </div>
+    <SandboxControls />
   </div>
 </template>
