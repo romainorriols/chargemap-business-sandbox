@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS } from '~/stores/ui'
 
 // Sandbox-only floating control center. A single FAB at the bottom-right
 // opens a small popover that lists every dev / demo toggle (nav V2 vs V1,
@@ -7,6 +9,12 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 // the `controls` array — no extra component, no extra fixed pill.
 const navStore = useNavStore()
 const uiStore = useUiStore()
+const route = useRoute()
+
+// Max-width is stored per-page so each page keeps an independent value.
+// The popover always reflects the page the user is currently looking at.
+const currentPageKey = computed(() => pageKeyForPath(route.path))
+const currentMaxWidth = computed(() => uiStore.getMaxWidth(currentPageKey.value))
 
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
@@ -85,25 +93,25 @@ const controls = computed<Control[]>(() => [
           />
         </div>
 
-        <!-- Max-width selector (dashboard + orders). 3-way segmented since
-             a Toggle can't express more than 2 states. -->
+        <!-- Max-width selector — applies to the current page only.
+             Each page persists its own value in the UI store. -->
         <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
           <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
             Max width
           </span>
           <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
             <button
-              v-for="w in [2192, 1600, 800] as const"
+              v-for="w in SANDBOX_MAX_WIDTH_OPTIONS"
               :key="w"
               type="button"
               :class="[
                 'px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] tabular-nums outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
-                uiStore.maxWidth === w
+                currentMaxWidth === w
                   ? 'bg-neutral text-text-neutral shadow-sm'
                   : 'text-text-neutral-secondary hover:text-text-neutral',
               ]"
-              :aria-pressed="uiStore.maxWidth === w"
-              @click="uiStore.maxWidth = w"
+              :aria-pressed="currentMaxWidth === w"
+              @click="uiStore.setMaxWidth(currentPageKey, w)"
             >
               {{ w }}
             </button>

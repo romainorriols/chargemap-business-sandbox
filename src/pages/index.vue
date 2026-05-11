@@ -150,7 +150,7 @@ const supervisionCard = computed(() =>
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.maxWidth + 'px' }">
+    <div class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.getMaxWidth('/') + 'px' }">
 
       <!-- Page header -->
       <div class="h-[48px] flex items-center anim-fade-up" style="animation-delay: 0ms">

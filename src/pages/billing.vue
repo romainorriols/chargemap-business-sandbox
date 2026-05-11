@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
+const uiStore = useUiStore()
 import { ref, computed, watch, onMounted } from 'vue'
 type Status = 'paid' | 'processing' | 'toPay' | 'overdue' | 'refunded' | 'cancelled'
 
@@ -578,7 +579,7 @@ const skeletonRows = Array.from({ length: 8 }, (_, i) => i)
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]" @click="closeMenus">
-    <div class="mx-auto w-full max-w-[2192px] flex flex-col gap-[40px]">
+    <div class="mx-auto w-full flex flex-col gap-[40px]" :style="{ maxWidth: uiStore.getMaxWidth('/billing') + 'px' }">
 
       <!-- Page header — title on the left, header CTA on the right.
            Factures tab: "Exporter" (primary) toggles export mode; once

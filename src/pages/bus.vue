@@ -5,6 +5,7 @@ import type { HorizontalTab } from '../components/ui/HorizontalTabs.vue'
 import buEmptyIllustration from '@/assets/illustrations/bu-empty.svg'
 
 const busStore = useBusStore()
+const uiStore = useUiStore()
 const search = ref('')
 
 // Scope filter: active vs deactivated. Swapping tabs resets pagination so
@@ -144,7 +145,7 @@ const showSuccessToast = (title: string, description: string) => {
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div v-if="!creating" class="mx-auto w-full max-w-[2560px] flex flex-col gap-[32px]" @click="closeMenus">
+    <div v-if="!creating" class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.getMaxWidth('/bus') + 'px' }" @click="closeMenus">
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">

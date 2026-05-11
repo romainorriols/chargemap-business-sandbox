@@ -3,6 +3,7 @@ const headingClass = usePageHeadingClass()
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 const busStore = useBusStore()
+const uiStore = useUiStore()
 // ─── Data generation ─────────────────────────────────────────────────────────
 // Mulberry32 — seeded PRNG so the table is identical across reloads.
 function makeRng(seed: number) {
@@ -628,7 +629,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[2560px] flex flex-col gap-[32px]">
+    <div class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.getMaxWidth('/bu/supervised-charges') + 'px' }">
 
       <!-- Page header -->
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">

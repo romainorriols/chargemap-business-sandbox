@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
+const uiStore = useUiStore()
 import { ref, computed, reactive, watch } from 'vue'
 interface UserRole {
   bu: string
@@ -214,7 +215,7 @@ watch(rolesForm, (rows) => {
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]" @click="closeMenus">
     <!-- Listing view -->
-    <div v-if="!selectedUser" class="mx-auto w-full max-w-[2560px] flex flex-col gap-[32px]">
+    <div v-if="!selectedUser" class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.getMaxWidth('/users') + 'px' }">
 
       <!-- Page header -->
       <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
