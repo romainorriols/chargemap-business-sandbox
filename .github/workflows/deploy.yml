@@ -1,0 +1,132 @@
+# Clever Cloud — 1 branche = 1 URL preview.
+#
+# Replicates the Vercel preview workflow on Clever Cloud:
+#   - push on `main`            → deploys the prod app `chargemap-sandbox`
+#   - push on any other branch  → deploys (or creates) `chargemap-sandbox-<slug>`
+#   - branch deletion           → deletes the matching preview app
+#
+# Required GitHub secrets (see DEPLOY.md):
+#   - CLEVER_TOKEN
+#   - CLEVER_SECRET
+#   - CLEVER_ORGA_ID
+#
+# clever-tools CLI reference: https://github.com/CleverCloud/clever-tools
+# Verify CLI flags against the installed clever-tools version when you first
+# run this — minor flag renames happen between major releases.
+
+name: Deploy to Clever Cloud
+
+on:
+  push:
+    branches: ['**']
+  delete:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history is required because `clever deploy` pushes the
+          # working tree to the Clever Cloud git remote.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install clever-tools
+        run: npm install -g clever-tools
+
+      - name: Login to Clever Cloud
+        env:
+          CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+          CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+        run: clever login --token "$CLEVER_TOKEN" --secret "$CLEVER_SECRET"
+
+      - name: Resolve app name from branch
+        id: app
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          if [ "$BRANCH" = "main" ]; then
+            APP_NAME="chargemap-sandbox"
+          else
+            SLUG=$(echo "$BRANCH" \
+              | tr '[:upper:]' '[:lower:]' \
+              | sed 's|[/_]|-|g' \
+              | sed 's|[^a-z0-9-]||g' \
+              | cut -c1-40)
+            APP_NAME="chargemap-sandbox-$SLUG"
+          fi
+          echo "name=$APP_NAME" >> "$GITHUB_OUTPUT"
+          echo "Resolved app name: $APP_NAME"
+
+      - name: Create app if missing, else link
+        env:
+          ORGA_ID: ${{ secrets.CLEVER_ORGA_ID }}
+          APP_NAME: ${{ steps.app.outputs.name }}
+        run: |
+          if clever applications list --org "$ORGA_ID" 2>/dev/null | grep -q "$APP_NAME"; then
+            echo "App $APP_NAME exists — linking…"
+            clever link --alias "$APP_NAME" "$APP_NAME"
+          else
+            echo "Creating app $APP_NAME…"
+            clever create \
+              --type static-apache \
+              --org "$ORGA_ID" \
+              --alias "$APP_NAME" \
+              "$APP_NAME"
+            clever env set CC_WEBROOT             /.output/public  --alias "$APP_NAME"
+            clever env set CC_OVERRIDE_BUILDCACHE /.output/public  --alias "$APP_NAME"
+            clever env set CC_PRE_BUILD_HOOK      "npm install"    --alias "$APP_NAME"
+            clever env set CC_POST_BUILD_HOOK     "npm run generate" --alias "$APP_NAME"
+            clever env set CC_NODE_VERSION        "20"             --alias "$APP_NAME"
+          fi
+
+      - name: Deploy
+        env:
+          APP_NAME: ${{ steps.app.outputs.name }}
+        run: clever deploy --alias "$APP_NAME" --force
+
+      - name: Print URL
+        env:
+          APP_NAME: ${{ steps.app.outputs.name }}
+        run: echo "Deployed → https://$APP_NAME.cleverapps.io"
+
+  cleanup:
+    # Tears down the preview app when its branch is deleted, so dead PRs
+    # don't accumulate billable nano instances. Refuses to touch `main`.
+    if: github.event_name == 'delete' && github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm install -g clever-tools
+
+      - name: Login to Clever Cloud
+        env:
+          CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+          CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+        run: clever login --token "$CLEVER_TOKEN" --secret "$CLEVER_SECRET"
+
+      - name: Delete preview app for deleted branch
+        env:
+          BRANCH: ${{ github.event.ref }}
+        run: |
+          if [ "$BRANCH" = "main" ]; then
+            echo "Refusing to delete prod app"; exit 0
+          fi
+          SLUG=$(echo "$BRANCH" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed 's|[/_]|-|g' \
+            | sed 's|[^a-z0-9-]||g' \
+            | cut -c1-40)
+          APP_NAME="chargemap-sandbox-$SLUG"
+          echo "Deleting $APP_NAME…"
+          clever delete --alias "$APP_NAME" --yes || echo "(no app to delete)"

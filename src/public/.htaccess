@@ -1,0 +1,10 @@
+# Clever Cloud Static Apache — SPA fallback.
+# Routes that don't map to a real file/dir are rewritten to /index.html so
+# Nuxt's vue-router takes over on the client. Required because the project
+# runs in SPA mode (ssr: false) — direct hits on deep routes like
+# /bu/brakson/home would otherwise return 404 from Apache.
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
