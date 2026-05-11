@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
+const uiStore = useUiStore()
 import { ref, computed } from 'vue'
 // ─── Colors lifted from Figma variables ────────────────────────
 const COLOR_CYAN_400       = '#20d3ee'
@@ -149,7 +150,7 @@ const supervisionCard = computed(() =>
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[32px]">
+    <div class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.maxWidth + 'px' }">
 
       <!-- Page header -->
       <div class="h-[48px] flex items-center anim-fade-up" style="animation-delay: 0ms">

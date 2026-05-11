@@ -84,6 +84,31 @@ const controls = computed<Control[]>(() => [
             @update:model-value="c.set"
           />
         </div>
+
+        <!-- Max-width selector (dashboard + orders). 3-way segmented since
+             a Toggle can't express more than 2 states. -->
+        <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+            Max width
+          </span>
+          <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
+            <button
+              v-for="w in [2192, 1600, 800] as const"
+              :key="w"
+              type="button"
+              :class="[
+                'px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] tabular-nums outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
+                uiStore.maxWidth === w
+                  ? 'bg-neutral text-text-neutral shadow-sm'
+                  : 'text-text-neutral-secondary hover:text-text-neutral',
+              ]"
+              :aria-pressed="uiStore.maxWidth === w"
+              @click="uiStore.maxWidth = w"
+            >
+              {{ w }}
+            </button>
+          </div>
+        </div>
       </div>
     </Transition>
 
