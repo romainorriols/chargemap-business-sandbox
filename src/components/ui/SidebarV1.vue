@@ -187,9 +187,13 @@ const switcherLabel = computed(() => {
       </button>
     </div>
 
-    <!-- Menu list -->
+    <!-- Menu list — drops its bottom border when an upsell card is
+         rendered below (the card brings its own visual edge). -->
     <div
-      class="flex-1 min-h-0 p-[16px] bg-[#1e3fae] border-b border-brand overflow-y-auto scrollbar-hide"
+      :class="[
+        'flex-1 min-h-0 p-[16px] bg-[#1e3fae] overflow-y-auto scrollbar-hide',
+        $slots.upsell ? '' : 'border-b border-brand',
+      ]"
     >
       <!-- ORGA mode (flat) -->
       <div v-if="mode === 'orga' && !useSections" class="relative flex flex-col gap-[4px] w-full">

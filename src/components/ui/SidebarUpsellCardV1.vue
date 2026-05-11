@@ -59,15 +59,15 @@ defineEmits<{
         </p>
       </div>
 
-      <!-- Close button — dark icon on the light gradient. -->
+      <!-- Close button — invisible click target overlaid on the X that
+           is already baked into the PNG (top-right of the illustration),
+           matching V2's pattern. Drawing our own icon would double up. -->
       <button
         type="button"
-        class="absolute top-[8px] right-[8px] size-[24px] flex items-center justify-center rounded-[8px] bg-transparent outline-none transition-colors duration-150 ease-out hover:bg-black/10 focus-visible:shadow-ring-gray motion-reduce:transition-none"
+        class="absolute top-[7px] right-[7px] size-[24px] rounded-[8px] bg-transparent outline-none active:scale-[0.95] transition-transform duration-150 ease-out focus-visible:shadow-ring-gray motion-reduce:transition-none"
         :aria-label="closeLabel"
         @click="$emit('close')"
-      >
-        <Icon name="x-mark" variant="outline" :size="16" class="text-[#1e3b8a]" />
-      </button>
+      />
     </div>
   </div>
 </template>
