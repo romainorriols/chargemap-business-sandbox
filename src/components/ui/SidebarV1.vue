@@ -363,6 +363,16 @@ const switcherLabel = computed(() => {
       </div>
     </div>
 
+    <!-- Upsell slot — pinned between the menu list and the newsletter row.
+         Same dark-blue surface as the surrounding sections so it visually
+         belongs to the nav stack; the card inside provides its own contrast. -->
+    <div
+      v-if="$slots.upsell"
+      class="bg-[#1e3fae] border-b border-brand p-[16px] shrink-0"
+    >
+      <slot name="upsell" />
+    </div>
+
     <!-- Newsletter + Centre d'aide — pinned between the menu list and the user footer.
          Each row keeps the same dark-blue surface but spans edge-to-edge with a top border. -->
     <button

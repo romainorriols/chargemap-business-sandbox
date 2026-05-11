@@ -207,7 +207,53 @@ function onSelectOrga() {
       @back="onBack"
       @select-bu="onSelectBu"
       @select-orga="onSelectOrga"
-    />
+    >
+      <template #upsell>
+        <!-- V1 stacked deck — same upsellStep state as V2, but the cards
+             use SidebarUpsellCardV1 (glass surface, white text) so they
+             integrate with the deep blue nav instead of looking like a
+             white block dropped onto it. Orga-scoped only. -->
+        <div
+          v-if="!currentBu"
+          class="inline-grid grid-cols-[max-content] grid-rows-[max-content] place-items-start"
+        >
+          <Transition
+            enter-active-class="transition-opacity duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-[0.97]"
+          >
+            <SidebarUpsellCardV1
+              v-if="upsellStep >= 1"
+              variant="supervision"
+              :stacked="upsellStep === 1"
+              close-label="Fermer la carte Recharge sur site"
+              class="col-start-1 row-start-1"
+              :class="upsellStep === 1 ? 'ml-[10px]' : 'ml-0'"
+              @close="upsellStep = 0"
+            />
+          </Transition>
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 translate-y-[6px] scale-[0.98]"
+            enter-to-class="opacity-100 translate-y-0 scale-100"
+            leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0 scale-100"
+            leave-to-class="opacity-0 -translate-y-[8px] scale-[0.95]"
+          >
+            <SidebarUpsellCardV1
+              v-if="upsellStep === 1"
+              variant="briefcase"
+              close-label="Fermer la carte Boostez votre flotte"
+              class="col-start-1 row-start-1 ml-0 mt-[16px]"
+              @close="upsellStep = 2"
+            />
+          </Transition>
+        </div>
+      </template>
+    </SidebarV1>
     <Sidebar
       v-else
       :mode="sidebarMode"
