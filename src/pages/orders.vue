@@ -256,7 +256,7 @@ function closeMobileDetail() {
        pattern hides one or the other but the visible one still takes the
        full height. -->
   <div class="h-full px-[32px] pt-[44px] pb-[32px] flex flex-col">
-    <div class="mx-auto w-full max-w-[2192px] flex flex-col gap-[32px] flex-1 min-h-0">
+    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[32px] flex-1 min-h-0">
 
       <!-- Page header -->
       <div

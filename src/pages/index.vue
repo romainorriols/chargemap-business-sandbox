@@ -149,7 +149,7 @@ const supervisionCard = computed(() =>
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[2192px] flex flex-col gap-[32px]">
+    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[32px]">
 
       <!-- Page header -->
       <div class="h-[48px] flex items-center anim-fade-up" style="animation-delay: 0ms">
