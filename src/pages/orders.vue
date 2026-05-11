@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePageHeadingClass } from '../utils/typography'
 
@@ -176,6 +176,14 @@ const rangeEnd = computed(() => Math.min(page.value * perPage, filteredOrders.va
 
 const selectedId = ref<string>(orders[0].id)
 const selected = computed(() => orders.find(o => o.id === selectedId.value) ?? null)
+
+// Reset the detail panel scroll on every selection change so each order
+// opens from the top, regardless of how far the previous one was scrolled.
+const detailScroll = ref<HTMLElement | null>(null)
+watch(selectedId, async () => {
+  await nextTick()
+  detailScroll.value?.scrollTo({ top: 0 })
+})
 
 // When the active filter / search hides the currently-selected order, fall
 // back to the first visible one so the detail panel never shows an order
@@ -444,7 +452,7 @@ function closeMobileDetail() {
           </div>
 
           <!-- Scrollable detail body — cross-fades on selection change -->
-          <div class="scrollbar-hide flex-1 min-h-0 overflow-y-auto">
+          <div ref="detailScroll" class="scrollbar-hide flex-1 min-h-0 overflow-y-auto">
             <Transition
               mode="out-in"
               enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
