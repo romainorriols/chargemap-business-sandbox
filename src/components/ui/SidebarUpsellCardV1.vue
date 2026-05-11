@@ -1,16 +1,13 @@
 <script setup lang="ts">
-import briefcaseHero from '@/assets/illustrations/upsell-briefcase-hero.png'
+import briefcaseIllustration from '@/assets/illustrations/upsell-briefcase-illustration.png'
 
-// V1-native upsell card — single briefcase variant. Composes the
-// illustration in code so we never inherit the white card frame from
-// the V2 PNG (which produced ugly vertical edges on the sides of the
-// V1 card). Figma 5783-24812 spec:
-//   - container: bg-white/10, backdrop-blur-5, shadow, rounded-16
-//   - header gradient: linear-gradient(-48.2deg, brand/200 5.78%,
-//     brand/100 58.29%, yellow/100 107.87%)
-//   - illustration: 3 briefcase tiles (the hero PNG, transparent bg)
-// The glass surface stays in an absolute SIBLING layer so it never
-// wraps the <img> — keeps retina rendering crisp.
+// V1-native upsell card — single briefcase variant. Figma 5783-24812
+// spec: rounded-16, bg-white/10, backdrop-blur-5, shadow.
+// The glass surface lives in an absolute sibling layer so it never
+// wraps the <img> — applying backdrop-filter to an ancestor of the
+// illustration forces it into a low-res compositing layer on retina
+// (Chrome/Safari quirk). Keeping them as siblings preserves both the
+// glass aesthetic AND the illustration's native quality.
 
 interface Props {
   closeLabel?: string
@@ -36,21 +33,16 @@ defineEmits<{
 
     <!-- Card content -->
     <div class="relative rounded-[16px] overflow-hidden">
-      <!-- Illustration: Figma gradient + briefcase hero PNG overlay -->
-      <div
-        class="relative w-[256px] h-[112px] overflow-hidden"
-        :style="{
-          background:
-            'linear-gradient(-48.2deg, #bedbfe 5.78%, #dcebfe 58.29%, #fef9c3 107.87%)',
-        }"
-      >
-        <img
-          :src="briefcaseHero"
-          alt=""
-          class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[180px] h-auto select-none pointer-events-none"
-          draggable="false"
-        />
-      </div>
+      <!-- Illustration — the Figma export (768×360, gradient + 3
+           briefcase tiles, no card frame). Container matches the PNG
+           aspect ratio (256:120) so the image renders at its native
+           proportions, no object-fit cropping. -->
+      <img
+        :src="briefcaseIllustration"
+        alt=""
+        class="block w-[256px] h-[120px] select-none pointer-events-none"
+        draggable="false"
+      />
 
       <!-- Copy block — transparent so the glass behind shines through. -->
       <div class="relative px-[16px] py-[8px] flex flex-col">
