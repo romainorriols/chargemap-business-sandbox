@@ -416,8 +416,9 @@ watch(rolesForm, (rows) => {
     </div>
 
     <!-- Detail view (Figma 5007-74753) — swap in when a user is selected.
-         Matches the Settings layout (max-w-800, two stacked info cards). -->
-    <div v-else class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]">
+         Shares the /users page key so toggling on the list affects the
+         detail too. -->
+    <div v-else class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.getMaxWidth('/users') + 'px' }">
 
       <!-- Page header: back button + user name -->
       <div class="flex items-start gap-[16px] anim-fade-up" style="animation-delay: 0ms">
