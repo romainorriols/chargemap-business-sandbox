@@ -70,10 +70,10 @@ jobs:
           ORGA_ID: ${{ secrets.CLEVER_ORGA_ID }}
           APP_NAME: ${{ steps.app.outputs.name }}
         run: |
-          if clever applications list --org "$ORGA_ID" 2>/dev/null | grep -q "$APP_NAME"; then
-            echo "App $APP_NAME exists — linking…"
-            clever link --alias "$APP_NAME" "$APP_NAME"
-          else
+          # Try to link first — if it fails, the app doesn't exist yet and
+          # we create it. This avoids relying on the exact output format of
+          # `clever applications list`, which has shifted across versions.
+          if ! clever link --alias "$APP_NAME" "$APP_NAME" 2>/dev/null; then
             echo "Creating app $APP_NAME…"
             clever create \
               --type static-apache \
@@ -85,7 +85,20 @@ jobs:
             clever env set CC_PRE_BUILD_HOOK      "npm install"    --alias "$APP_NAME"
             clever env set CC_POST_BUILD_HOOK     "npm run generate" --alias "$APP_NAME"
             clever env set CC_NODE_VERSION        "20"             --alias "$APP_NAME"
+          else
+            echo "Linked to existing app $APP_NAME"
           fi
+
+      - name: Ensure friendly cleverapps.io subdomain
+        env:
+          APP_NAME: ${{ steps.app.outputs.name }}
+        # Idempotent: if the domain already exists, the command fails
+        # quietly and we keep going. Default Clever Cloud URLs use a UUID
+        # like `app-<uuid>.cleverapps.io`, this aliases a predictable
+        # `<app-name>.cleverapps.io` on top.
+        run: |
+          clever domain add "$APP_NAME.cleverapps.io" --alias "$APP_NAME" 2>/dev/null \
+            || echo "(domain $APP_NAME.cleverapps.io already configured)"
 
       - name: Deploy
         env:
@@ -95,7 +108,18 @@ jobs:
       - name: Print URL
         env:
           APP_NAME: ${{ steps.app.outputs.name }}
-        run: echo "Deployed → https://$APP_NAME.cleverapps.io"
+        run: |
+          URL="https://$APP_NAME.cleverapps.io"
+          echo "Deployed → $URL"
+          # Surface the URL on the workflow run's summary page so it's
+          # one click away from the Actions tab — closest thing to the
+          # Vercel PR-comment UX.
+          {
+            echo "### Deployed preview"
+            echo ""
+            echo "- **App**: \`$APP_NAME\`"
+            echo "- **URL**: $URL"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   cleanup:
     # Tears down the preview app when its branch is deleted, so dead PRs
