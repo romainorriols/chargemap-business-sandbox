@@ -2,6 +2,7 @@
 const headingClass = usePageHeadingClass()
 import { computed, reactive, ref, watch } from 'vue'
 const orgaStore = useOrgaStore()
+const uiStore = useUiStore()
 import briefcaseHero from '../assets/illustrations/upsell-briefcase-hero.png'
 import classicHighlight from '../assets/illustrations/classic-highlight.png'
 
@@ -327,7 +328,10 @@ watch(newTokenOpen, isOpen => {
   <div class="min-h-full h-full flex flex-col items-center gap-[40px] px-[32px] pt-[32px] pb-0 overflow-y-auto">
 
     <!-- Page header -->
-    <div class="w-full max-w-[800px] flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
+    <div
+      class="w-full flex items-center gap-[16px] anim-fade-up"
+      :style="{ maxWidth: uiStore.getMaxWidth('/settings') + 'px', animationDelay: '0ms' }"
+    >
       <h1 :class="headingClass">
         {{ pageTitle }}
       </h1>
@@ -338,15 +342,16 @@ watch(newTokenOpen, isOpen => {
       v-model="activeTab"
       :tabs="tabs"
       variant="underline"
-      class="w-full max-w-[800px] anim-fade-up"
-      style="animation-delay: 40ms"
+      class="w-full anim-fade-up"
+      :style="{ maxWidth: uiStore.getMaxWidth('/settings') + 'px', animationDelay: '40ms' }"
     />
 
     <!-- Tab content — canonical tab-fade animation (see main.css). -->
     <Transition mode="out-in" name="tab-fade">
       <div
         :key="activeTab"
-        class="w-full max-w-[800px] flex flex-col gap-[16px]"
+        class="w-full flex flex-col gap-[16px]"
+        :style="{ maxWidth: uiStore.getMaxWidth('/settings') + 'px' }"
       >
         <!-- Informations tab -->
         <template v-if="activeTab === 'informations'">

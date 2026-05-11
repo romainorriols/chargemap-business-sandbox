@@ -461,7 +461,7 @@ const showSuccessToast = (title: string, description: string) => {
     </div>
 
     <!-- Creation view (Figma 5007-85647) — inline swap from listing -->
-    <div v-else class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]">
+    <div v-else class="mx-auto w-full flex flex-col gap-[32px]" :style="{ maxWidth: uiStore.getMaxWidth('/bus') + 'px' }">
 
       <!-- Page header: back + title -->
       <div class="flex items-start gap-[16px] anim-fade-up" style="animation-delay: 0ms">

@@ -2,6 +2,7 @@
 const headingClass = usePageHeadingClass()
 import { computed, reactive, ref, watch } from 'vue'
 const busStore = useBusStore()
+const uiStore = useUiStore()
 const tabs = [
   { id: 'general', label: 'Général' },
   { id: 'facturation', label: 'Facturation' },
@@ -256,7 +257,7 @@ const showSuccessToast = (title: string, description: string) => {
     >
       <Banner
         v-if="!hasPaymentMethod"
-        class="max-w-[800px]"
+        :style="{ maxWidth: uiStore.getMaxWidth('/bu/settings') + 'px' }"
         type="warning"
         text="Renseigner un moyen de paiement pour commander des badges et licences"
         action-label="Renseigner"
@@ -267,7 +268,10 @@ const showSuccessToast = (title: string, description: string) => {
     </Transition>
 
     <!-- Page header -->
-    <div class="w-full max-w-[800px] flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
+    <div
+      class="w-full flex items-center gap-[16px] anim-fade-up"
+      :style="{ maxWidth: uiStore.getMaxWidth('/bu/settings') + 'px', animationDelay: '0ms' }"
+    >
       <h1 :class="headingClass">
         {{ pageTitle }}
       </h1>
@@ -280,8 +284,8 @@ const showSuccessToast = (title: string, description: string) => {
       :tabs="tabs"
       v-model="activeTab"
       variant="underline"
-      class="max-w-[800px] anim-fade-up"
-      style="animation-delay: 40ms"
+      class="anim-fade-up"
+      :style="{ maxWidth: uiStore.getMaxWidth('/bu/settings') + 'px', animationDelay: '40ms' }"
     >
       <template #panel>
         <div class="w-full flex flex-col gap-[16px]">
