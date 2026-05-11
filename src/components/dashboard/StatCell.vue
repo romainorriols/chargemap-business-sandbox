@@ -9,13 +9,13 @@ interface Props {
   value: string
   label: string
   link?: string
-  /** Accent color for the icon container + icon. Defaults to 'indigo' (the KPI-card accent in Figma). */
+  /** Accent color for the icon container + icon. Defaults to 'brand' (the KPI-card accent in Figma). */
   accent?: AccentColor
   /** Title-only variant: no icon, label is a section heading. Used for "Données RSE". */
   titleOnly?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
-  accent: 'indigo',
+  accent: 'brand',
   titleOnly: false,
 })
 
