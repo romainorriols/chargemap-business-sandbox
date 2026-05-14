@@ -1412,7 +1412,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
     >
       <aside
         v-if="budgetDrawerOpen"
-        class="fixed right-0 top-0 bottom-0 z-40 w-[424px] max-w-full bg-neutral border-l border-border-neutral-secondary shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col"
+        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
         aria-label="Budget de recharge"
