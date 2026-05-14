@@ -236,13 +236,13 @@ interface DayRule {
 const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
   active: true,
   days: [
-    { id: 'lundi',    label: 'Lundi',    active: true,  customHours: false, start: '09:00', end: '12:30' },
-    { id: 'mardi',    label: 'Mardi',    active: true,  customHours: false, start: '09:00', end: '12:30' },
-    { id: 'mercredi', label: 'Mercredi', active: true,  customHours: true,  start: '09:00', end: '12:30' },
-    { id: 'jeudi',    label: 'Jeudi',    active: true,  customHours: false, start: '09:00', end: '12:30' },
-    { id: 'vendredi', label: 'Vendredi', active: false, customHours: false, start: '09:00', end: '12:30' },
-    { id: 'samedi',   label: 'Samedi',   active: false, customHours: false, start: '09:00', end: '12:30' },
-    { id: 'dimanche', label: 'Dimanche', active: false, customHours: false, start: '09:00', end: '12:30' },
+    { id: 'lundi',    label: 'Lundi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
+    { id: 'mardi',    label: 'Mardi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
+    { id: 'mercredi', label: 'Mercredi', active: true,  customHours: true,  start: '00:00', end: '00:00' },
+    { id: 'jeudi',    label: 'Jeudi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
+    { id: 'vendredi', label: 'Vendredi', active: false, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'samedi',   label: 'Samedi',   active: false, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'dimanche', label: 'Dimanche', active: false, customHours: false, start: '00:00', end: '00:00' },
   ],
 })
 
@@ -1773,7 +1773,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </template>
                     <template v-else>
                       <div class="flex-1 min-w-0 flex items-center gap-[8px]">
-                        <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm">
+                        <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
                           <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
                           <input
                             v-model="day.start"
@@ -1784,7 +1784,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           >
                         </div>
                         <span class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">à</span>
-                        <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm">
+                        <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
                           <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
                           <input
                             v-model="day.end"
