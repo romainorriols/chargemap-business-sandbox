@@ -168,7 +168,6 @@ function resetDetailState() {
 const detailTabs: HorizontalTab[] = [
   { id: 'informations',     label: 'Informations' },
   { id: 'charging-rules',   label: 'Règles de recharge' },
-  { id: 'settings',         label: 'Paramètres' },
 ]
 const activeTab = ref<string>('informations')
 
@@ -178,12 +177,12 @@ type RattachementFilter = 'all' | 'full' | 'vehicle' | 'driver' | 'none'
 const itineranceFilter = ref<ItineranceFilter>('all')
 const rattachementFilter = ref<RattachementFilter>('all')
 const itineranceItems = [
-  { value: 'all', label: 'Itinérance : Tous' },
+  { value: 'all', label: 'Itinérance: Tous' },
   { value: 'on',  label: 'Activée' },
   { value: 'off', label: 'Désactivée' },
 ]
 const rattachementItems = [
-  { value: 'all',     label: 'Rattachement : Tous' },
+  { value: 'all',     label: 'Rattachement: Tous' },
   { value: 'full',    label: 'Conducteur + véhicule' },
   { value: 'vehicle', label: 'Véhicule seul' },
   { value: 'driver',  label: 'Conducteur seul' },
@@ -642,7 +641,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
     <!-- ── DETAIL ──────────────────────────────────────────────────────── -->
     <div
       v-else
-      class="mx-auto w-full flex flex-col gap-[24px]"
+      class="mx-auto w-full flex flex-col gap-[32px]"
       :style="{ maxWidth: uiStore.getMaxWidth('/bu/groups') + 'px' }"
     >
 
@@ -693,7 +692,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         leave-to-class="opacity-0 -translate-y-[4px]"
       >
         <!-- ── Tab: Informations ──────────────────────────────────── -->
-        <div v-if="activeTab === 'informations'" key="informations" class="flex flex-col gap-[24px]">
+        <div v-if="activeTab === 'informations'" key="informations" class="flex flex-col gap-[32px]">
 
           <!-- KPI row -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 60ms">
@@ -714,7 +713,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </p>
             </div>
             <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Itinérance activée</p>
+              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Itinérance activé</p>
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
                 {{ kpis.itinOn }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
               </p>
@@ -732,10 +731,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
             <!-- VIEW MODE -->
-            <div v-if="!isAddingBadges" key="view" class="flex flex-col gap-[24px]">
+            <div v-if="!isAddingBadges" key="view" class="flex flex-col gap-[16px]">
               <!-- Filter row (no card — sits directly between KPIs and table) -->
-              <div class="flex flex-col xl:flex-row xl:items-center gap-[16px] anim-fade-up" style="animation-delay: 80ms">
-                <div class="w-full xl:flex-1 xl:min-w-0">
+              <div class="flex flex-col lg:flex-row lg:items-center gap-[8px] anim-fade-up" style="animation-delay: 80ms">
+                <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
                   <Input
                     v-model="badgeSearch"
                     type="leadingIcon"
@@ -743,38 +742,36 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     placeholder="Recherche"
                   />
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:flex xl:flex-row xl:items-center gap-[16px]">
-                  <div class="w-full xl:flex-1 xl:min-w-[220px]">
-                    <Dropdown
-                      v-model="itineranceFilter"
-                      :items="itineranceItems"
-                      input-type="leadingIcon"
-                      icon="highway"
-                      :searchable="false"
-                      :show-label="false"
-                      :show-hint="false"
-                    />
-                  </div>
-                  <div class="w-full xl:flex-1 xl:min-w-[220px]">
-                    <Dropdown
-                      v-model="rattachementFilter"
-                      :items="rattachementItems"
-                      input-type="leadingIcon"
-                      icon="link"
-                      :searchable="false"
-                      :show-label="false"
-                      :show-hint="false"
-                    />
-                  </div>
-                  <div class="shrink-0">
-                    <Button
-                      type="primary"
-                      size="md"
-                      icon-left="plus"
-                      label="Ajouter des badges"
-                      @click="enterAddMode"
-                    />
-                  </div>
+                <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+                  <Dropdown
+                    v-model="itineranceFilter"
+                    :items="itineranceItems"
+                    input-type="leadingIcon"
+                    icon="highway"
+                    :searchable="false"
+                    :show-label="false"
+                    :show-hint="false"
+                  />
+                </div>
+                <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+                  <Dropdown
+                    v-model="rattachementFilter"
+                    :items="rattachementItems"
+                    input-type="leadingIcon"
+                    icon="link"
+                    :searchable="false"
+                    :show-label="false"
+                    :show-hint="false"
+                  />
+                </div>
+                <div class="shrink-0">
+                  <Button
+                    type="primary"
+                    size="md"
+                    icon-left="plus"
+                    label="Ajouter des badges"
+                    @click="enterAddMode"
+                  />
                 </div>
               </div>
 
@@ -809,7 +806,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                     Conducteur
                   </div>
-                  <div class="w-[56px] shrink-0" aria-hidden="true" />
+                  <div class="w-[68px] shrink-0" aria-hidden="true" />
                 </div>
 
                 <!-- Empty state -->
@@ -873,43 +870,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
                     <!-- Badge -->
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-mono font-medium text-[14px] leading-[1.5] tracking-[-0.28px] text-text-neutral truncate">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                         {{ b.identifier }}
                       </p>
                     </div>
 
                     <!-- Véhicule -->
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <span
-                        v-if="b.vehicle"
-                        class="inline-flex items-center px-[8px] h-[24px] rounded-[6px] border border-border-neutral-tertiary bg-neutral-tertiary font-mono font-medium text-[12px] leading-none tracking-[-0.24px] text-text-neutral-secondary"
-                      >
-                        {{ b.vehicle.plate }}
-                      </span>
-                      <span v-else class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary select-none" aria-label="Non rattaché">
-                        --
-                      </span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
+                        <span v-else aria-label="Non rattaché">--</span>
+                      </p>
                     </div>
 
                     <!-- Conducteur -->
-                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center gap-[10px]">
-                      <template v-if="b.driver">
-                        <div class="shrink-0 flex items-center justify-center size-[28px] rounded-full bg-brand-surface">
-                          <span class="font-sans font-semibold text-[11px] leading-none tracking-[-0.22px] text-text-brand-deep">
-                            {{ b.driver.initials }}
-                          </span>
-                        </div>
-                        <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                          {{ b.driver.name }}
-                        </p>
-                      </template>
-                      <span v-else class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary select-none" aria-label="Non rattaché">
-                        --
-                      </span>
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.driver">{{ b.driver.name }}</template>
+                        <span v-else aria-label="Non rattaché">--</span>
+                      </p>
                     </div>
 
                     <!-- Row menu (trailing) -->
-                    <div class="w-full md:w-[56px] shrink-0 px-[24px] md:px-[16px] pb-[16px] md:pb-[12px] md:py-[12px] flex md:items-center md:justify-end">
+                    <div class="w-full md:w-[68px] shrink-0 px-[24px] md:px-[16px] pb-[16px] md:pb-[12px] md:py-[12px] flex md:items-center md:justify-end">
                       <div class="relative">
                         <button
                           type="button"
@@ -1099,35 +1082,21 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </span>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-mono font-medium text-[14px] leading-[1.5] tracking-[-0.28px] text-text-neutral truncate">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                         {{ b.identifier }}
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <span
-                        v-if="b.vehicle"
-                        class="inline-flex items-center px-[8px] h-[24px] rounded-[6px] border border-border-neutral-tertiary bg-neutral-tertiary font-mono font-medium text-[12px] leading-none tracking-[-0.24px] text-text-neutral-secondary"
-                      >
-                        {{ b.vehicle.plate }}
-                      </span>
-                      <span v-else class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary select-none">
-                        --
-                      </span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
+                        <span v-else>--</span>
+                      </p>
                     </div>
-                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center gap-[10px]">
-                      <template v-if="b.driver">
-                        <div class="shrink-0 flex items-center justify-center size-[28px] rounded-full bg-brand-surface">
-                          <span class="font-sans font-semibold text-[11px] leading-none tracking-[-0.22px] text-text-brand-deep">
-                            {{ b.driver.initials }}
-                          </span>
-                        </div>
-                        <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                          {{ b.driver.name }}
-                        </p>
-                      </template>
-                      <span v-else class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary select-none">
-                        --
-                      </span>
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.driver">{{ b.driver.name }}</template>
+                        <span v-else>--</span>
+                      </p>
                     </div>
                   </button>
                 </div>
@@ -1160,7 +1129,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <!-- ── Tab: Règles de recharge ────────────────────────────── -->
-        <div v-else-if="activeTab === 'charging-rules'" key="charging-rules" class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[48px] flex flex-col items-center justify-center gap-[8px] text-center">
+        <div v-else key="charging-rules" class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[48px] flex flex-col items-center justify-center gap-[8px] text-center">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
             Règles de recharge
           </p>
@@ -1168,23 +1137,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             Définissez ici les règles de recharge appliquées aux badges de ce groupe.
           </p>
         </div>
-
-        <!-- ── Tab: Paramètres ────────────────────────────────────── -->
-        <div v-else key="settings" class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[48px] flex flex-col items-center justify-center gap-[8px] text-center">
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-            Paramètres du groupe
-          </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary max-w-[440px]">
-            Nom du groupe, description, suppression. Bientôt.
-          </p>
-        </div>
       </Transition>
 
       <div class="h-[60px]" />
     </div>
 
-    <!-- ── Floating selection pill (bottom-center, dark) ───────────────── -->
-    <div class="pointer-events-none fixed inset-x-0 bottom-[32px] z-40 flex justify-center px-[24px] md:left-[288px] md:right-0 md:px-[32px]">
+    <!-- ── Floating selection pill (centered in content area, dark) ───── -->
+    <div class="pointer-events-none fixed left-0 right-0 bottom-[32px] z-40 flex justify-center px-[24px] md:left-[304px] md:px-[32px]">
       <Transition
         enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
         enter-from-class="opacity-0 translate-y-[16px]"
@@ -1195,11 +1154,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       >
         <div
           v-if="selectedToRemove.size > 0 && !isAddingBadges && selectedGroup"
-          class="pointer-events-auto inline-flex items-center justify-between gap-[24px] min-w-[420px] max-w-full px-[16px] py-[12px] rounded-[10px] bg-text-neutral text-[#f1f5f9] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.18),0px_4px_6px_-4px_rgba(0,0,0,0.18)]"
+          class="pointer-events-auto flex items-center justify-between gap-[16px] w-[634px] max-w-full h-[61px] px-[16px] rounded-[8px] bg-[#020408] border border-[#344256] text-[#f1f5f9] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
           role="region"
           aria-label="Actions sur les badges sélectionnés"
         >
-          <div class="flex items-center gap-[8px] min-w-0">
+          <div class="flex items-center gap-[4px] min-w-0">
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] tabular-nums">
               {{ fmtCount(selectedToRemove.size) }}
             </span>
@@ -1212,15 +1171,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               aria-label="Effacer la sélection"
               @click="clearRemoveSelection"
             >
-              <Icon name="x-mark" variant="solid" :size="16" />
+              <Icon name="x-mark" variant="solid" :size="18" />
             </button>
           </div>
           <button
             type="button"
-            class="flex items-center gap-[8px] px-[12px] h-[36px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
+            class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
             @click="bulkRemoveSelected"
           >
-            <Icon name="trash" variant="outline" :size="18" />
+            <Icon name="trash" variant="outline" :size="20" />
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
               Supprimer
             </span>
