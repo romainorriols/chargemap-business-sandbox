@@ -2,7 +2,6 @@
 const headingClass = usePageHeadingClass()
 const uiStore = useUiStore()
 import { ref, computed, reactive, watch, onUnmounted } from 'vue'
-import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -181,21 +180,65 @@ function resetDetailState() {
   selectedToRemove.clear()
   itineranceFilter.value = 'all'
   rattachementFilter.value = 'all'
-  activeTab.value = 'informations'
-  chargingRulesBannerVisible.value = true
+  rulesExpanded.value = true
   clearUndo()
   dismissToast()
 }
 
-// "Ajoutez des règles de recharge" banner (Figma 5931-23349). Visible by
-// default, dismissable via X / Fermer / switching to the rules tab.
-const chargingRulesBannerVisible = ref(true)
-
-const detailTabs: HorizontalTab[] = [
-  { id: 'informations',     label: 'Informations' },
-  { id: 'charging-rules',   label: 'Règles de recharge' },
+// Règles de recharge — collapsible card with 6 rule items (Figma 5959-40868).
+// State is per-detail-entry; resets to expanded on backToList.
+interface ChargingRule {
+  id: string
+  title: string
+  description: string
+  icon: string
+  active: boolean
+}
+const rules: ChargingRule[] = [
+  {
+    id: 'budget',
+    title: 'Budget de recharge',
+    description: 'Fixer un budget limite à vos conducteurs par mois',
+    icon: 'money-coins',
+    active: true,
+  },
+  {
+    id: 'alerte',
+    title: "Seuil d'alerte",
+    description: 'Soyez alertez si vos conducteurs dépasse un certain budget par mois',
+    icon: 'bell',
+    active: true,
+  },
+  {
+    id: 'autorisations',
+    title: 'Autorisations quotidiennes',
+    description: 'Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges',
+    icon: 'calendar',
+    active: false,
+  },
+  {
+    id: 'vacance',
+    title: 'Blocage vacance',
+    description: 'Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée',
+    icon: 'paper-airplane',
+    active: true,
+  },
+  {
+    id: 'pays',
+    title: 'Blocage pays',
+    description: 'Grâce à la restriction géographique, vous pouvez définir les pays dans lesquels la recharge est autorisée ou non.',
+    icon: 'flag',
+    active: true,
+  },
+  {
+    id: 'reseau',
+    title: 'Blocage réseau',
+    description: 'Permet de définir sur quels réseaux la recharge est autorisée ou bloquée, afin de mieux contrôler vos usages',
+    icon: 'signal',
+    active: true,
+  },
 ]
-const activeTab = ref<string>('informations')
+const rulesExpanded = ref(true)
 
 // Filters scoped to the selected group's badges.
 type ItineranceFilter = 'all' | 'on' | 'off'
@@ -719,30 +762,83 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="anim-fade-up" style="animation-delay: 40ms">
-        <HorizontalTabs
-          v-model="activeTab"
-          :tabs="detailTabs"
-          variant="underline"
-        />
-      </div>
+      <!-- Règles de recharge du groupe — collapsible card (Figma 5959-40868) -->
+      <section class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 40ms">
+        <!-- Card header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px]">
+          <div class="flex items-center gap-[12px] min-w-0">
+            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
+              <Icon name="book-open" variant="outline" :size="24" class="text-icon-neutral-secondary" />
+            </div>
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+              Règles de recharge du groupe
+            </p>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
+            :aria-label="rulesExpanded ? 'Réduire les règles' : 'Développer les règles'"
+            :aria-expanded="rulesExpanded"
+            @click="rulesExpanded = !rulesExpanded"
+          >
+            <Icon
+              name="chevron-down"
+              variant="outline"
+              :size="20"
+              :class="['transition-transform duration-200 ease-out motion-reduce:transition-none', rulesExpanded ? 'rotate-180' : 'rotate-0']"
+            />
+          </button>
+        </div>
 
-      <!-- Tab content -->
-      <Transition
-        mode="out-in"
-        enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-        enter-from-class="opacity-0 translate-y-[6px]"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-[4px]"
-      >
-        <!-- ── Tab: Informations ──────────────────────────────────── -->
-        <div v-if="activeTab === 'informations'" key="informations" class="flex flex-col gap-[32px]">
+        <!-- Collapsible grid of 6 rule cards -->
+        <div :class="['grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none', rulesExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]']">
+          <div class="overflow-hidden">
+            <div class="px-[16px] pb-[16px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
+              <article
+                v-for="rule in rules"
+                :key="rule.id"
+                class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[16px] overflow-clip"
+              >
+                <div class="flex items-center justify-between w-full">
+                  <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
+                    <Icon :name="rule.icon" variant="outline" :size="24" class="text-icon-neutral-secondary" />
+                  </div>
+                  <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
+                    <span
+                      :class="[
+                        'flex items-center justify-center size-[21px] rounded-full',
+                        rule.active ? 'bg-success-medium' : 'bg-text-neutral-secondary',
+                      ]"
+                    >
+                      <Icon :name="rule.active ? 'check' : 'x-mark'" variant="solid" :size="12" class="text-white" />
+                    </span>
+                    <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                      {{ rule.active ? 'Activé' : 'Désactivé' }}
+                    </span>
+                  </span>
+                </div>
+                <div class="flex flex-col gap-[4px] w-full">
+                  <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                    {{ rule.title }}
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    {{ rule.description }}
+                  </p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Informations section -->
+      <div class="flex flex-col gap-[16px]">
+        <h2 class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral anim-fade-up" style="animation-delay: 60ms">
+          Informations
+        </h2>
 
           <!-- KPI row -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 60ms">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 80ms">
             <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
               <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
@@ -766,20 +862,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </p>
             </div>
           </div>
-
-          <!-- Charging-rules banner (Figma 5931-23349) -->
-          <Alert
-            v-if="chargingRulesBannerVisible"
-            v-model="chargingRulesBannerVisible"
-            type="brand"
-            title="Ajoutez des règles de recharge !"
-            description="Définissez des règles de recharge pour mieux contrôler les usages et vos coûts"
-            primary-action-label="Définir des règles"
-            secondary-action-label="Fermer"
-            :dismissable="true"
-            @primary-action="activeTab = 'charging-rules'; chargingRulesBannerVisible = false"
-            @secondary-action="chargingRulesBannerVisible = false"
-          />
 
           <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
                peek to suggest layering, matching the Figma Frame 6070 mock. -->
@@ -1243,18 +1325,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </section>
             </div>
           </Transition>
-        </div>
-
-        <!-- ── Tab: Règles de recharge ────────────────────────────── -->
-        <div v-else key="charging-rules" class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[48px] flex flex-col items-center justify-center gap-[8px] text-center">
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-            Règles de recharge
-          </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary max-w-[440px]">
-            Définissez ici les règles de recharge appliquées aux badges de ce groupe.
-          </p>
-        </div>
-      </Transition>
+      </div>
 
       <div class="h-[60px]" />
     </div>
