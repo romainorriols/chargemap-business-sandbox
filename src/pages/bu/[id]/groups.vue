@@ -790,10 +790,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     v-model="itineranceFilter"
                     :items="itineranceItems"
                     input-type="leadingIcon"
-                    icon="map"
+                    icon="public-road"
                     :searchable="false"
                     :show-label="false"
                     :show-hint="false"
+                    :teleport="true"
                   />
                 </div>
                 <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
@@ -805,6 +806,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :searchable="false"
                     :show-label="false"
                     :show-hint="false"
+                    :teleport="true"
                   />
                 </div>
                 <div class="shrink-0">
@@ -912,26 +914,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </p>
                 </div>
 
-                <!-- Rows (charges-row pattern: symmetric vertical 4px slide) -->
-                <TransitionGroup
-                  v-else
-                  tag="div"
-                  enter-active-class="transition-[opacity,transform] duration-[200ms] ease motion-reduce:transition-none"
-                  enter-from-class="opacity-0 translate-y-[4px]"
-                  enter-to-class="opacity-100 translate-y-0"
-                  leave-active-class="transition-[opacity,transform] duration-[200ms] ease motion-reduce:transition-none"
-                  leave-from-class="opacity-100 translate-y-0"
-                  leave-to-class="opacity-0 -translate-y-[4px]"
-                  move-class="transition-transform duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-                >
+                <!-- Rows — billing-style anim-fade-up cascade (key on b.id so
+                     pagination re-mounts new rows and re-runs the animation,
+                     staggered by 20ms each). -->
+                <div v-else>
                   <div
-                    v-for="b in badgePaginated"
+                    v-for="(b, i) in badgePaginated"
                     :key="b.id"
                     role="button"
                     tabindex="0"
                     :aria-pressed="selectedToRemove.has(b.id)"
+                    :style="{ animationDelay: `${i * 20}ms` }"
                     :class="[
-                      'group/row relative flex flex-col md:flex-row md:items-stretch w-full md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 cursor-pointer outline-none',
+                      'group/row relative flex flex-col md:flex-row md:items-stretch w-full md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 cursor-pointer outline-none anim-fade-up',
                       'transition-colors duration-150 ease-out motion-reduce:transition-none focus-visible:bg-neutral-secondary',
                       selectedToRemove.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
                     ]"
@@ -1043,7 +1038,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </div>
                     </div>
                   </div>
-                </TransitionGroup>
+                </div>
 
                 <TableFooter
                   v-if="filteredBadges.length > 0"
@@ -1173,12 +1168,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <!-- Rows -->
                     <div v-else>
                       <button
-                        v-for="b in addPaginated"
+                        v-for="(b, i) in addPaginated"
                         :key="b.id"
                         type="button"
                         :aria-pressed="selectedToAdd.has(b.id)"
+                        :style="{ animationDelay: `${i * 20}ms` }"
                         :class="[
-                          'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 text-left',
+                          'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 text-left anim-fade-up',
                           'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
                           selectedToAdd.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
                         ]"
