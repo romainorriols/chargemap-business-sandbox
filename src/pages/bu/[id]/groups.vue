@@ -1572,7 +1572,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </div>
 
-          <!-- Type + amount (visible only when active) -->
+          <!-- Type + amount (visible only when active) — both inputs sit
+               inside a single outer card per Figma 5980-29501. -->
           <Transition
             enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
             enter-from-class="opacity-0 -translate-y-[4px]"
@@ -1581,7 +1582,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
-            <div v-if="alerteForm.active" class="flex flex-col gap-[8px]">
+            <div v-if="alerteForm.active" class="p-[8px] rounded-[12px] border border-border-neutral-secondary bg-neutral flex flex-col gap-[8px]">
               <Dropdown
                 v-model="alerteForm.type"
                 :items="alerteTypeItems"
@@ -1593,13 +1594,14 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
               <div class="relative">
                 <Input
-                  v-model="alerteForm.amount"
+                  :model-value="isAlerteAmountDisabled ? '' : alerteForm.amount"
                   type="trailingText"
                   :addon-trailing-text="alerteSuffix"
                   :show-currency-icon="false"
                   :trailing-separator="false"
                   :disabled="isAlerteAmountDisabled"
                   placeholder="0"
+                  @update:model-value="(v) => (alerteForm.amount = v)"
                 />
                 <!-- Tooltip — visible while the amount input is disabled
                      because the Budget de recharge rule is not active. -->
@@ -1613,7 +1615,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 >
                   <div
                     v-if="isAlerteAmountDisabled"
-                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[260px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-center"
+                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left"
                     role="status"
                   >
                     Définissez un budget de recharge pour utiliser cette option.
