@@ -183,8 +183,6 @@ function resetDetailState() {
   rattachementFilter.value = 'all'
   activeTab.value = 'informations'
   chargingRulesBannerVisible.value = true
-  budgetExpanded.value = true
-  restrictionsExpanded.value = true
   clearUndo()
   dismissToast()
 }
@@ -199,8 +197,7 @@ const activeTab = ref<string>('informations')
 // "Ajoutez des règles de recharge" banner on the Informations tab
 const chargingRulesBannerVisible = ref(true)
 
-// Charging-rules tab splits the six rules into two collapsible sections
-// (Budget × 2 rules, Restrictions × 4 rules) — Figma 5959-58388.
+// Charging-rules tab — 3×2 grid of 6 rule cards (Figma 5959-38687).
 type StatusIcon = 'check' | 'x-mark'
 type IconVariant = 'outline' | 'solid'
 interface ChargingRule {
@@ -212,7 +209,7 @@ interface ChargingRule {
   statusIcon: StatusIcon
   statusLabel: 'Activé' | 'Désactivé'
 }
-const budgetRules: ChargingRule[] = [
+const rules: ChargingRule[] = [
   {
     id: 'budget',
     title: 'Budget de recharge',
@@ -231,8 +228,6 @@ const budgetRules: ChargingRule[] = [
     statusIcon: 'check',
     statusLabel: 'Activé',
   },
-]
-const restrictionRules: ChargingRule[] = [
   {
     id: 'autorisations',
     title: 'Autorisations quotidiennes',
@@ -270,8 +265,6 @@ const restrictionRules: ChargingRule[] = [
     statusLabel: 'Activé',
   },
 ]
-const budgetExpanded = ref(true)
-const restrictionsExpanded = ref(true)
 
 // Filters scoped to the selected group's badges.
 type ItineranceFilter = 'all' | 'on' | 'off'
@@ -1322,129 +1315,41 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </Transition>
         </div>
 
-        <!-- ── Tab: Règles de recharge ─────────────────────────────── -->
-        <div v-else key="charging-rules" class="flex flex-col gap-[16px]">
-          <!-- Budget section (2 rule cards on a 2-up grid) -->
-          <section class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 40ms">
-            <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px]">
-              <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                Budget
-              </p>
-              <button
-                type="button"
-                class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                :aria-label="budgetExpanded ? 'Réduire Budget' : 'Développer Budget'"
-                :aria-expanded="budgetExpanded"
-                @click="budgetExpanded = !budgetExpanded"
-              >
-                <Icon
-                  name="chevron-down"
-                  variant="outline"
-                  :size="20"
-                  :class="['transition-transform duration-200 ease-out motion-reduce:transition-none', budgetExpanded ? 'rotate-180' : 'rotate-0']"
-                />
-              </button>
-            </div>
-            <div :class="['grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none', budgetExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]']">
-              <div class="overflow-hidden">
-                <div class="px-[16px] pb-[16px] grid grid-cols-1 lg:grid-cols-2 gap-[16px]">
-                  <article
-                    v-for="rule in budgetRules"
-                    :key="rule.id"
-                    class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[16px] overflow-clip"
-                  >
-                    <div class="flex items-center justify-between w-full">
-                      <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
-                        <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
-                      </div>
-                      <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
-                        <svg v-if="rule.statusIcon === 'check'" width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
-                          <circle cx="10.5" cy="10.5" r="10.5" fill="#18B97E" />
-                          <path fill-rule="evenodd" clip-rule="evenodd" d="M14.2781 6.98105C14.4426 7.09072 14.487 7.31296 14.3774 7.47745L10.0819 13.9206C10.0224 14.0099 9.92608 14.0677 9.81936 14.0783C9.71264 14.0889 9.60681 14.051 9.53098 13.9752L6.66734 11.1115C6.52755 10.9718 6.52755 10.7451 6.66734 10.6053C6.80713 10.4655 7.03378 10.4655 7.17357 10.6053L9.72846 13.1602L13.7817 7.08033C13.8914 6.91584 14.1136 6.87139 14.2781 6.98105Z" fill="white" />
-                        </svg>
-                        <svg v-else width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
-                          <circle cx="10.5" cy="10.5" r="10.5" fill="#94A3B8" />
-                          <path d="M13.1105 7.38618C13.2503 7.24639 13.4769 7.24639 13.6167 7.38618C13.7565 7.52597 13.7565 7.75256 13.6167 7.89235L11.0061 10.5029L13.6167 13.1134L13.6414 13.1405C13.7561 13.2811 13.7477 13.4886 13.6167 13.6196C13.4856 13.7507 13.2781 13.759 13.1376 13.6443L13.1105 13.6196L10.5 11.0091L7.88942 13.6196C7.74963 13.7594 7.52304 13.7594 7.38325 13.6196C7.24346 13.4798 7.24346 13.2532 7.38325 13.1134L9.9938 10.5029L7.38325 7.89235L7.35854 7.86531C7.24385 7.72472 7.25218 7.51724 7.38325 7.38618C7.51431 7.25511 7.72179 7.24678 7.86238 7.36147L7.88942 7.38618L10.5 9.99673L13.1105 7.38618Z" fill="white" />
-                        </svg>
-                        <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                          {{ rule.statusLabel }}
-                        </span>
-                      </span>
-                    </div>
-                    <div class="flex flex-col gap-[4px] w-full">
-                      <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                        {{ rule.title }}
-                      </p>
-                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                        {{ rule.description }}
-                      </p>
-                    </div>
-                  </article>
-                </div>
+        <!-- ── Tab: Règles de recharge — 3×2 grid (Figma 5959-38687) ──── -->
+        <div v-else key="charging-rules" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
+          <article
+            v-for="(rule, i) in rules"
+            :key="rule.id"
+            :style="{ animationDelay: `${40 + i * 30}ms` }"
+            class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[16px] overflow-clip anim-fade-up"
+          >
+            <div class="flex items-center justify-between w-full">
+              <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
+                <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
               </div>
+              <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
+                <svg v-if="rule.statusIcon === 'check'" width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="10.5" fill="#18B97E" />
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M14.2781 6.98105C14.4426 7.09072 14.487 7.31296 14.3774 7.47745L10.0819 13.9206C10.0224 14.0099 9.92608 14.0677 9.81936 14.0783C9.71264 14.0889 9.60681 14.051 9.53098 13.9752L6.66734 11.1115C6.52755 10.9718 6.52755 10.7451 6.66734 10.6053C6.80713 10.4655 7.03378 10.4655 7.17357 10.6053L9.72846 13.1602L13.7817 7.08033C13.8914 6.91584 14.1136 6.87139 14.2781 6.98105Z" fill="white" />
+                </svg>
+                <svg v-else width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="10.5" fill="#94A3B8" />
+                  <path d="M13.1105 7.38618C13.2503 7.24639 13.4769 7.24639 13.6167 7.38618C13.7565 7.52597 13.7565 7.75256 13.6167 7.89235L11.0061 10.5029L13.6167 13.1134L13.6414 13.1405C13.7561 13.2811 13.7477 13.4886 13.6167 13.6196C13.4856 13.7507 13.2781 13.759 13.1376 13.6443L13.1105 13.6196L10.5 11.0091L7.88942 13.6196C7.74963 13.7594 7.52304 13.7594 7.38325 13.6196C7.24346 13.4798 7.24346 13.2532 7.38325 13.1134L9.9938 10.5029L7.38325 7.89235L7.35854 7.86531C7.24385 7.72472 7.25218 7.51724 7.38325 7.38618C7.51431 7.25511 7.72179 7.24678 7.86238 7.36147L7.88942 7.38618L10.5 9.99673L13.1105 7.38618Z" fill="white" />
+                </svg>
+                <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                  {{ rule.statusLabel }}
+                </span>
+              </span>
             </div>
-          </section>
-
-          <!-- Restrictions section (4 rule cards on a 2-up grid) -->
-          <section class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 80ms">
-            <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px]">
-              <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                Restrictions
+            <div class="flex flex-col gap-[4px] w-full">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                {{ rule.title }}
               </p>
-              <button
-                type="button"
-                class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
-                :aria-label="restrictionsExpanded ? 'Réduire Restrictions' : 'Développer Restrictions'"
-                :aria-expanded="restrictionsExpanded"
-                @click="restrictionsExpanded = !restrictionsExpanded"
-              >
-                <Icon
-                  name="chevron-down"
-                  variant="outline"
-                  :size="20"
-                  :class="['transition-transform duration-200 ease-out motion-reduce:transition-none', restrictionsExpanded ? 'rotate-180' : 'rotate-0']"
-                />
-              </button>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                {{ rule.description }}
+              </p>
             </div>
-            <div :class="['grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none', restrictionsExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]']">
-              <div class="overflow-hidden">
-                <div class="px-[16px] pb-[16px] grid grid-cols-1 lg:grid-cols-2 gap-[16px]">
-                  <article
-                    v-for="rule in restrictionRules"
-                    :key="rule.id"
-                    class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[16px] overflow-clip"
-                  >
-                    <div class="flex items-center justify-between w-full">
-                      <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
-                        <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
-                      </div>
-                      <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
-                        <svg v-if="rule.statusIcon === 'check'" width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
-                          <circle cx="10.5" cy="10.5" r="10.5" fill="#18B97E" />
-                          <path fill-rule="evenodd" clip-rule="evenodd" d="M14.2781 6.98105C14.4426 7.09072 14.487 7.31296 14.3774 7.47745L10.0819 13.9206C10.0224 14.0099 9.92608 14.0677 9.81936 14.0783C9.71264 14.0889 9.60681 14.051 9.53098 13.9752L6.66734 11.1115C6.52755 10.9718 6.52755 10.7451 6.66734 10.6053C6.80713 10.4655 7.03378 10.4655 7.17357 10.6053L9.72846 13.1602L13.7817 7.08033C13.8914 6.91584 14.1136 6.87139 14.2781 6.98105Z" fill="white" />
-                        </svg>
-                        <svg v-else width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
-                          <circle cx="10.5" cy="10.5" r="10.5" fill="#94A3B8" />
-                          <path d="M13.1105 7.38618C13.2503 7.24639 13.4769 7.24639 13.6167 7.38618C13.7565 7.52597 13.7565 7.75256 13.6167 7.89235L11.0061 10.5029L13.6167 13.1134L13.6414 13.1405C13.7561 13.2811 13.7477 13.4886 13.6167 13.6196C13.4856 13.7507 13.2781 13.759 13.1376 13.6443L13.1105 13.6196L10.5 11.0091L7.88942 13.6196C7.74963 13.7594 7.52304 13.7594 7.38325 13.6196C7.24346 13.4798 7.24346 13.2532 7.38325 13.1134L9.9938 10.5029L7.38325 7.89235L7.35854 7.86531C7.24385 7.72472 7.25218 7.51724 7.38325 7.38618C7.51431 7.25511 7.72179 7.24678 7.86238 7.36147L7.88942 7.38618L10.5 9.99673L13.1105 7.38618Z" fill="white" />
-                        </svg>
-                        <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                          {{ rule.statusLabel }}
-                        </span>
-                      </span>
-                    </div>
-                    <div class="flex flex-col gap-[4px] w-full">
-                      <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                        {{ rule.title }}
-                      </p>
-                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                        {{ rule.description }}
-                      </p>
-                    </div>
-                  </article>
-                </div>
-              </div>
-            </div>
-          </section>
+          </article>
         </div>
       </Transition>
 
