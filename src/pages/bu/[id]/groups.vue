@@ -186,13 +186,19 @@ function resetDetailState() {
 }
 
 // Règles de recharge — collapsible card with 6 rule items (Figma 5959-40868).
-// State is per-detail-entry; resets to expanded on backToList.
+// Each rule keeps its own icon (with variant), status icon and status label,
+// because the Figma mock decouples those: cards 4/5/6 carry a x-mark icon
+// alongside an "Activé" label (intentional or not, pixel-perfect is the ask).
+type StatusIcon = 'check' | 'x-mark'
+type IconVariant = 'outline' | 'solid'
 interface ChargingRule {
   id: string
   title: string
   description: string
   icon: string
-  active: boolean
+  iconVariant: IconVariant
+  statusIcon: StatusIcon
+  statusLabel: 'Activé' | 'Désactivé'
 }
 const rules: ChargingRule[] = [
   {
@@ -200,42 +206,54 @@ const rules: ChargingRule[] = [
     title: 'Budget de recharge',
     description: 'Fixer un budget limite à vos conducteurs par mois',
     icon: 'money-coins',
-    active: true,
+    iconVariant: 'outline',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
   },
   {
     id: 'alerte',
-    title: "Seuil d'alerte",
+    title: 'Seuil d’alerte',
     description: 'Soyez alertez si vos conducteurs dépasse un certain budget par mois',
-    icon: 'bell',
-    active: true,
+    icon: 'bell-alert',
+    iconVariant: 'outline',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
   },
   {
     id: 'autorisations',
     title: 'Autorisations quotidiennes',
     description: 'Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges',
-    icon: 'calendar',
-    active: false,
+    icon: 'calendar-days',
+    iconVariant: 'outline',
+    statusIcon: 'x-mark',
+    statusLabel: 'Désactivé',
   },
   {
     id: 'vacance',
     title: 'Blocage vacance',
     description: 'Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée',
-    icon: 'paper-airplane',
-    active: true,
+    icon: 'airport-alt',
+    iconVariant: 'outline',
+    statusIcon: 'x-mark',
+    statusLabel: 'Activé',
   },
   {
     id: 'pays',
     title: 'Blocage pays',
     description: 'Grâce à la restriction géographique, vous pouvez définir les pays dans lesquels la recharge est autorisée ou non.',
     icon: 'flag',
-    active: true,
+    iconVariant: 'outline',
+    statusIcon: 'x-mark',
+    statusLabel: 'Activé',
   },
   {
     id: 'reseau',
     title: 'Blocage réseau',
     description: 'Permet de définir sur quels réseaux la recharge est autorisée ou bloquée, afin de mieux contrôler vos usages',
-    icon: 'signal',
-    active: true,
+    icon: 'route-off',
+    iconVariant: 'solid',
+    statusIcon: 'x-mark',
+    statusLabel: 'Activé',
   },
 ]
 const rulesExpanded = ref(true)
@@ -770,7 +788,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
               <Icon name="book-open" variant="outline" :size="24" class="text-icon-neutral-secondary" />
             </div>
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
               Règles de recharge du groupe
             </p>
           </div>
@@ -801,19 +819,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               >
                 <div class="flex items-center justify-between w-full">
                   <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
-                    <Icon :name="rule.icon" variant="outline" :size="24" class="text-icon-neutral-secondary" />
+                    <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
                   </div>
                   <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
                     <span
                       :class="[
                         'flex items-center justify-center size-[21px] rounded-full',
-                        rule.active ? 'bg-success-medium' : 'bg-text-neutral-secondary',
+                        rule.statusIcon === 'check' ? 'bg-success-medium' : 'bg-text-neutral',
                       ]"
                     >
-                      <Icon :name="rule.active ? 'check' : 'x-mark'" variant="solid" :size="12" class="text-white" />
+                      <Icon :name="rule.statusIcon" variant="solid" :size="12" class="text-white" />
                     </span>
                     <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                      {{ rule.active ? 'Activé' : 'Désactivé' }}
+                      {{ rule.statusLabel }}
                     </span>
                   </span>
                 </div>
