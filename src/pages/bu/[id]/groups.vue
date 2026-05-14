@@ -185,6 +185,7 @@ function resetDetailState() {
   chargingRulesBannerVisible.value = true
   selectedRuleId.value = null
   budgetDrawerOpen.value = false
+  alerteDrawerOpen.value = false
   clearUndo()
   dismissToast()
 }
@@ -218,6 +219,26 @@ const selectedRuleId = ref<string | null>(null)
 // Drawer state for the Budget de recharge rule (Figma 5980-29598 / 5980-28115)
 const budgetDrawerOpen = ref(false)
 const budgetForm = reactive({ active: false, amount: '230,00' })
+
+// Drawer state for the Seuil d'alerte rule (Figma 5988-37178). Threshold type
+// is either a percentage of the recharge budget or a monthly cap in euros.
+const alerteDrawerOpen = ref(false)
+type AlerteType = 'percentage' | 'monthly'
+const alerteForm = reactive<{ active: boolean; type: AlerteType; amount: string }>({
+  active: false,
+  type: 'percentage',
+  amount: '50',
+})
+const alerteTypeItems = [
+  { value: 'percentage', label: 'Pourcentage du budget de recharge' },
+  { value: 'monthly',    label: 'Seuil d’alerte mensuel' },
+]
+const alerteSuffix = computed(() => (alerteForm.type === 'percentage' ? '%' : 'Eur'))
+const isAlerteAmountDisabled = computed(() => {
+  if (alerteForm.type !== 'percentage') return false
+  const budgetRule = rules.find(r => r.id === 'budget')
+  return !budgetRule || budgetRule.statusIcon !== 'check'
+})
 
 const rules: ChargingRule[] = reactive([
   {
@@ -283,6 +304,12 @@ function onRuleClick(rule: ChargingRule) {
     budgetDrawerOpen.value = true
     return
   }
+  if (rule.id === 'alerte') {
+    selectedRuleId.value = rule.id
+    alerteForm.active = rule.statusIcon === 'check'
+    alerteDrawerOpen.value = true
+    return
+  }
   selectedRuleId.value = selectedRuleId.value === rule.id ? null : rule.id
 }
 
@@ -300,6 +327,22 @@ function saveBudget() {
   budgetDrawerOpen.value = false
   selectedRuleId.value = null
   showSuccessToast('Budget de recharge mis à jour', '')
+}
+
+function closeAlerteDrawer() {
+  alerteDrawerOpen.value = false
+  selectedRuleId.value = null
+}
+
+function saveAlerte() {
+  const rule = rules.find(r => r.id === 'alerte')
+  if (rule) {
+    rule.statusIcon = alerteForm.active ? 'check' : 'x-mark'
+    rule.statusLabel = alerteForm.active ? 'Activé' : 'Désactivé'
+  }
+  alerteDrawerOpen.value = false
+  selectedRuleId.value = null
+  showSuccessToast('Seuil d’alerte mis à jour', '')
 }
 
 // Filters scoped to the selected group's badges.
@@ -1480,6 +1523,112 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeBudgetDrawer" />
           <Button type="primary" size="md" label="Enregistrer" @click="saveBudget" />
+        </div>
+      </aside>
+    </Transition>
+
+    <!-- ── Seuil d'alerte drawer (Figma 5988-37178) ───────────────────── -->
+    <Transition
+      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
+    >
+      <aside
+        v-if="alerteDrawerOpen"
+        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Seuil d'alerte"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            Seuil d’alerte
+          </p>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            aria-label="Fermer"
+            @click="closeAlerteDrawer"
+          >
+            <Icon name="x-mark" variant="outline" :size="20" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[8px]">
+          <!-- Toggle row -->
+          <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] rounded-[12px] border border-border-neutral-secondary bg-neutral">
+            <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
+            </span>
+            <Toggle
+              v-model="alerteForm.active"
+              size="md"
+              aria-label="Activer le seuil d'alerte"
+            />
+          </div>
+
+          <!-- Type + amount (visible only when active) -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <div v-if="alerteForm.active" class="flex flex-col gap-[8px]">
+              <Dropdown
+                v-model="alerteForm.type"
+                :items="alerteTypeItems"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+                :teleport="true"
+              />
+
+              <div class="relative">
+                <Input
+                  v-model="alerteForm.amount"
+                  type="trailingText"
+                  :addon-trailing-text="alerteSuffix"
+                  :show-currency-icon="false"
+                  :trailing-separator="false"
+                  :disabled="isAlerteAmountDisabled"
+                  placeholder="0"
+                />
+                <!-- Tooltip — visible while the amount input is disabled
+                     because the Budget de recharge rule is not active. -->
+                <Transition
+                  enter-active-class="transition-[opacity,transform] duration-[160ms] ease-out motion-reduce:transition-none"
+                  enter-from-class="opacity-0 -translate-y-[4px]"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-[4px]"
+                >
+                  <div
+                    v-if="isAlerteAmountDisabled"
+                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[260px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-center"
+                    role="status"
+                  >
+                    Définissez un budget de recharge pour utiliser cette option.
+                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
+                  </div>
+                </Transition>
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
+          <Button type="secondary" size="md" label="Annuler" @click="closeAlerteDrawer" />
+          <Button type="primary" size="md" label="Enregistrer" @click="saveAlerte" />
         </div>
       </aside>
     </Transition>
