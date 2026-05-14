@@ -182,9 +182,14 @@ function resetDetailState() {
   itineranceFilter.value = 'all'
   rattachementFilter.value = 'all'
   activeTab.value = 'informations'
+  chargingRulesBannerVisible.value = true
   clearUndo()
   dismissToast()
 }
+
+// "Ajoutez des règles de recharge" banner (Figma 5931-23349). Visible by
+// default, dismissable via X / Fermer / switching to the rules tab.
+const chargingRulesBannerVisible = ref(true)
 
 const detailTabs: HorizontalTab[] = [
   { id: 'informations',     label: 'Informations' },
@@ -761,6 +766,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </p>
             </div>
           </div>
+
+          <!-- Charging-rules banner (Figma 5931-23349) -->
+          <Alert
+            v-if="chargingRulesBannerVisible"
+            v-model="chargingRulesBannerVisible"
+            type="brand"
+            title="Ajoutez des règles de recharge !"
+            description="Définissez des règles de recharge pour mieux contrôler les usages et vos coûts"
+            primary-action-label="Définir des règles"
+            secondary-action-label="Fermer"
+            :dismissable="true"
+            @primary-action="activeTab = 'charging-rules'; chargingRulesBannerVisible = false"
+            @secondary-action="chargingRulesBannerVisible = false"
+          />
 
           <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
                peek to suggest layering, matching the Figma Frame 6070 mock. -->
