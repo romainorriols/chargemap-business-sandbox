@@ -14,6 +14,9 @@ interface Props {
   showHint?: boolean
   badge?: string
   icon?: string
+  /** Variant of the leading icon. Defaults to `outline`. Some icons (e.g. `highway`)
+   *  only have a complete glyph in the `solid` variant — pass `'solid'` for those. */
+  iconVariant?: 'outline' | 'solid'
   open?: boolean
   /** Keep the focus ring on the trigger even when `open` (e.g. menu has no search input that would steal focus). */
   focused?: boolean
@@ -33,6 +36,7 @@ const props = withDefaults(defineProps<Props>(), {
   showHint: true,
   badge: '',
   icon: '',
+  iconVariant: 'outline',
   open: false,
   focused: false,
   destructive: false,
@@ -103,6 +107,7 @@ const iconSize = computed(() => props.size === 'md' ? 20 : 18)
         <Icon
           v-if="type === 'leadingIcon' && icon"
           :name="icon"
+          :variant="iconVariant"
           :size="iconSize"
           class="shrink-0 text-icon-neutral-secondary"
         />

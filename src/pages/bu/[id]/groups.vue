@@ -748,6 +748,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :items="itineranceItems"
                     input-type="leadingIcon"
                     icon="highway"
+                    icon-variant="solid"
                     :searchable="false"
                     :show-label="false"
                     :show-hint="false"

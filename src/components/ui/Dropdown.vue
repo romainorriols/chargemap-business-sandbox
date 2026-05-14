@@ -17,6 +17,8 @@ interface Props {
   showHint?: boolean
   badge?: string
   icon?: string
+  /** Variant of the leading icon — passed through to DropdownInput. */
+  iconVariant?: 'outline' | 'solid'
   items?: DropdownItem[]
   searchable?: boolean
   footer?: boolean
@@ -43,6 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
   showHint: true,
   badge: '',
   icon: '',
+  iconVariant: 'outline',
   items: () => [],
   searchable: true,
   footer: false,
@@ -151,6 +154,7 @@ onUnmounted(() => {
       :show-hint="showHint"
       :badge="badge"
       :icon="icon"
+      :icon-variant="iconVariant"
       :open="isOpen"
       :focused="isOpen && !searchable"
       :destructive="destructive"
