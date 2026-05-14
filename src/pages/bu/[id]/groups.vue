@@ -1592,7 +1592,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 :teleport="true"
               />
 
-              <div class="relative">
+              <div class="relative group/disabled-amount" tabindex="-1">
                 <Input
                   :model-value="isAlerteAmountDisabled ? '' : alerteForm.amount"
                   type="trailingText"
@@ -1603,25 +1603,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   placeholder="0"
                   @update:model-value="(v) => (alerteForm.amount = v)"
                 />
-                <!-- Tooltip — visible while the amount input is disabled
-                     because the Budget de recharge rule is not active. -->
-                <Transition
-                  enter-active-class="transition-[opacity,transform] duration-[160ms] ease-out motion-reduce:transition-none"
-                  enter-from-class="opacity-0 -translate-y-[4px]"
-                  enter-to-class="opacity-100 translate-y-0"
-                  leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
-                  leave-from-class="opacity-100 translate-y-0"
-                  leave-to-class="opacity-0 -translate-y-[4px]"
+                <!-- Tooltip — hover/focus-within over the disabled input only. -->
+                <div
+                  v-if="isAlerteAmountDisabled"
+                  class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
+                  role="tooltip"
                 >
-                  <div
-                    v-if="isAlerteAmountDisabled"
-                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left"
-                    role="status"
-                  >
-                    Définissez un budget de recharge pour utiliser cette option.
-                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
-                  </div>
-                </Transition>
+                  Définissez un budget de recharge pour utiliser cette option.
+                  <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
+                </div>
               </div>
             </div>
           </Transition>
