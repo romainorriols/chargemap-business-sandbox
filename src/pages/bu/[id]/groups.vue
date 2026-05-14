@@ -1091,10 +1091,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         :items="itineranceItems"
                         input-type="leadingIcon"
                         icon="highway"
-                        icon-variant="solid"
                         :searchable="false"
                         :show-label="false"
                         :show-hint="false"
+                        :teleport="true"
                       />
                     </div>
                     <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
@@ -1106,6 +1106,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         :searchable="false"
                         :show-label="false"
                         :show-hint="false"
+                        :teleport="true"
                       />
                     </div>
                   </div>
