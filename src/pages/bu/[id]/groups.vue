@@ -184,6 +184,7 @@ function resetDetailState() {
   activeTab.value = 'informations'
   chargingRulesBannerVisible.value = true
   selectedRuleId.value = null
+  budgetDrawerOpen.value = false
   clearUndo()
   dismissToast()
 }
@@ -211,10 +212,14 @@ interface ChargingRule {
   statusLabel: 'Activé' | 'Désactivé'
 }
 // Selected rule (Figma state) — click on a card to toggle the selected
-// visual state. No real behaviour wired yet; matches the Figma 5957-15232 mock.
+// visual state. Budget de recharge also opens an edit drawer.
 const selectedRuleId = ref<string | null>(null)
 
-const rules: ChargingRule[] = [
+// Drawer state for the Budget de recharge rule (Figma 5980-29598 / 5980-28115)
+const budgetDrawerOpen = ref(false)
+const budgetForm = reactive({ active: false, amount: '230,00' })
+
+const rules: ChargingRule[] = reactive([
   {
     id: 'budget',
     title: 'Budget de recharge',
@@ -269,7 +274,33 @@ const rules: ChargingRule[] = [
     statusIcon: 'x-mark',
     statusLabel: 'Activé',
   },
-]
+])
+
+function onRuleClick(rule: ChargingRule) {
+  if (rule.id === 'budget') {
+    selectedRuleId.value = rule.id
+    budgetForm.active = rule.statusIcon === 'check'
+    budgetDrawerOpen.value = true
+    return
+  }
+  selectedRuleId.value = selectedRuleId.value === rule.id ? null : rule.id
+}
+
+function closeBudgetDrawer() {
+  budgetDrawerOpen.value = false
+  selectedRuleId.value = null
+}
+
+function saveBudget() {
+  const rule = rules.find(r => r.id === 'budget')
+  if (rule) {
+    rule.statusIcon = budgetForm.active ? 'check' : 'x-mark'
+    rule.statusLabel = budgetForm.active ? 'Activé' : 'Désactivé'
+  }
+  budgetDrawerOpen.value = false
+  selectedRuleId.value = null
+  showSuccessToast('Budget de recharge mis à jour', '')
+}
 
 // Filters scoped to the selected group's badges.
 type ItineranceFilter = 'all' | 'on' | 'off'
@@ -1335,7 +1366,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 ? 'bg-neutral-secondary border-border-brand shadow-ring-brand'
                 : 'bg-neutral border-border-neutral-secondary shadow-sm hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
-            @click="selectedRuleId = selectedRuleId === rule.id ? null : rule.id"
+            @click="onRuleClick(rule)"
           >
             <div class="flex items-center justify-between w-full">
               <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
@@ -1369,6 +1400,87 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
       <div class="h-[60px]" />
     </div>
+
+    <!-- ── Budget de recharge drawer (Figma 5980-28115 / 5980-29598) ──── -->
+    <Transition
+      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
+    >
+      <aside
+        v-if="budgetDrawerOpen"
+        class="fixed right-0 top-0 bottom-0 z-40 w-[424px] max-w-full bg-neutral border-l border-border-neutral-secondary shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Budget de recharge"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            Budget de recharge
+          </p>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            aria-label="Fermer"
+            @click="closeBudgetDrawer"
+          >
+            <Icon name="x-mark" variant="outline" :size="20" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[8px]">
+          <!-- Toggle row -->
+          <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] rounded-[12px] border border-border-neutral-secondary bg-neutral">
+            <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
+            </span>
+            <Toggle
+              v-model="budgetForm.active"
+              size="md"
+              aria-label="Activer le budget de recharge"
+            />
+          </div>
+
+          <!-- Budget mensuel (visible only when active) -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <div
+              v-if="budgetForm.active"
+              class="flex items-center gap-[16px] pl-[16px] pr-[8px] py-[8px] rounded-[12px] border border-border-neutral-secondary bg-neutral"
+            >
+              <span class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Budget mensuel
+              </span>
+              <div class="shrink-0 w-[180px]">
+                <Input
+                  v-model="budgetForm.amount"
+                  type="trailingText"
+                  :addon-trailing-text="'Eur'"
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
+          <Button type="secondary" size="md" label="Annuler" @click="closeBudgetDrawer" />
+          <Button type="primary" size="md" label="Enregistrer" @click="saveBudget" />
+        </div>
+      </aside>
+    </Transition>
 
     <!-- ── Floating selection pill — adaptive (Supprimer in view, Ajouter in add) -->
     <div class="pointer-events-none fixed left-0 right-0 bottom-[32px] z-40 flex justify-center px-[24px] md:left-[304px] md:px-[32px]">
