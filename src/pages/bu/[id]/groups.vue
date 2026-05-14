@@ -795,8 +795,35 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </div>
 
-      <!-- Tabs (Figma 5959-58388) -->
-      <div class="anim-fade-up" style="animation-delay: 40ms">
+      <!-- KPI row — sits above the tabs so the metrics stay visible across
+           both Informations and Règles de recharge (Figma 5931-23791). -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 40ms">
+        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
+        </div>
+        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un véhicule</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
+            {{ kpis.withVehicle }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
+          </p>
+        </div>
+        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un conducteur</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
+            {{ kpis.withDriver }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
+          </p>
+        </div>
+        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Itinérance activé</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
+            {{ kpis.itinOn }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="anim-fade-up" style="animation-delay: 60ms">
         <HorizontalTabs
           v-model="activeTab"
           :tabs="detailTabs"
@@ -830,32 +857,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             @primary-action="activeTab = 'charging-rules'; chargingRulesBannerVisible = false"
             @secondary-action="chargingRulesBannerVisible = false"
           />
-
-          <!-- KPI row -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 60ms">
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un véhicule</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-                {{ kpis.withVehicle }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-              </p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un conducteur</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-                {{ kpis.withDriver }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-              </p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Itinérance activé</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-                {{ kpis.itinOn }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-              </p>
-            </div>
-          </div>
 
           <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
                peek to suggest layering, matching the Figma Frame 6070 mock. -->
