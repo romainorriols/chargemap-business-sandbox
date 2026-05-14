@@ -26,6 +26,7 @@ const PAGE_DEFAULTS: Record<string, SandboxMaxWidth> = {
   '/bu/home':                2192,
   '/bu/settings':            800,
   '/bu/supervised-charges':  2192,
+  '/bu/groups':              2192,
   '/bu/default':             2192,
 }
 
