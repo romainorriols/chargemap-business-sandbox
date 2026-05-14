@@ -282,16 +282,6 @@ const badgesInGroup = computed(() =>
     : [],
 )
 
-// KPI counts — denominator is the group total so 45/50 reads as "45 of 50".
-const kpis = computed(() => {
-  const inGroup = badgesInGroup.value
-  const total = inGroup.length
-  const withVehicle = inGroup.filter(b => b.vehicle).length
-  const withDriver  = inGroup.filter(b => b.driver).length
-  const itinOn      = inGroup.filter(b => b.itinerance).length
-  return { total, withVehicle, withDriver, itinOn }
-})
-
 function searchMatches(b: Badge, q: string) {
   if (!q) return true
   return b.identifier.toLowerCase().includes(q)
@@ -822,14 +812,33 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
                   </div>
                   <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
-                    <span
-                      :class="[
-                        'flex items-center justify-center size-[21px] rounded-full',
-                        rule.statusIcon === 'check' ? 'bg-success-medium' : 'bg-text-neutral',
-                      ]"
+                    <!-- Inline SVGs from the Figma export (Group 4 / Group 4-1) -->
+                    <svg
+                      v-if="rule.statusIcon === 'check'"
+                      width="21"
+                      height="21"
+                      viewBox="0 0 21 21"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="shrink-0 block"
+                      aria-hidden="true"
                     >
-                      <Icon :name="rule.statusIcon" variant="solid" :size="12" class="text-white" />
-                    </span>
+                      <circle cx="10.5" cy="10.5" r="10.5" fill="#18B97E" />
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M14.2781 6.98105C14.4426 7.09072 14.487 7.31296 14.3774 7.47745L10.0819 13.9206C10.0224 14.0099 9.92608 14.0677 9.81936 14.0783C9.71264 14.0889 9.60681 14.051 9.53098 13.9752L6.66734 11.1115C6.52755 10.9718 6.52755 10.7451 6.66734 10.6053C6.80713 10.4655 7.03378 10.4655 7.17357 10.6053L9.72846 13.1602L13.7817 7.08033C13.8914 6.91584 14.1136 6.87139 14.2781 6.98105Z" fill="white" />
+                    </svg>
+                    <svg
+                      v-else
+                      width="21"
+                      height="21"
+                      viewBox="0 0 21 21"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="shrink-0 block"
+                      aria-hidden="true"
+                    >
+                      <circle cx="10.5" cy="10.5" r="10.5" fill="#94A3B8" />
+                      <path d="M13.1105 7.38618C13.2503 7.24639 13.4769 7.24639 13.6167 7.38618C13.7565 7.52597 13.7565 7.75256 13.6167 7.89235L11.0061 10.5029L13.6167 13.1134L13.6414 13.1405C13.7561 13.2811 13.7477 13.4886 13.6167 13.6196C13.4856 13.7507 13.2781 13.759 13.1376 13.6443L13.1105 13.6196L10.5 11.0091L7.88942 13.6196C7.74963 13.7594 7.52304 13.7594 7.38325 13.6196C7.24346 13.4798 7.24346 13.2532 7.38325 13.1134L9.9938 10.5029L7.38325 7.89235L7.35854 7.86531C7.24385 7.72472 7.25218 7.51724 7.38325 7.38618C7.51431 7.25511 7.72179 7.24678 7.86238 7.36147L7.88942 7.38618L10.5 9.99673L13.1105 7.38618Z" fill="white" />
+                    </svg>
                     <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
                       {{ rule.statusLabel }}
                     </span>
@@ -854,32 +863,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <h2 class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral anim-fade-up" style="animation-delay: 60ms">
           Informations
         </h2>
-
-          <!-- KPI row -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 80ms">
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un véhicule</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-                {{ kpis.withVehicle }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-              </p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un conducteur</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-                {{ kpis.withDriver }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-              </p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Itinérance activé</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-                {{ kpis.itinOn }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-              </p>
-            </div>
-          </div>
 
           <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
                peek to suggest layering, matching the Figma Frame 6070 mock. -->
