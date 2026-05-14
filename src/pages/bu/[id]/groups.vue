@@ -298,6 +298,13 @@ const rules: ChargingRule[] = reactive([
 ])
 
 function onRuleClick(rule: ChargingRule) {
+  // Clicking a card while another rule's drawer is open closes the open one
+  // first so the two drawers never stack. The leave + enter animations run in
+  // parallel; the entering drawer renders on top so the leaving one slides
+  // away beneath it without visible overlap.
+  budgetDrawerOpen.value = false
+  alerteDrawerOpen.value = false
+
   if (rule.id === 'budget') {
     selectedRuleId.value = rule.id
     budgetForm.active = rule.statusIcon === 'check'
