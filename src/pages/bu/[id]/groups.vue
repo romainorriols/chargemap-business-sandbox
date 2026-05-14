@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
 const uiStore = useUiStore()
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch, onUnmounted } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 
 interface BadgeDriver { name: string; initials: string }
@@ -146,6 +146,27 @@ function openGroup(id: string) {
   selectedId.value = id
   openMenuId.value = null
 }
+
+// Loading skeleton (Figma /billing pattern): 600ms simulated fetch on
+// every detail entry so the table cross-fades in instead of popping.
+const isLoading = ref(false)
+let loadingTimer: ReturnType<typeof setTimeout> | null = null
+watch(selectedId, (id) => {
+  if (loadingTimer) { clearTimeout(loadingTimer); loadingTimer = null }
+  if (id) {
+    isLoading.value = true
+    loadingTimer = setTimeout(() => {
+      isLoading.value = false
+      loadingTimer = null
+    }, 600)
+  } else {
+    isLoading.value = false
+  }
+})
+const skeletonRows = Array.from({ length: 20 }, (_, i) => i)
+onUnmounted(() => {
+  if (loadingTimer) clearTimeout(loadingTimer)
+})
 function backToList() {
   selectedId.value = null
   resetDetailState()
@@ -238,7 +259,7 @@ const filteredBadges = computed(() => {
     .filter(passesRattachement)
 })
 const badgePage = ref(1)
-const badgePerPage = 10
+const badgePerPage = 20
 const badgePageCount = computed(() => Math.max(1, Math.ceil(filteredBadges.value.length / badgePerPage)))
 const badgePaginated = computed(() => {
   const start = (badgePage.value - 1) * badgePerPage
@@ -270,7 +291,7 @@ function toggleSelectAllVisibleForRemove() {
 const isAddingBadges = ref(false)
 const addSearch = ref('')
 const addPage = ref(1)
-const addPerPage = 10
+const addPerPage = 20
 const selectedToAdd = reactive(new Set<string>())
 
 const availableBadges = computed(() => allBadges.filter(b => b.groupId === null))
@@ -741,10 +762,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </div>
           </div>
 
-          <!-- Layered stack: view content (base) + add drawer (overlay) ── -->
-          <div class="relative grid">
-            <!-- VIEW MODE (always rendered, in flow) -->
-            <div class="col-start-1 row-start-1 flex flex-col gap-[16px]">
+          <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
+               peek to suggest layering, matching the Figma Frame 6070 mock. -->
+          <Transition
+            mode="out-in"
+            enter-active-class="transition-[opacity,transform] duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 translate-y-[24px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 translate-y-[16px]"
+          >
+            <!-- VIEW MODE -->
+            <div v-if="!isAddingBadges" key="view" class="flex flex-col gap-[16px]">
               <!-- Filter row (no card — sits directly between KPIs and table) -->
               <div class="flex flex-col lg:flex-row lg:items-center gap-[8px] anim-fade-up" style="animation-delay: 80ms">
                 <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
@@ -760,8 +790,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     v-model="itineranceFilter"
                     :items="itineranceItems"
                     input-type="leadingIcon"
-                    icon="highway"
-                    icon-variant="solid"
+                    icon="map"
                     :searchable="false"
                     :show-label="false"
                     :show-hint="false"
@@ -791,6 +820,50 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
               <!-- Table card -->
               <section class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 100ms">
+                <Transition mode="out-in" name="tab-fade">
+
+                <!-- SKELETON (initial load — 600ms simulated) -->
+                <div v-if="isLoading" key="skel">
+                  <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
+                    <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="16px" height="16px" rounded="4px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="60px" height="14px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="70px" height="14px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="80px" height="14px" />
+                    </div>
+                    <div class="w-[68px] shrink-0" aria-hidden="true" />
+                  </div>
+                  <div
+                    v-for="i in skeletonRows"
+                    :key="`sk-${i}`"
+                    class="flex items-stretch w-full md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0"
+                  >
+                    <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="16px" height="16px" rounded="4px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="150px" height="14px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="100px" height="14px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="140px" height="14px" />
+                    </div>
+                    <div class="w-[68px] shrink-0 px-[16px] py-[12px] flex items-center justify-end">
+                      <Skeleton width="20px" height="20px" rounded="6px" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- REAL TABLE -->
+                <div v-else key="real">
                 <!-- Header row -->
                 <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
                   <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
@@ -839,17 +912,17 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </p>
                 </div>
 
-                <!-- Rows -->
+                <!-- Rows (charges-row pattern: symmetric vertical 4px slide) -->
                 <TransitionGroup
                   v-else
                   tag="div"
-                  enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-                  enter-from-class="opacity-0 -translate-y-[4px]"
+                  enter-active-class="transition-[opacity,transform] duration-[200ms] ease motion-reduce:transition-none"
+                  enter-from-class="opacity-0 translate-y-[4px]"
                   enter-to-class="opacity-100 translate-y-0"
-                  leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-                  leave-from-class="opacity-100 translate-x-0"
-                  leave-to-class="opacity-0 translate-x-[12px]"
-                  move-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+                  leave-active-class="transition-[opacity,transform] duration-[200ms] ease motion-reduce:transition-none"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-[4px]"
+                  move-class="transition-transform duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
                 >
                   <div
                     v-for="b in badgePaginated"
@@ -981,21 +1054,22 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   :total="filteredBadges.length"
                   @update:page="(n) => (badgePage = n)"
                 />
+                </div>
+                </Transition>
               </section>
             </div>
 
-            <!-- ADD DRAWER (overlay, slides up over the view) -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[360ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 translate-y-full"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 translate-y-full"
-            >
+            <!-- ADD MODE — drawer + fake-card peek behind (Figma Frame 6070
+                 is a decorative back card, not the listing rendered behind). -->
+            <div v-else key="add" class="relative">
+              <!-- Fake back card peek: 18px above, 16px inset on each side -->
+              <div
+                class="absolute inset-x-[16px] -top-[18px] h-[36px] bg-neutral border border-border-neutral-secondary rounded-[16px] z-0"
+                aria-hidden="true"
+              />
+
               <section
-                v-if="isAddingBadges"
-                class="col-start-1 row-start-1 z-10 w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-lg flex flex-col self-start"
+                class="relative z-10 w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-lg flex flex-col"
               >
                 <!-- Drawer header: title + Annuler -->
                 <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px]">
@@ -1157,8 +1231,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </div>
                 </div>
               </section>
-            </Transition>
-          </div>
+            </div>
+          </Transition>
         </div>
 
         <!-- ── Tab: Règles de recharge ────────────────────────────── -->
