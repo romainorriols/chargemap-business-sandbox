@@ -186,6 +186,7 @@ function resetDetailState() {
   selectedRuleId.value = null
   budgetDrawerOpen.value = false
   alerteDrawerOpen.value = false
+  autorisationsDrawerOpen.value = false
   clearUndo()
   dismissToast()
 }
@@ -219,6 +220,31 @@ const selectedRuleId = ref<string | null>(null)
 // Drawer state for the Budget de recharge rule (Figma 5980-29598 / 5980-28115)
 const budgetDrawerOpen = ref(false)
 const budgetForm = reactive({ active: false, amount: '230,00' })
+
+// Drawer state for the Autorisations quotidiennes rule (Figma 5980-29659).
+// Master toggle gates the whole feature; each day carries its own toggle
+// and either an "all day" allowance or a custom HH:MM range.
+const autorisationsDrawerOpen = ref(false)
+interface DayRule {
+  id: string
+  label: string
+  active: boolean
+  customHours: boolean
+  start: string
+  end: string
+}
+const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
+  active: true,
+  days: [
+    { id: 'lundi',    label: 'Lundi',    active: true,  customHours: false, start: '09:00', end: '12:30' },
+    { id: 'mardi',    label: 'Mardi',    active: true,  customHours: false, start: '09:00', end: '12:30' },
+    { id: 'mercredi', label: 'Mercredi', active: true,  customHours: true,  start: '09:00', end: '12:30' },
+    { id: 'jeudi',    label: 'Jeudi',    active: true,  customHours: false, start: '09:00', end: '12:30' },
+    { id: 'vendredi', label: 'Vendredi', active: false, customHours: false, start: '09:00', end: '12:30' },
+    { id: 'samedi',   label: 'Samedi',   active: false, customHours: false, start: '09:00', end: '12:30' },
+    { id: 'dimanche', label: 'Dimanche', active: false, customHours: false, start: '09:00', end: '12:30' },
+  ],
+})
 
 // Drawer state for the Seuil d'alerte rule (Figma 5988-37178). Threshold type
 // is either a percentage of the recharge budget or a monthly cap in euros.
@@ -304,6 +330,7 @@ function onRuleClick(rule: ChargingRule) {
   // away beneath it without visible overlap.
   budgetDrawerOpen.value = false
   alerteDrawerOpen.value = false
+  autorisationsDrawerOpen.value = false
 
   if (rule.id === 'budget') {
     selectedRuleId.value = rule.id
@@ -315,6 +342,12 @@ function onRuleClick(rule: ChargingRule) {
     selectedRuleId.value = rule.id
     alerteForm.active = rule.statusIcon === 'check'
     alerteDrawerOpen.value = true
+    return
+  }
+  if (rule.id === 'autorisations') {
+    selectedRuleId.value = rule.id
+    autorisationsForm.active = rule.statusIcon === 'check'
+    autorisationsDrawerOpen.value = true
     return
   }
   selectedRuleId.value = selectedRuleId.value === rule.id ? null : rule.id
@@ -334,6 +367,22 @@ function saveBudget() {
   budgetDrawerOpen.value = false
   selectedRuleId.value = null
   showSuccessToast('Budget de recharge mis à jour', '')
+}
+
+function closeAutorisationsDrawer() {
+  autorisationsDrawerOpen.value = false
+  selectedRuleId.value = null
+}
+
+function saveAutorisations() {
+  const rule = rules.find(r => r.id === 'autorisations')
+  if (rule) {
+    rule.statusIcon = autorisationsForm.active ? 'check' : 'x-mark'
+    rule.statusLabel = autorisationsForm.active ? 'Activé' : 'Désactivé'
+  }
+  autorisationsDrawerOpen.value = false
+  selectedRuleId.value = null
+  showSuccessToast('Autorisations quotidiennes mises à jour', '')
 }
 
 function closeAlerteDrawer() {
@@ -1628,6 +1677,137 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeAlerteDrawer" />
           <Button type="primary" size="md" label="Enregistrer" @click="saveAlerte" />
+        </div>
+      </aside>
+    </Transition>
+
+    <!-- ── Autorisations quotidiennes drawer (Figma 5980-29659) ────────── -->
+    <Transition
+      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
+    >
+      <aside
+        v-if="autorisationsDrawerOpen"
+        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Autorisations quotidiennes"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            Autorisations quotidiennes
+          </p>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            aria-label="Fermer"
+            @click="closeAutorisationsDrawer"
+          >
+            <Icon name="x-mark" variant="outline" :size="20" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[8px]">
+          <!-- Master toggle row -->
+          <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] rounded-[12px] border border-border-neutral-secondary bg-neutral">
+            <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              {{ autorisationsForm.active ? 'Activé' : 'Désactivé' }}
+            </span>
+            <Toggle
+              v-model="autorisationsForm.active"
+              size="md"
+              aria-label="Activer les autorisations quotidiennes"
+            />
+          </div>
+
+          <!-- Day rows (visible only when master is active) -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <div v-if="autorisationsForm.active" class="flex flex-col gap-[8px]">
+              <article
+                v-for="day in autorisationsForm.days"
+                :key="day.id"
+                class="rounded-[12px] border border-border-neutral-secondary bg-neutral overflow-hidden"
+              >
+                <!-- Day header: label + toggle -->
+                <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px]">
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                    {{ day.label }}
+                  </span>
+                  <Toggle
+                    v-model="day.active"
+                    size="md"
+                    :aria-label="`Activer ${day.label}`"
+                  />
+                </div>
+
+                <!-- Day body — only when day toggle is on -->
+                <div
+                  v-if="day.active"
+                  class="px-[16px] pb-[16px] flex items-center justify-between gap-[8px]"
+                >
+                  <!-- All-day mode -->
+                  <template v-if="!day.customHours">
+                    <span class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      Autorisé toute la journée
+                    </span>
+                    <Button
+                      type="secondary"
+                      size="md"
+                      label="Modifier"
+                      @click="day.customHours = true"
+                    />
+                  </template>
+                  <!-- Custom range mode -->
+                  <template v-else>
+                    <div class="flex items-center gap-[8px] min-w-0">
+                      <div class="w-[100px] shrink-0">
+                        <Input
+                          v-model="day.start"
+                          type="leadingIcon"
+                          icon="clock"
+                          placeholder="00:00"
+                        />
+                      </div>
+                      <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">à</span>
+                      <div class="w-[100px] shrink-0">
+                        <Input
+                          v-model="day.end"
+                          type="leadingIcon"
+                          icon="clock"
+                          placeholder="00:00"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="secondary"
+                      size="md"
+                      label="Supprimer"
+                      @click="day.customHours = false"
+                    />
+                  </template>
+                </div>
+              </article>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
+          <Button type="secondary" size="md" label="Annuler" @click="closeAutorisationsDrawer" />
+          <Button type="primary" size="md" label="Enregistrer" @click="saveAutorisations" />
         </div>
       </aside>
     </Transition>
