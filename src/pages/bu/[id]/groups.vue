@@ -790,7 +790,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     v-model="itineranceFilter"
                     :items="itineranceItems"
                     input-type="leadingIcon"
-                    icon="public-road"
+                    icon="highway"
                     :searchable="false"
                     :show-label="false"
                     :show-hint="false"
@@ -1116,8 +1116,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                   </div>
 
-                  <!-- Inner table card -->
-                  <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip">
+                  <!-- Table directly in drawer body (Figma 5931-23791 — no inner card) -->
+                  <div>
                     <!-- Header row -->
                     <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
                       <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
