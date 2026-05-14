@@ -1467,6 +1467,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   v-model="budgetForm.amount"
                   type="trailingText"
                   :addon-trailing-text="'Eur'"
+                  :show-currency-icon="false"
+                  :trailing-separator="false"
                   placeholder="0,00"
                 />
               </div>

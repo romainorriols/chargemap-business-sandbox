@@ -18,6 +18,10 @@ interface Props {
   addonTrailingText?: string
   addonButtonLabel?: string
   icon?: string
+  /** trailingText only: show the hardcoded currency-euro leading icon. */
+  showCurrencyIcon?: boolean
+  /** trailingText only: render the vertical divider before the trailing addon. */
+  trailingSeparator?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -35,6 +39,8 @@ const props = withDefaults(defineProps<Props>(), {
   addonTrailingText: 'kWh',
   addonButtonLabel: 'Copy',
   icon: '',
+  showCurrencyIcon: true,
+  trailingSeparator: true,
 })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
@@ -173,7 +179,7 @@ const addonTextSize = computed(() => props.size === 'md' ? 'text-base' : 'text-s
       <!-- ── TRAILING TEXT ──────────────────────────────────────────────────── -->
       <template v-else-if="type === 'trailingText'">
         <div class="flex flex-1 gap-2 items-center min-w-0 overflow-hidden pl-3" :class="size === 'sm' ? 'py-2' : ''">
-          <Icon name="currency-euro" :size="size === 'md' ? 20 : 18" class="shrink-0 text-icon-neutral-secondary" />
+          <Icon v-if="showCurrencyIcon" name="currency-euro" :size="size === 'md' ? 20 : 18" class="shrink-0 text-icon-neutral-secondary" />
           <input
             v-bind="attrs"
             :value="modelValue"
@@ -186,7 +192,12 @@ const addonTextSize = computed(() => props.size === 'md' ? 'text-base' : 'text-s
             <Icon name="question-mark-circle" :size="14" />
           </button>
         </div>
-        <div class="flex items-center px-3 shrink-0 self-stretch border-l border-border-neutral-secondary">
+        <div
+          :class="[
+            'flex items-center px-3 shrink-0 self-stretch',
+            trailingSeparator ? 'border-l border-border-neutral-secondary' : '',
+          ]"
+        >
           <span :class="['font-sans leading-[1.5] tracking-[-0.03em] text-text-neutral whitespace-nowrap', addonTextSize]">
             {{ addonTrailingText }}
           </span>
