@@ -183,6 +183,7 @@ function resetDetailState() {
   rattachementFilter.value = 'all'
   activeTab.value = 'informations'
   chargingRulesBannerVisible.value = true
+  selectedRuleId.value = null
   clearUndo()
   dismissToast()
 }
@@ -209,6 +210,10 @@ interface ChargingRule {
   statusIcon: StatusIcon
   statusLabel: 'Activé' | 'Désactivé'
 }
+// Selected rule (Figma state) — click on a card to toggle the selected
+// visual state. No real behaviour wired yet; matches the Figma 5957-15232 mock.
+const selectedRuleId = ref<string | null>(null)
+
 const rules: ChargingRule[] = [
   {
     id: 'budget',
@@ -1317,11 +1322,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
         <!-- ── Tab: Règles de recharge — 3×2 grid (Figma 5959-38687) ──── -->
         <div v-else key="charging-rules" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
-          <article
+          <button
             v-for="(rule, i) in rules"
             :key="rule.id"
+            type="button"
+            :aria-pressed="selectedRuleId === rule.id"
             :style="{ animationDelay: `${40 + i * 30}ms` }"
-            class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[16px] overflow-clip anim-fade-up"
+            :class="[
+              'text-left flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border-[1.5px] outline-none cursor-pointer',
+              'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
+              selectedRuleId === rule.id
+                ? 'bg-neutral-secondary border-border-brand shadow-ring-brand'
+                : 'bg-neutral border-border-neutral-secondary shadow-sm hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+            ]"
+            @click="selectedRuleId = selectedRuleId === rule.id ? null : rule.id"
           >
             <div class="flex items-center justify-between w-full">
               <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
@@ -1349,7 +1363,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 {{ rule.description }}
               </p>
             </div>
-          </article>
+          </button>
         </div>
       </Transition>
 
