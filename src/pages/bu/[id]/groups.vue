@@ -1054,17 +1054,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </section>
             </div>
 
-            <!-- ADD MODE — drawer + fake-card peek behind (Figma Frame 6070
-                 is a decorative back card, not the listing rendered behind). -->
-            <div v-else key="add" class="relative">
-              <!-- Fake back card peek: 18px above, 16px inset on each side -->
-              <div
-                class="absolute inset-x-[16px] -top-[18px] h-[36px] bg-neutral border border-border-neutral-secondary rounded-[16px] z-0"
-                aria-hidden="true"
-              />
-
+            <!-- ADD MODE — drawer only (Figma 5931-23791 dropped the back-card
+                 peek that was in the earlier 5931-24777 mock). -->
+            <div v-else key="add">
               <section
-                class="relative z-10 w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-lg flex flex-col"
+                class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-lg flex flex-col"
               >
                 <!-- Drawer header: title + Annuler -->
                 <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px]">
