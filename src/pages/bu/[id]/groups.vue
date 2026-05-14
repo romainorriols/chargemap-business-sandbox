@@ -149,7 +149,9 @@ function resetDetailState() {
   addSearch.value = ''
   addPage.value = 1
   selectedToAdd.clear()
+  selectedToRemove.clear()
   clearUndo()
+  dismissToast()
 }
 
 const badgesInGroup = computed(() =>
@@ -193,6 +195,26 @@ const addPage = ref(1)
 const addPerPage = 10
 const selectedToAdd = reactive(new Set<string>())
 
+// View-mode multi-select for bulk remove. Keyed by badge id so selection
+// survives pagination / search changes; cleared on mode transitions and
+// when the user leaves the detail view.
+const selectedToRemove = reactive(new Set<string>())
+function toggleRemoveSelection(id: string) {
+  if (selectedToRemove.has(id)) selectedToRemove.delete(id)
+  else selectedToRemove.add(id)
+}
+function clearRemoveSelection() { selectedToRemove.clear() }
+const removeVisibleAllSelected = computed(() =>
+  badgePaginated.value.length > 0 && badgePaginated.value.every(b => selectedToRemove.has(b.id)),
+)
+const removeVisibleSomeSelected = computed(() =>
+  badgePaginated.value.some(b => selectedToRemove.has(b.id)) && !removeVisibleAllSelected.value,
+)
+function toggleSelectAllVisibleForRemove() {
+  if (removeVisibleAllSelected.value) badgePaginated.value.forEach(b => selectedToRemove.delete(b.id))
+  else badgePaginated.value.forEach(b => selectedToRemove.add(b.id))
+}
+
 const availableBadges = computed(() => allBadges.filter(b => b.groupId === null))
 const filteredAvailable = computed(() => {
   const q = addSearch.value.trim().toLowerCase()
@@ -209,6 +231,7 @@ watch(addSearch, () => { addPage.value = 1 })
 
 function enterAddMode() {
   selectedToAdd.clear()
+  selectedToRemove.clear()
   addSearch.value = ''
   addPage.value = 1
   isAddingBadges.value = true
@@ -249,19 +272,39 @@ function confirmAdd() {
   )
 }
 
-// ── Remove with undo ───────────────────────────────────────────────────────
-type PendingUndo = { badgeId: string; previousGroupId: string }
+// ── Remove with undo (single + bulk) ───────────────────────────────────────
+// Single trash and bulk "Retirer N badge(s)" both go through this — the
+// toast's "Annuler" button restores the saved badgeIds to their previous
+// group. Stored as an array so the same code handles both flows.
+type PendingUndo = { badgeIds: string[]; groupId: string }
 let pendingUndo: PendingUndo | null = null
 function removeBadge(b: Badge) {
   if (!b.groupId) return
-  pendingUndo = { badgeId: b.id, previousGroupId: b.groupId }
+  pendingUndo = { badgeIds: [b.id], groupId: b.groupId }
   b.groupId = null
   showUndoToast('Badge retiré du groupe', b.identifier)
 }
+function bulkRemoveSelected() {
+  if (!selectedGroup.value || selectedToRemove.size === 0) return
+  const ids = Array.from(selectedToRemove)
+  const groupId = selectedGroup.value.id
+  ids.forEach(id => {
+    const target = allBadges.find(x => x.id === id)
+    if (target) target.groupId = null
+  })
+  pendingUndo = { badgeIds: ids, groupId }
+  selectedToRemove.clear()
+  showUndoToast(
+    ids.length === 1 ? '1 badge retiré du groupe' : `${ids.length} badges retirés du groupe`,
+    '',
+  )
+}
 function undoRemove() {
   if (!pendingUndo) return
-  const target = allBadges.find(x => x.id === pendingUndo!.badgeId)
-  if (target) target.groupId = pendingUndo.previousGroupId
+  pendingUndo.badgeIds.forEach(id => {
+    const target = allBadges.find(x => x.id === id)
+    if (target) target.groupId = pendingUndo!.groupId
+  })
   clearUndo()
   toast.visible = false
 }
@@ -632,7 +675,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
             <!-- Table header -->
             <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
-              <div class="flex-[280] min-w-[220px] px-[24px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              <div class="w-[56px] shrink-0 px-[20px] py-[10px] flex items-center">
+                <button
+                  type="button"
+                  role="checkbox"
+                  :aria-checked="removeVisibleSomeSelected ? 'mixed' : (removeVisibleAllSelected ? 'true' : 'false')"
+                  :aria-label="removeVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
+                  :class="[
+                    'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
+                    (removeVisibleAllSelected || removeVisibleSomeSelected)
+                      ? 'bg-brand border-brand'
+                      : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
+                  ]"
+                  @click="toggleSelectAllVisibleForRemove"
+                >
+                  <Icon v-if="removeVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
+                  <Icon v-else-if="removeVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
+                </button>
+              </div>
+              <div class="flex-[280] min-w-[220px] px-[8px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                 Badge
               </div>
               <div class="flex-[300] min-w-[200px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -672,10 +733,36 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div
                 v-for="b in badgePaginated"
                 :key="b.id"
-                class="group/row flex flex-col md:flex-row md:items-stretch w-full md:min-h-[68px] border-t border-border-neutral-tertiary first:border-t-0 transition-colors duration-150 ease-out motion-reduce:transition-none hover:bg-neutral-secondary"
+                role="button"
+                tabindex="0"
+                :aria-pressed="selectedToRemove.has(b.id)"
+                :class="[
+                  'group/row relative flex flex-col md:flex-row md:items-stretch w-full md:min-h-[68px] border-t border-border-neutral-tertiary first:border-t-0 cursor-pointer outline-none',
+                  'transition-colors duration-150 ease-out motion-reduce:transition-none focus-visible:bg-neutral-secondary',
+                  selectedToRemove.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
+                ]"
+                @click="toggleRemoveSelection(b.id)"
+                @keydown.enter="toggleRemoveSelection(b.id)"
+                @keydown.space.prevent="toggleRemoveSelection(b.id)"
               >
+                <!-- Checkbox -->
+                <div class="w-full md:w-[56px] shrink-0 px-[24px] md:px-[20px] pt-[16px] md:pt-[10px] md:py-[10px] flex md:items-center">
+                  <span
+                    role="checkbox"
+                    :aria-checked="selectedToRemove.has(b.id)"
+                    :class="[
+                      'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
+                      selectedToRemove.has(b.id)
+                        ? 'bg-brand border-brand'
+                        : 'bg-neutral border-border-neutral-secondary group-hover/row:border-border-neutral',
+                    ]"
+                  >
+                    <Icon v-if="selectedToRemove.has(b.id)" name="check" variant="solid" :size="12" class="text-white" />
+                  </span>
+                </div>
+
                 <!-- Badge identifier -->
-                <div class="flex-[280] min-w-0 px-[24px] py-[16px] md:py-[10px] flex items-center gap-[12px]">
+                <div class="flex-[280] min-w-0 px-[24px] md:px-[8px] py-[8px] md:py-[10px] flex items-center gap-[12px]">
                   <div class="shrink-0 flex items-center justify-center size-[36px] rounded-[10px] bg-brand-surface">
                     <Icon name="charging-badge-pass" variant="solid" :size="20" class="text-text-brand-deep" />
                   </div>
@@ -722,13 +809,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </span>
                 </div>
 
-                <!-- Remove action (trailing) -->
+                <!-- Remove action (trailing) — single-row quick delete -->
                 <div class="w-full md:w-[80px] shrink-0 px-[24px] md:px-[16px] pb-[16px] md:pb-[10px] md:py-[10px] flex md:items-center md:justify-end">
                   <button
                     type="button"
                     class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger focus-visible:bg-danger-surface focus-visible:text-icon-danger transition-[background-color,color,transform] duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
                     :aria-label="`Retirer le badge ${b.identifier} du groupe`"
-                    @click="removeBadge(b)"
+                    @click.stop="removeBadge(b)"
+                    @keydown.enter.stop
+                    @keydown.space.stop
                   >
                     <Icon name="trash" variant="outline" :size="18" />
                   </button>
@@ -746,6 +835,43 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               :total="filteredBadges.length"
               @update:page="(n) => (badgePage = n)"
             />
+
+            <!-- Bulk action bar — visible while 1+ badges are selected -->
+            <Transition
+              enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 translate-y-[8px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 translate-y-[8px]"
+            >
+              <div
+                v-if="selectedToRemove.size > 0"
+                class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-t border-border-neutral-tertiary bg-neutral"
+              >
+                <div class="flex items-center gap-[12px] min-w-0">
+                  <span class="inline-flex items-center px-[8px] h-[22px] rounded-full bg-brand-surface font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-brand-deep tabular-nums">
+                    {{ fmtCount(selectedToRemove.size) }} sélectionné{{ selectedToRemove.size > 1 ? 's' : '' }}
+                  </span>
+                  <button
+                    type="button"
+                    class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none rounded-[4px] focus-visible:shadow-ring-gray"
+                    @click="clearRemoveSelection"
+                  >
+                    Désélectionner
+                  </button>
+                </div>
+                <Button
+                  type="destructive"
+                  size="md"
+                  icon-left="trash"
+                  :label="selectedToRemove.size === 1
+                    ? 'Retirer du groupe'
+                    : `Retirer ${fmtCount(selectedToRemove.size)} badges`"
+                  @click="bulkRemoveSelected"
+                />
+              </div>
+            </Transition>
           </div>
 
           <!-- ── ADD MODE ───────────────────────────────────────────── -->
