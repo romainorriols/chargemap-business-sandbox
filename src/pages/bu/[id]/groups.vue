@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
 const uiStore = useUiStore()
-import { ref, computed, watch } from 'vue'
+import { ref, computed, reactive, watch } from 'vue'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -10,78 +10,96 @@ interface Badge {
   identifier: string
   driver: BadgeDriver | null
   vehicle: BadgeVehicle | null
+  groupId: string | null
 }
 interface Group {
   id: string
   name: string
-  badgesCount: number
-  vehiclesCount: number
-  driversCount: number
-  badges: Badge[]
 }
 
-// Realistic FR fleet — drivers, vehicle models, plates. The detail badge list
-// is a representative subset (14 entries) per group; the card stats keep the
-// "full fleet" numbers to feel like a real account.
+// Realistic FR fleet pools — drivers, vehicles. Seed walks them with a
+// deterministic offset per group so each group has a distinct distribution.
 const driverPool: BadgeDriver[] = [
-  { name: 'Camille Laurent',  initials: 'CL' },
-  { name: 'Nicolas Mercier',  initials: 'NM' },
-  { name: 'Léa Dubois',       initials: 'LD' },
-  { name: 'Antoine Robert',   initials: 'AR' },
-  { name: 'Sophie Moreau',    initials: 'SM' },
-  { name: 'Julien Bernard',   initials: 'JB' },
-  { name: 'Émilie Faure',     initials: 'EF' },
-  { name: 'Hugo Lefèvre',     initials: 'HL' },
-  { name: 'Inès Marchand',    initials: 'IM' },
-  { name: 'Thomas Girard',    initials: 'TG' },
+  { name: 'Camille Laurent',        initials: 'CL' },
+  { name: 'Nicolas Mercier',        initials: 'NM' },
+  { name: 'Léa Dubois',             initials: 'LD' },
+  { name: 'Antoine Robert',         initials: 'AR' },
+  { name: 'Sophie Moreau',          initials: 'SM' },
+  { name: 'Julien Bernard',         initials: 'JB' },
+  { name: 'Émilie Faure',           initials: 'EF' },
+  { name: 'Hugo Lefèvre',           initials: 'HL' },
+  { name: 'Inès Marchand',          initials: 'IM' },
+  { name: 'Thomas Girard',          initials: 'TG' },
+  { name: 'Manon Petit',            initials: 'MP' },
+  { name: 'Lucas Roussel',          initials: 'LR' },
 ]
 const vehiclePool: BadgeVehicle[] = [
-  { model: 'Renault Zoé',         plate: 'AB-123-CD' },
-  { model: 'Peugeot e-208',       plate: 'EF-456-GH' },
-  { model: 'Tesla Model 3',       plate: 'IJ-789-KL' },
+  { model: 'Renault Zoé',           plate: 'AB-123-CD' },
+  { model: 'Peugeot e-208',         plate: 'EF-456-GH' },
+  { model: 'Tesla Model 3',         plate: 'IJ-789-KL' },
   { model: 'Hyundai Kona Electric', plate: 'MN-012-OP' },
-  { model: 'Kia e-Niro',          plate: 'QR-345-ST' },
-  { model: 'Volkswagen ID.3',     plate: 'UV-678-WX' },
-  { model: 'BMW iX1',             plate: 'YZ-901-AB' },
-  { model: 'Citroën ë-C4',        plate: 'CD-234-EF' },
-  { model: 'Fiat 500e',           plate: 'GH-567-IJ' },
-  { model: 'Mercedes EQA',        plate: 'KL-890-MN' },
+  { model: 'Kia e-Niro',            plate: 'QR-345-ST' },
+  { model: 'Volkswagen ID.3',       plate: 'UV-678-WX' },
+  { model: 'BMW iX1',               plate: 'YZ-901-AB' },
+  { model: 'Citroën ë-C4',          plate: 'CD-234-EF' },
+  { model: 'Fiat 500e',             plate: 'GH-567-IJ' },
+  { model: 'Mercedes EQA',          plate: 'KL-890-MN' },
+  { model: 'Skoda Enyaq',           plate: 'OP-123-QR' },
+  { model: 'Audi Q4 e-tron',        plate: 'ST-456-UV' },
 ]
 
-// Deterministic seed: walk the pools with a stable offset per group so each
-// group's badge list looks different without random reshuffles per render.
-function seedBadges(offset: number, size = 14): Badge[] {
-  const out: Badge[] = []
-  for (let i = 0; i < size; i++) {
-    const idx = (offset + i)
-    const id = 78000 + offset * 73 + i * 11
-    // Vary linkage so the table tells a real story:
-    //   - 60% driver + vehicle
-    //   - 20% vehicle only (pool car)
-    //   - 15% driver only (badge issued, vehicle pending)
-    //   -  5% neither (just provisioned)
-    const m = i % 20
-    const hasDriver = !(m === 0 || m === 5 || m === 9 || m === 14)
-    const hasVehicle = !(m === 3 || m === 11 || m === 17 || m === 0)
-    out.push({
-      id: `b-${offset}-${i}`,
-      identifier: `CMB-${id.toString().padStart(5, '0')}`,
-      driver:  hasDriver  ? driverPool[idx % driverPool.length]  : null,
-      vehicle: hasVehicle ? vehiclePool[idx % vehiclePool.length] : null,
-    })
+let badgeSerial = 78000
+function makeBadge(groupId: string | null, slot: number): Badge {
+  badgeSerial += 7 + (slot % 5)
+  // Spread linkage so the table tells a real story:
+  //   60% driver + vehicle, 20% vehicle only (pool car),
+  //   15% driver only (badge issued, vehicle pending), 5% neither.
+  const m = (slot + (groupId?.charCodeAt(2) ?? 17)) % 20
+  const hasDriver  = !(m === 0 || m === 5 || m === 9 || m === 14)
+  const hasVehicle = !(m === 3 || m === 11 || m === 17 || m === 0)
+  return {
+    id: `b-${groupId ?? 'pool'}-${slot}`,
+    identifier: `CMB-${badgeSerial.toString().padStart(5, '0')}`,
+    driver:  hasDriver  ? driverPool[(slot * 3 + (groupId?.length ?? 0)) % driverPool.length]   : null,
+    vehicle: hasVehicle ? vehiclePool[(slot * 5 + (groupId?.length ?? 0)) % vehiclePool.length] : null,
+    groupId,
   }
-  return out
+}
+function seedBadges(groupId: string | null, count: number): Badge[] {
+  return Array.from({ length: count }, (_, i) => makeBadge(groupId, i))
 }
 
 const groups: Group[] = [
-  { id: 'g-1', name: 'Groupe logistique Rhône',          badgesCount: 42, vehiclesCount: 33, driversCount: 26, badges: seedBadges(0) },
-  { id: 'g-2', name: 'Flotte commerciale Île-de-France', badgesCount: 32, vehiclesCount: 33, driversCount: 26, badges: seedBadges(3) },
-  { id: 'g-3', name: 'Techniciens itinérants Sud',       badgesCount: 32, vehiclesCount: 33, driversCount: 26, badges: seedBadges(6) },
-  { id: 'g-4', name: 'Service livraison Lyon Centre',    badgesCount: 42, vehiclesCount: 33, driversCount: 26, badges: seedBadges(2) },
-  { id: 'g-5', name: 'Équipe terrain Aquitaine',         badgesCount: 32, vehiclesCount: 33, driversCount: 26, badges: seedBadges(5) },
-  { id: 'g-6', name: 'Pôle dirigeants Paris',            badgesCount: 32, vehiclesCount: 33, driversCount: 26, badges: seedBadges(8) },
-  { id: 'g-7', name: 'Maintenance bornes Est',           badgesCount: 18, vehiclesCount: 14, driversCount: 12, badges: seedBadges(1, 12) },
+  { id: 'g-1', name: 'Groupe logistique Rhône' },
+  { id: 'g-2', name: 'Flotte commerciale Île-de-France' },
+  { id: 'g-3', name: 'Techniciens itinérants Sud' },
+  { id: 'g-4', name: 'Service livraison Lyon Centre' },
+  { id: 'g-5', name: 'Équipe terrain Aquitaine' },
+  { id: 'g-6', name: 'Pôle dirigeants Paris' },
+  { id: 'g-7', name: 'Maintenance bornes Est' },
 ]
+
+// Single source of truth: every badge in the BU, with its groupId (or null
+// for the unassigned pool). Add = set groupId; Remove = set groupId to null.
+const allBadges = reactive<Badge[]>([
+  ...seedBadges('g-1', 22),
+  ...seedBadges('g-2', 18),
+  ...seedBadges('g-3', 16),
+  ...seedBadges('g-4', 20),
+  ...seedBadges('g-5', 16),
+  ...seedBadges('g-6', 14),
+  ...seedBadges('g-7', 12),
+  ...seedBadges(null, 28),
+])
+
+// Derived stats — listing cards and detail subhead both read from here, so
+// add/remove flips the visible numbers immediately.
+function groupStats(groupId: string) {
+  const inGroup = allBadges.filter(b => b.groupId === groupId)
+  const drivers  = new Set(inGroup.filter(b => b.driver).map(b => b.driver!.name))
+  const vehicles = new Set(inGroup.filter(b => b.vehicle).map(b => b.vehicle!.plate))
+  return { badges: inGroup.length, drivers: drivers.size, vehicles: vehicles.size }
+}
 
 // ── Listing state ──────────────────────────────────────────────────────────
 const search = ref('')
@@ -113,7 +131,7 @@ function toggleMenu(id: string, e: MouseEvent) {
 }
 function closeMenus() { openMenuId.value = null }
 
-// ── Detail view (Users.vue listing↔detail pattern) ─────────────────────────
+// ── Detail view ────────────────────────────────────────────────────────────
 const selectedId = ref<string | null>(null)
 const selectedGroup = computed(() => groups.find(g => g.id === selectedId.value) ?? null)
 function openGroup(id: string) {
@@ -122,22 +140,40 @@ function openGroup(id: string) {
 }
 function backToList() {
   selectedId.value = null
+  resetDetailState()
+}
+function resetDetailState() {
   badgeSearch.value = ''
   badgePage.value = 1
+  isAddingBadges.value = false
+  addSearch.value = ''
+  addPage.value = 1
+  selectedToAdd.clear()
+  clearUndo()
 }
 
-// Detail: badge search + pagination scoped to selected group.
+const badgesInGroup = computed(() =>
+  selectedGroup.value
+    ? allBadges.filter(b => b.groupId === selectedGroup.value!.id)
+    : [],
+)
+const selectedStats = computed(() => selectedGroup.value
+  ? groupStats(selectedGroup.value.id)
+  : { badges: 0, drivers: 0, vehicles: 0 },
+)
+
+// Detail: badge search + pagination scoped to the selected group.
 const badgeSearch = ref('')
+function matches(b: Badge, q: string) {
+  if (!q) return true
+  return b.identifier.toLowerCase().includes(q)
+    || (b.driver?.name.toLowerCase().includes(q) ?? false)
+    || (b.vehicle?.model.toLowerCase().includes(q) ?? false)
+    || (b.vehicle?.plate.toLowerCase().includes(q) ?? false)
+}
 const filteredBadges = computed(() => {
-  if (!selectedGroup.value) return []
   const q = badgeSearch.value.trim().toLowerCase()
-  if (!q) return selectedGroup.value.badges
-  return selectedGroup.value.badges.filter(b =>
-    b.identifier.toLowerCase().includes(q) ||
-    (b.driver?.name.toLowerCase().includes(q) ?? false) ||
-    (b.vehicle?.model.toLowerCase().includes(q) ?? false) ||
-    (b.vehicle?.plate.toLowerCase().includes(q) ?? false),
-  )
+  return badgesInGroup.value.filter(b => matches(b, q))
 })
 const badgePage = ref(1)
 const badgePerPage = 10
@@ -150,8 +186,136 @@ const badgeRangeStart = computed(() => filteredBadges.value.length === 0 ? 0 : (
 const badgeRangeEnd = computed(() => Math.min(badgePage.value * badgePerPage, filteredBadges.value.length))
 watch(badgeSearch, () => { badgePage.value = 1 })
 
-// FR locale grouping for the count chip ("1 234").
-const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
+// ── Add mode ───────────────────────────────────────────────────────────────
+const isAddingBadges = ref(false)
+const addSearch = ref('')
+const addPage = ref(1)
+const addPerPage = 10
+const selectedToAdd = reactive(new Set<string>())
+
+const availableBadges = computed(() => allBadges.filter(b => b.groupId === null))
+const filteredAvailable = computed(() => {
+  const q = addSearch.value.trim().toLowerCase()
+  return availableBadges.value.filter(b => matches(b, q))
+})
+const addPageCount = computed(() => Math.max(1, Math.ceil(filteredAvailable.value.length / addPerPage)))
+const addPaginated = computed(() => {
+  const start = (addPage.value - 1) * addPerPage
+  return filteredAvailable.value.slice(start, start + addPerPage)
+})
+const addRangeStart = computed(() => filteredAvailable.value.length === 0 ? 0 : (addPage.value - 1) * addPerPage + 1)
+const addRangeEnd = computed(() => Math.min(addPage.value * addPerPage, filteredAvailable.value.length))
+watch(addSearch, () => { addPage.value = 1 })
+
+function enterAddMode() {
+  selectedToAdd.clear()
+  addSearch.value = ''
+  addPage.value = 1
+  isAddingBadges.value = true
+  clearUndo()
+}
+function cancelAddMode() {
+  isAddingBadges.value = false
+  selectedToAdd.clear()
+}
+function toggleAddSelection(id: string) {
+  if (selectedToAdd.has(id)) selectedToAdd.delete(id)
+  else selectedToAdd.add(id)
+}
+// Master checkbox: tri-state (all / some / none) on the visible (paginated) rows.
+const visibleAllSelected = computed(() =>
+  addPaginated.value.length > 0 && addPaginated.value.every(b => selectedToAdd.has(b.id)),
+)
+const visibleSomeSelected = computed(() =>
+  addPaginated.value.some(b => selectedToAdd.has(b.id)) && !visibleAllSelected.value,
+)
+function toggleSelectAllVisible() {
+  if (visibleAllSelected.value) addPaginated.value.forEach(b => selectedToAdd.delete(b.id))
+  else addPaginated.value.forEach(b => selectedToAdd.add(b.id))
+}
+
+function confirmAdd() {
+  if (!selectedGroup.value || selectedToAdd.size === 0) return
+  const targetId = selectedGroup.value.id
+  const count = selectedToAdd.size
+  allBadges.forEach(b => {
+    if (selectedToAdd.has(b.id)) b.groupId = targetId
+  })
+  isAddingBadges.value = false
+  selectedToAdd.clear()
+  showSuccessToast(
+    count === 1 ? '1 badge ajouté au groupe' : `${count} badges ajoutés au groupe`,
+    '',
+  )
+}
+
+// ── Remove with undo ───────────────────────────────────────────────────────
+type PendingUndo = { badgeId: string; previousGroupId: string }
+let pendingUndo: PendingUndo | null = null
+function removeBadge(b: Badge) {
+  if (!b.groupId) return
+  pendingUndo = { badgeId: b.id, previousGroupId: b.groupId }
+  b.groupId = null
+  showUndoToast('Badge retiré du groupe', b.identifier)
+}
+function undoRemove() {
+  if (!pendingUndo) return
+  const target = allBadges.find(x => x.id === pendingUndo!.badgeId)
+  if (target) target.groupId = pendingUndo.previousGroupId
+  clearUndo()
+  toast.visible = false
+}
+function clearUndo() {
+  pendingUndo = null
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+type ToastKind = 'success' | 'neutral'
+const toast = reactive<{
+  visible: boolean
+  kind: ToastKind
+  title: string
+  description: string
+  primaryActionLabel: string
+}>({
+  visible: false,
+  kind: 'success',
+  title: '',
+  description: '',
+  primaryActionLabel: '',
+})
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+function dismissToast() {
+  if (toastTimer) { clearTimeout(toastTimer); toastTimer = null }
+  toast.visible = false
+}
+function showSuccessToast(title: string, description: string) {
+  if (toastTimer) clearTimeout(toastTimer)
+  toast.kind = 'success'
+  toast.title = title
+  toast.description = description
+  toast.primaryActionLabel = ''
+  toast.visible = true
+  toastTimer = setTimeout(() => { toast.visible = false }, 3500)
+}
+function showUndoToast(title: string, description: string) {
+  if (toastTimer) clearTimeout(toastTimer)
+  toast.kind = 'neutral'
+  toast.title = title
+  toast.description = description
+  toast.primaryActionLabel = 'Annuler'
+  toast.visible = true
+  toastTimer = setTimeout(() => {
+    toast.visible = false
+    clearUndo()
+  }, 3500)
+}
+function onToastPrimary() {
+  if (toast.primaryActionLabel === 'Annuler') undoRemove()
+}
+
+// FR-locale count formatter.
+const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 </script>
 
 <template>
@@ -293,8 +457,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
             <!-- Stats row: 3 columns separated by thin vertical dividers -->
             <div class="flex items-stretch gap-[8px] w-full">
               <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
-                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  {{ g.badgesCount }}
+                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ groupStats(g.id).badges }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                   Badges
@@ -302,8 +466,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
               </div>
               <div class="w-px self-stretch bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
-                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  {{ g.vehiclesCount }}
+                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ groupStats(g.id).vehicles }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                   Véhicules
@@ -311,8 +475,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
               </div>
               <div class="w-px self-stretch bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
-                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  {{ g.driversCount }}
+                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ groupStats(g.id).drivers }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                   Conducteurs
@@ -395,7 +559,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
       :style="{ maxWidth: uiStore.getMaxWidth('/bu/groups') + 'px' }"
     >
 
-      <!-- Page header: back + name + metric subhead -->
+      <!-- Header: back + name + metric subhead -->
       <div class="flex items-start justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <div class="flex flex-col items-start min-w-0 flex-1">
           <button
@@ -412,11 +576,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
             {{ selectedGroup.name }}
           </h1>
           <p class="mt-[8px] font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            <span class="font-medium text-text-neutral">{{ selectedGroup.badgesCount }}</span> badges
+            <span class="font-medium text-text-neutral tabular-nums">{{ selectedStats.badges }}</span> badges
             <span class="mx-[8px]" aria-hidden="true">·</span>
-            <span class="font-medium text-text-neutral">{{ selectedGroup.vehiclesCount }}</span> véhicules
+            <span class="font-medium text-text-neutral tabular-nums">{{ selectedStats.vehicles }}</span> véhicules
             <span class="mx-[8px]" aria-hidden="true">·</span>
-            <span class="font-medium text-text-neutral">{{ selectedGroup.driversCount }}</span> conducteurs
+            <span class="font-medium text-text-neutral tabular-nums">{{ selectedStats.drivers }}</span> conducteurs
           </p>
         </div>
       </div>
@@ -426,132 +590,380 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR').replace(/ /g, ' ')
         class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up"
         style="animation-delay: 80ms"
       >
-        <!-- Card header: title + count + search + action -->
-        <div class="flex flex-col gap-[16px] p-[24px] border-b border-border-neutral-tertiary">
-          <div class="flex items-center justify-between gap-[16px] flex-wrap">
-            <div class="flex items-center gap-[12px] min-w-0">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Badges
-              </p>
-              <span class="inline-flex items-center px-[8px] h-[22px] rounded-full bg-neutral-tertiary font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">
-                {{ fmtCount(filteredBadges.length) }}
-              </span>
-            </div>
-            <Button
-              type="secondary"
-              size="md"
-              icon-left="plus"
-              label="Ajouter un badge"
-            />
-          </div>
-          <div class="w-full max-w-[420px]">
-            <Input
-              v-model="badgeSearch"
-              type="leadingIcon"
-              icon="magnifying-glass"
-              placeholder="Rechercher un badge, conducteur, véhicule…"
-            />
-          </div>
-        </div>
-
-        <!-- Table header -->
-        <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
-          <div class="flex-[280] min-w-[220px] px-[24px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Badge
-          </div>
-          <div class="flex-[300] min-w-[200px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Conducteur
-          </div>
-          <div class="flex-[320] min-w-[220px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Véhicule
-          </div>
-        </div>
-
-        <!-- Empty state -->
-        <div
-          v-if="badgePaginated.length === 0"
-          class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+        <Transition
+          mode="out-in"
+          enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+          enter-from-class="opacity-0 translate-y-[6px]"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-[4px]"
         >
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-            Aucun badge
-          </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Aucun badge ne correspond à cette recherche.
-          </p>
-        </div>
-
-        <!-- Table rows -->
-        <div v-else>
-          <div
-            v-for="(b, i) in badgePaginated"
-            :key="b.id"
-            :style="{ animationDelay: `${120 + i * 20}ms` }"
-            class="anim-fade-up flex flex-col md:flex-row md:items-stretch w-full md:min-h-[68px] border-t border-border-neutral-tertiary first:border-t-0 transition-colors duration-150 ease-out motion-reduce:transition-none hover:bg-neutral-secondary"
-          >
-            <!-- Badge identifier -->
-            <div class="flex-[280] min-w-0 px-[24px] py-[16px] md:py-[10px] flex items-center gap-[12px]">
-              <div class="shrink-0 flex items-center justify-center size-[36px] rounded-[10px] bg-brand-surface">
-                <Icon name="charging-badge-pass" variant="solid" :size="20" class="text-text-brand-deep" />
-              </div>
-              <p class="min-w-0 font-mono font-medium text-[14px] leading-[1.5] tracking-[-0.28px] text-text-neutral truncate">
-                {{ b.identifier }}
-              </p>
-            </div>
-
-            <!-- Conducteur -->
-            <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[10px] flex items-center gap-[10px]">
-              <template v-if="b.driver">
-                <div class="shrink-0 flex items-center justify-center size-[28px] rounded-full bg-brand-surface">
-                  <span class="font-sans font-semibold text-[11px] leading-none tracking-[-0.22px] text-text-brand-deep">
-                    {{ b.driver.initials }}
+          <!-- ── VIEW MODE ──────────────────────────────────────────── -->
+          <div v-if="!isAddingBadges" key="view">
+            <!-- Card header -->
+            <div class="flex flex-col gap-[16px] p-[24px] border-b border-border-neutral-tertiary">
+              <div class="flex items-center justify-between gap-[16px] flex-wrap">
+                <div class="flex items-center gap-[12px] min-w-0">
+                  <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                    Badges
+                  </p>
+                  <span class="inline-flex items-center px-[8px] h-[22px] rounded-full bg-neutral-tertiary font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary tabular-nums">
+                    {{ fmtCount(filteredBadges.length) }}
                   </span>
                 </div>
-                <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                  {{ b.driver.name }}
-                </p>
-              </template>
-              <span
-                v-else
-                class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary italic"
-              >
-                Non rattaché
-              </span>
+                <Button
+                  type="secondary"
+                  size="md"
+                  icon-left="plus"
+                  label="Ajouter un badge"
+                  @click="enterAddMode"
+                />
+              </div>
+              <div class="w-full max-w-[420px]">
+                <Input
+                  v-model="badgeSearch"
+                  type="leadingIcon"
+                  icon="magnifying-glass"
+                  placeholder="Rechercher un badge, conducteur, véhicule…"
+                />
+              </div>
             </div>
 
-            <!-- Véhicule -->
-            <div class="flex-[320] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[10px] pb-[16px] md:pb-[10px] flex items-center gap-[10px]">
-              <template v-if="b.vehicle">
-                <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                  {{ b.vehicle.model }}
-                </p>
-                <span class="shrink-0 inline-flex items-center px-[8px] h-[22px] rounded-[6px] border border-border-neutral-tertiary bg-neutral-tertiary font-mono font-medium text-[12px] leading-none tracking-[-0.24px] text-text-neutral-secondary">
-                  {{ b.vehicle.plate }}
-                </span>
-              </template>
-              <span
-                v-else
-                class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary italic"
+            <!-- Table header -->
+            <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
+              <div class="flex-[280] min-w-[220px] px-[24px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Badge
+              </div>
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Conducteur
+              </div>
+              <div class="flex-[320] min-w-[220px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Véhicule
+              </div>
+              <div class="w-[80px] shrink-0" aria-hidden="true" />
+            </div>
+
+            <!-- Empty state -->
+            <div
+              v-if="badgePaginated.length === 0"
+              class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+            >
+              <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                {{ badgeSearch ? 'Aucun badge' : 'Aucun badge dans ce groupe' }}
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                {{ badgeSearch ? 'Aucun badge ne correspond à cette recherche.' : 'Ajoutez un badge pour commencer.' }}
+              </p>
+            </div>
+
+            <!-- Table rows -->
+            <TransitionGroup
+              v-else
+              tag="div"
+              enter-active-class="transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 -translate-y-[6px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-x-0"
+              leave-to-class="opacity-0 translate-x-[12px]"
+              move-class="transition-transform duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+            >
+              <div
+                v-for="b in badgePaginated"
+                :key="b.id"
+                class="group/row flex flex-col md:flex-row md:items-stretch w-full md:min-h-[68px] border-t border-border-neutral-tertiary first:border-t-0 transition-colors duration-150 ease-out motion-reduce:transition-none hover:bg-neutral-secondary"
               >
-                Non rattaché
-              </span>
+                <!-- Badge identifier -->
+                <div class="flex-[280] min-w-0 px-[24px] py-[16px] md:py-[10px] flex items-center gap-[12px]">
+                  <div class="shrink-0 flex items-center justify-center size-[36px] rounded-[10px] bg-brand-surface">
+                    <Icon name="charging-badge-pass" variant="solid" :size="20" class="text-text-brand-deep" />
+                  </div>
+                  <p class="min-w-0 font-mono font-medium text-[14px] leading-[1.5] tracking-[-0.28px] text-text-neutral truncate">
+                    {{ b.identifier }}
+                  </p>
+                </div>
+
+                <!-- Conducteur -->
+                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[10px] flex items-center gap-[10px]">
+                  <template v-if="b.driver">
+                    <div class="shrink-0 flex items-center justify-center size-[28px] rounded-full bg-brand-surface">
+                      <span class="font-sans font-semibold text-[11px] leading-none tracking-[-0.22px] text-text-brand-deep">
+                        {{ b.driver.initials }}
+                      </span>
+                    </div>
+                    <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                      {{ b.driver.name }}
+                    </p>
+                  </template>
+                  <span
+                    v-else
+                    class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary italic"
+                  >
+                    Non rattaché
+                  </span>
+                </div>
+
+                <!-- Véhicule -->
+                <div class="flex-[320] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[10px] flex items-center gap-[10px]">
+                  <template v-if="b.vehicle">
+                    <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                      {{ b.vehicle.model }}
+                    </p>
+                    <span class="shrink-0 inline-flex items-center px-[8px] h-[22px] rounded-[6px] border border-border-neutral-tertiary bg-neutral-tertiary font-mono font-medium text-[12px] leading-none tracking-[-0.24px] text-text-neutral-secondary">
+                      {{ b.vehicle.plate }}
+                    </span>
+                  </template>
+                  <span
+                    v-else
+                    class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary italic"
+                  >
+                    Non rattaché
+                  </span>
+                </div>
+
+                <!-- Remove action (trailing) -->
+                <div class="w-full md:w-[80px] shrink-0 px-[24px] md:px-[16px] pb-[16px] md:pb-[10px] md:py-[10px] flex md:items-center md:justify-end">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger focus-visible:bg-danger-surface focus-visible:text-icon-danger transition-[background-color,color,transform] duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray"
+                    :aria-label="`Retirer le badge ${b.identifier} du groupe`"
+                    @click="removeBadge(b)"
+                  >
+                    <Icon name="trash" variant="outline" :size="18" />
+                  </button>
+                </div>
+              </div>
+            </TransitionGroup>
+
+            <!-- Pagination footer -->
+            <TableFooter
+              v-if="filteredBadges.length > 0"
+              :page="badgePage"
+              :page-count="badgePageCount"
+              :range-start="badgeRangeStart"
+              :range-end="badgeRangeEnd"
+              :total="filteredBadges.length"
+              @update:page="(n) => (badgePage = n)"
+            />
+          </div>
+
+          <!-- ── ADD MODE ───────────────────────────────────────────── -->
+          <div v-else key="add">
+            <!-- Card header (add mode) -->
+            <div class="flex flex-col gap-[16px] p-[24px] border-b border-border-neutral-tertiary">
+              <div class="flex items-center justify-between gap-[16px] flex-wrap">
+                <div class="flex items-center gap-[12px] min-w-0">
+                  <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                    Ajouter des badges
+                  </p>
+                  <Transition
+                    enter-active-class="transition-[opacity,transform] duration-[180ms] ease-out motion-reduce:transition-none"
+                    enter-from-class="opacity-0 scale-[0.92]"
+                    enter-to-class="opacity-100 scale-100"
+                    leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+                    leave-from-class="opacity-100 scale-100"
+                    leave-to-class="opacity-0 scale-[0.92]"
+                  >
+                    <span
+                      v-if="selectedToAdd.size > 0"
+                      class="inline-flex items-center px-[8px] h-[22px] rounded-full bg-brand-surface font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-brand-deep tabular-nums"
+                    >
+                      {{ fmtCount(selectedToAdd.size) }} sélectionné{{ selectedToAdd.size > 1 ? 's' : '' }}
+                    </span>
+                  </Transition>
+                </div>
+                <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  <span class="tabular-nums">{{ fmtCount(filteredAvailable.length) }}</span> badge{{ filteredAvailable.length > 1 ? 's' : '' }} non rattaché{{ filteredAvailable.length > 1 ? 's' : '' }}
+                </span>
+              </div>
+              <div class="w-full max-w-[420px]">
+                <Input
+                  v-model="addSearch"
+                  type="leadingIcon"
+                  icon="magnifying-glass"
+                  placeholder="Rechercher un badge, conducteur, véhicule…"
+                />
+              </div>
+            </div>
+
+            <!-- Table header (add mode, with master checkbox) -->
+            <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
+              <div class="w-[56px] shrink-0 px-[20px] py-[10px] flex items-center">
+                <button
+                  type="button"
+                  role="checkbox"
+                  :aria-checked="visibleSomeSelected ? 'mixed' : (visibleAllSelected ? 'true' : 'false')"
+                  :aria-label="visibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
+                  :class="[
+                    'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
+                    (visibleAllSelected || visibleSomeSelected)
+                      ? 'bg-brand border-brand'
+                      : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
+                  ]"
+                  @click="toggleSelectAllVisible"
+                >
+                  <Icon v-if="visibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
+                  <Icon v-else-if="visibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
+                </button>
+              </div>
+              <div class="flex-[280] min-w-[220px] px-[8px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Badge
+              </div>
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Conducteur
+              </div>
+              <div class="flex-[320] min-w-[220px] px-[16px] py-[10px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Véhicule
+              </div>
+            </div>
+
+            <!-- Empty state (add mode) -->
+            <div
+              v-if="addPaginated.length === 0"
+              class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+            >
+              <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                {{ addSearch ? 'Aucun badge' : 'Aucun badge disponible' }}
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                {{ addSearch
+                  ? 'Aucun badge non rattaché ne correspond à cette recherche.'
+                  : 'Tous les badges sont déjà rattachés à un groupe.' }}
+              </p>
+            </div>
+
+            <!-- Table rows (add mode, with checkboxes) -->
+            <div v-else>
+              <button
+                v-for="b in addPaginated"
+                :key="b.id"
+                type="button"
+                :aria-pressed="selectedToAdd.has(b.id)"
+                :class="[
+                  'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[68px] border-t border-border-neutral-tertiary first:border-t-0 text-left',
+                  'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
+                  selectedToAdd.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
+                ]"
+                @click="toggleAddSelection(b.id)"
+              >
+                <!-- Checkbox column -->
+                <div class="w-full md:w-[56px] shrink-0 px-[24px] md:px-[20px] pt-[16px] md:pt-[10px] md:py-[10px] flex md:items-center">
+                  <span
+                    role="checkbox"
+                    :aria-checked="selectedToAdd.has(b.id)"
+                    :class="[
+                      'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
+                      selectedToAdd.has(b.id)
+                        ? 'bg-brand border-brand'
+                        : 'bg-neutral border-border-neutral-secondary group-hover/row:border-border-neutral',
+                    ]"
+                  >
+                    <Icon v-if="selectedToAdd.has(b.id)" name="check" variant="solid" :size="12" class="text-white" />
+                  </span>
+                </div>
+
+                <!-- Badge identifier -->
+                <div class="flex-[280] min-w-0 px-[24px] md:px-[8px] py-[8px] md:py-[10px] flex items-center gap-[12px]">
+                  <div class="shrink-0 flex items-center justify-center size-[36px] rounded-[10px] bg-brand-surface">
+                    <Icon name="charging-badge-pass" variant="solid" :size="20" class="text-text-brand-deep" />
+                  </div>
+                  <p class="min-w-0 font-mono font-medium text-[14px] leading-[1.5] tracking-[-0.28px] text-text-neutral truncate">
+                    {{ b.identifier }}
+                  </p>
+                </div>
+
+                <!-- Conducteur -->
+                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[10px] flex items-center gap-[10px]">
+                  <template v-if="b.driver">
+                    <div class="shrink-0 flex items-center justify-center size-[28px] rounded-full bg-brand-surface">
+                      <span class="font-sans font-semibold text-[11px] leading-none tracking-[-0.22px] text-text-brand-deep">
+                        {{ b.driver.initials }}
+                      </span>
+                    </div>
+                    <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                      {{ b.driver.name }}
+                    </p>
+                  </template>
+                  <span
+                    v-else
+                    class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary italic"
+                  >
+                    Non rattaché
+                  </span>
+                </div>
+
+                <!-- Véhicule -->
+                <div class="flex-[320] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[10px] pb-[16px] md:pb-[10px] flex items-center gap-[10px]">
+                  <template v-if="b.vehicle">
+                    <p class="min-w-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                      {{ b.vehicle.model }}
+                    </p>
+                    <span class="shrink-0 inline-flex items-center px-[8px] h-[22px] rounded-[6px] border border-border-neutral-tertiary bg-neutral-tertiary font-mono font-medium text-[12px] leading-none tracking-[-0.24px] text-text-neutral-secondary">
+                      {{ b.vehicle.plate }}
+                    </span>
+                  </template>
+                  <span
+                    v-else
+                    class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary italic"
+                  >
+                    Non rattaché
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Pagination -->
+            <TableFooter
+              v-if="filteredAvailable.length > 0"
+              :page="addPage"
+              :page-count="addPageCount"
+              :range-start="addRangeStart"
+              :range-end="addRangeEnd"
+              :total="filteredAvailable.length"
+              @update:page="(n) => (addPage = n)"
+            />
+
+            <!-- Sticky action bar -->
+            <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-t border-border-neutral-tertiary bg-neutral">
+              <Button
+                type="secondary"
+                size="md"
+                label="Annuler"
+                @click="cancelAddMode"
+              />
+              <Button
+                type="primary"
+                size="md"
+                :label="selectedToAdd.size === 0
+                  ? 'Ajouter au groupe'
+                  : `Ajouter ${fmtCount(selectedToAdd.size)} badge${selectedToAdd.size > 1 ? 's' : ''}`"
+                :disabled="selectedToAdd.size === 0"
+                @click="confirmAdd"
+              />
             </div>
           </div>
-        </div>
-
-        <!-- Pagination footer -->
-        <TableFooter
-          v-if="filteredBadges.length > 0"
-          :page="badgePage"
-          :page-count="badgePageCount"
-          :range-start="badgeRangeStart"
-          :range-end="badgeRangeEnd"
-          :total="filteredBadges.length"
-          @update:page="(n) => (badgePage = n)"
-        />
+        </Transition>
       </section>
 
       <!-- Footer spacer -->
       <div class="h-[60px]" />
+    </div>
+
+    <!-- ── Toast (top-right, fixed) ─────────────────────────────────────── -->
+    <div class="pointer-events-none fixed top-[24px] right-[24px] z-50">
+      <div class="pointer-events-auto">
+        <Toast
+          v-model="toast.visible"
+          :type="toast.kind"
+          :title="toast.title"
+          :description="toast.description"
+          :primary-action-label="toast.primaryActionLabel"
+          :secondary-action-label="''"
+          @primary-action="onToastPrimary"
+          @dismiss="dismissToast"
+        />
+      </div>
     </div>
   </div>
 </template>
