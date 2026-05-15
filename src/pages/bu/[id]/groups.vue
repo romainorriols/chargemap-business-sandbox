@@ -103,7 +103,7 @@ function seedBadges(groupId: string | null, count: number): Badge[] {
   return Array.from({ length: count }, (_, i) => makeBadge(groupId, i))
 }
 
-const groups: Group[] = [
+const groups = reactive<Group[]>([
   { id: 'g-1', name: 'Groupe logistique Rhône',          manager: 'Marc Dubois'      },
   { id: 'g-2', name: 'Flotte commerciale Île-de-France', manager: 'Camille Laurent'  },
   { id: 'g-3', name: 'Techniciens itinérants Sud',       manager: 'Antoine Robert'   },
@@ -111,7 +111,7 @@ const groups: Group[] = [
   { id: 'g-5', name: 'Équipe terrain Aquitaine',         manager: 'Julien Bernard'   },
   { id: 'g-6', name: 'Pôle dirigeants Paris',            manager: 'Émilie Faure'     },
   { id: 'g-7', name: 'Maintenance bornes Est',           manager: 'Hugo Lefèvre'     },
-]
+])
 
 const allBadges = reactive<Badge[]>([
   ...seedBadges('g-1', 50),
@@ -168,6 +168,68 @@ const selectedGroup = computed(() => groups.find(g => g.id === selectedId.value)
 function openGroup(id: string) {
   selectedId.value = id
   openMenuId.value = null
+}
+
+// ── Settings view (Figma 6042-35774) ──────────────────────────────────────
+// Reachable from the listing card's ellipsis menu and from a Paramètres
+// pill in the detail-view header. Replaces whichever view was active.
+const settingsId = ref<string | null>(null)
+const selectedSettingsGroup = computed(() =>
+  groups.find(g => g.id === settingsId.value) ?? null,
+)
+const settingsForm = reactive<{ name: string; manager: string }>({ name: '', manager: '' })
+// Mock creation timestamp — not stored per group in this sandbox.
+const settingsCreatedAt = '18/10/2025'
+const settingsDirty = computed(() => {
+  const g = selectedSettingsGroup.value
+  if (!g) return false
+  return settingsForm.name.trim() !== '' && (
+    settingsForm.name !== g.name || settingsForm.manager !== g.manager
+  )
+})
+// Managers offered in the dropdown: every distinct manager currently used
+// across the groups list — surfaces existing values without inventing names.
+const managerItems = computed(() => {
+  const seen = new Set<string>()
+  const list: { value: string; label: string }[] = []
+  for (const g of groups) {
+    if (!seen.has(g.manager)) {
+      seen.add(g.manager)
+      list.push({ value: g.manager, label: g.manager })
+    }
+  }
+  return list
+})
+
+function openSettings(id: string) {
+  const g = groups.find(x => x.id === id)
+  if (!g) return
+  // Settings layers on top of whichever view was active. We keep selectedId
+  // intact so exiting drops the user back where they came from.
+  settingsId.value = id
+  settingsForm.name = g.name
+  settingsForm.manager = g.manager
+  openMenuId.value = null
+}
+function exitSettings() {
+  settingsId.value = null
+  settingsForm.name = ''
+  settingsForm.manager = ''
+}
+function saveSettings() {
+  const g = groups.find(x => x.id === settingsId.value)
+  if (!g) return
+  g.name = settingsForm.name.trim()
+  g.manager = settingsForm.manager
+  exitSettings()
+  showSuccessToast('Paramètres mis à jour', '')
+}
+function deleteSettingsGroup() {
+  if (!settingsId.value) return
+  const idx = groups.findIndex(g => g.id === settingsId.value)
+  if (idx >= 0) groups.splice(idx, 1)
+  exitSettings()
+  showSuccessToast('Groupe supprimé', '')
 }
 
 // Loading skeleton (Figma /billing pattern): 600ms simulated fetch on
@@ -1013,9 +1075,87 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]" @click="closeMenus">
 
+    <!-- ── SETTINGS (Figma 6042-35774) — layers on top of listing/detail ── -->
+    <div
+      v-if="selectedSettingsGroup"
+      class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
+    >
+
+      <!-- Header: × Quitter back + page title -->
+      <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
+        <button
+          type="button"
+          class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+          @click="exitSettings"
+        >
+          <Icon name="x-mark" variant="outline" :size="16" />
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+            Quitter
+          </span>
+        </button>
+        <h1 class="font-sans font-medium text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral truncate max-w-full">
+          Paramètres de {{ selectedSettingsGroup.name }}
+        </h1>
+      </div>
+
+      <!-- Informations section + Date / Supprimer card + footer actions -->
+      <div class="flex flex-col gap-[16px] anim-fade-up" style="animation-delay: 80ms">
+
+        <!-- Informations section -->
+        <div class="flex flex-col gap-[16px]">
+          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+            Informations
+          </p>
+          <div class="bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px]">
+            <div class="flex items-start gap-[16px] w-full">
+              <div class="flex-1 min-w-0">
+                <Input
+                  v-model="settingsForm.name"
+                  label="Nom du groupe"
+                  placeholder="Nom du groupe"
+                />
+              </div>
+              <div class="flex-1 min-w-0">
+                <Dropdown
+                  v-model="settingsForm.manager"
+                  label="Manager"
+                  :items="managerItems"
+                  :searchable="false"
+                  :show-hint="false"
+                  placeholder="Sélectionner un manager"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date / Supprimer card -->
+        <div class="bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px]">
+          <div class="flex items-center gap-[16px] w-full">
+            <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Créer le {{ settingsCreatedAt }}
+            </p>
+            <button
+              type="button"
+              class="shrink-0 inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] bg-danger text-white font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-danger-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-error active:scale-[0.97]"
+              @click="deleteSettingsGroup"
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer actions -->
+        <div class="flex items-center justify-end gap-[16px] w-full">
+          <Button type="secondary" size="md" label="Quitter" @click="exitSettings" />
+          <Button type="primary" size="md" label="Enregistrer" :disabled="!settingsDirty" @click="saveSettings" />
+        </div>
+      </div>
+    </div>
+
     <!-- ── LISTING ─────────────────────────────────────────────────────── -->
     <div
-      v-if="!selectedGroup"
+      v-else-if="!selectedGroup"
       class="mx-auto w-full flex flex-col gap-[32px]"
       :style="{
         maxWidth: uiStore.groupListVariant === 'compact'
@@ -1063,10 +1203,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               'bg-neutral border border-border-neutral-secondary shadow-sm',
               'p-[24px] flex flex-col gap-[16px]',
               'transition-[transform,box-shadow,border-color] duration-200 ease-out motion-reduce:transition-none',
-              'hover:border-border-neutral hover:shadow-md hover:-translate-y-[2px]',
               'outline-none focus-visible:shadow-ring-gray',
               openMenuId === g.id ? 'z-30' : 'z-0',
-              uiStore.groupListVariant === 'compact' ? 'rounded-[8px]' : 'rounded-[16px]',
+              uiStore.groupListVariant === 'compact'
+                ? 'rounded-[8px] hover:border-border-neutral'
+                : 'rounded-[16px] hover:border-border-neutral hover:shadow-md hover:-translate-y-[2px]',
             ]"
             @click="openGroup(g.id)"
             @keydown.enter="openGroup(g.id)"
@@ -1074,13 +1215,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           >
             <div class="flex items-start gap-[16px] w-full">
               <div class="flex-1 min-w-0 flex flex-col gap-[8px] items-start">
-                <!-- Compact: naked solid folder icon (24px). Detailed: brand tile. -->
+                <!-- Compact: naked solid folder icon (24px, neutral gray). Detailed: brand tile. -->
                 <Icon
                   v-if="uiStore.groupListVariant === 'compact'"
                   name="folder"
                   variant="solid"
                   :size="24"
-                  class="text-icon-neutral-primary"
+                  class="text-icon-neutral-secondary"
                 />
                 <div
                   v-else
@@ -1135,6 +1276,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         type="button"
                         role="menuitem"
                         class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                        @click="openSettings(g.id)"
+                      >
+                        <Icon name="cog-6-tooth" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
+                        <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                          Paramètres
+                        </span>
+                      </button>
+                    </div>
+                    <div class="px-[4px] py-[2px]">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
                         @click="openGroup(g.id)"
                       >
                         <Icon name="pencil-square" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
@@ -1163,26 +1317,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
             <div class="h-px w-full shrink-0 bg-border-neutral-tertiary" />
 
-            <!-- Compact: 2 stats (Badges count + Manager name) -->
-            <div v-if="uiStore.groupListVariant === 'compact'" class="flex items-stretch gap-[8px] w-full">
-              <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
-                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                  {{ groupStats(g.id).badges }}
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            <!-- Compact: 2 stats stacked as label/value rows (Figma 6042-23251) -->
+            <template v-if="uiStore.groupListVariant === 'compact'">
+              <div class="flex items-center gap-[16px] w-full">
+                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                   Badges
                 </p>
-              </div>
-              <div class="w-px self-stretch bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
-                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                  {{ g.manager }}
+                <p class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right whitespace-nowrap tabular-nums">
+                  {{ groupStats(g.id).badges }}
                 </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              </div>
+              <div class="flex items-center gap-[16px] w-full">
+                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                   Manager
                 </p>
+                <p class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right whitespace-nowrap truncate max-w-[60%]">
+                  {{ g.manager }}
+                </p>
               </div>
-            </div>
+            </template>
 
             <!-- Detailed: 3 stats (Badges / Véhicules / Conducteurs) -->
             <div v-else class="flex items-stretch gap-[8px] w-full">
@@ -1307,6 +1460,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             size="md"
             icon-left="cog-6-tooth"
             label="Paramètres"
+            @click="openSettings(selectedGroup.id)"
           />
         </div>
       </div>
