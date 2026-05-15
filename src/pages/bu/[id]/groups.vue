@@ -187,6 +187,7 @@ function resetDetailState() {
   budgetDrawerOpen.value = false
   alerteDrawerOpen.value = false
   autorisationsDrawerOpen.value = false
+  vacanceDrawerOpen.value = false
   clearUndo()
   dismissToast()
 }
@@ -220,6 +221,13 @@ const selectedRuleId = ref<string | null>(null)
 // Drawer state for the Budget de recharge rule (Figma 5980-29598 / 5980-28115)
 const budgetDrawerOpen = ref(false)
 const budgetForm = reactive({ active: false, amount: '230,00' })
+
+// Drawer state for the Blocage vacance rule (Figma 5980-30694). Master
+// toggle gates the whole feature; the body sits at an empty state with a
+// dashed "+ Nouvelle période" button (period editor itself is out of scope
+// for this mock).
+const vacanceDrawerOpen = ref(false)
+const vacanceForm = reactive({ active: true })
 
 // Drawer state for the Autorisations quotidiennes rule (Figma 5980-29659).
 // Master toggle gates the whole feature; each day carries its own toggle
@@ -331,6 +339,7 @@ function onRuleClick(rule: ChargingRule) {
   budgetDrawerOpen.value = false
   alerteDrawerOpen.value = false
   autorisationsDrawerOpen.value = false
+  vacanceDrawerOpen.value = false
 
   if (rule.id === 'budget') {
     selectedRuleId.value = rule.id
@@ -348,6 +357,12 @@ function onRuleClick(rule: ChargingRule) {
     selectedRuleId.value = rule.id
     autorisationsForm.active = rule.statusIcon === 'check'
     autorisationsDrawerOpen.value = true
+    return
+  }
+  if (rule.id === 'vacance') {
+    selectedRuleId.value = rule.id
+    vacanceForm.active = rule.statusIcon === 'check'
+    vacanceDrawerOpen.value = true
     return
   }
   selectedRuleId.value = selectedRuleId.value === rule.id ? null : rule.id
@@ -383,6 +398,22 @@ function saveAutorisations() {
   autorisationsDrawerOpen.value = false
   selectedRuleId.value = null
   showSuccessToast('Autorisations quotidiennes mises à jour', '')
+}
+
+function closeVacanceDrawer() {
+  vacanceDrawerOpen.value = false
+  selectedRuleId.value = null
+}
+
+function saveVacance() {
+  const rule = rules.find(r => r.id === 'vacance')
+  if (rule) {
+    rule.statusIcon = vacanceForm.active ? 'check' : 'x-mark'
+    rule.statusLabel = vacanceForm.active ? 'Activé' : 'Désactivé'
+  }
+  vacanceDrawerOpen.value = false
+  selectedRuleId.value = null
+  showSuccessToast('Blocage vacance mis à jour', '')
 }
 
 function closeAlerteDrawer() {
@@ -1813,6 +1844,84 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeAutorisationsDrawer" />
           <Button type="primary" size="md" label="Enregistrer" @click="saveAutorisations" />
+        </div>
+      </aside>
+    </Transition>
+
+    <!-- ── Blocage vacance drawer (Figma 5980-30694) ───────────────────── -->
+    <Transition
+      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
+    >
+      <aside
+        v-if="vacanceDrawerOpen"
+        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Blocage vacance"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            Blocage vacance
+          </p>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            aria-label="Fermer"
+            @click="closeVacanceDrawer"
+          >
+            <Icon name="x-mark" variant="outline" :size="20" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto p-[16px]">
+          <div class="flex flex-col gap-[16px]">
+            <!-- Master "Activé" card -->
+            <div class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]">
+              <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
+              </p>
+              <Toggle
+                v-model="vacanceForm.active"
+                size="sm"
+                aria-label="Activer le blocage vacance"
+              />
+            </div>
+
+            <!-- Empty state — "+ Nouvelle période" CTA, only when master is active -->
+            <Transition
+              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 -translate-y-[4px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-[4px]"
+            >
+              <button
+                v-if="vacanceForm.active"
+                type="button"
+                class="w-full h-[100px] flex items-center justify-center gap-[12px] px-[16px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral text-text-neutral-secondary hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand focus-visible:border-brand"
+                aria-label="Ajouter une nouvelle période de vacance"
+              >
+                <Icon name="plus" variant="outline" :size="24" class="shrink-0" />
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]">
+                  Nouvelle période
+                </span>
+              </button>
+            </Transition>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
+          <Button type="secondary" size="md" label="Annuler" @click="closeVacanceDrawer" />
+          <Button type="primary" size="md" label="Enregistrer" @click="saveVacance" />
         </div>
       </aside>
     </Transition>
