@@ -418,6 +418,31 @@ function setNetworkAuthorized(id: string, authorized: boolean) {
   else networkPicker.draftBlocked.add(id)
 }
 
+// Bulk actions operate on the currently visible set so that filters and
+// search work as a scope (e.g. "Lents" + "Tout bloquer" only blocks the slow
+// networks). Both functions mutate the draft, never the persisted state —
+// the user still has to click Enregistrer / Valider la selection to commit.
+function blockAllVisible() {
+  for (const net of visibleNetworks.value) {
+    networkPicker.draftBlocked.add(net.id)
+  }
+}
+function authorizeAllVisible() {
+  for (const net of visibleNetworks.value) {
+    networkPicker.draftBlocked.delete(net.id)
+  }
+}
+// "All visible networks share this state already" → grey out the matching
+// bulk button so it doesn't pretend to do something.
+const allVisibleBlocked = computed(() =>
+  visibleNetworks.value.length > 0
+  && visibleNetworks.value.every(n => networkPicker.draftBlocked.has(n.id))
+)
+const allVisibleAuthorized = computed(() =>
+  visibleNetworks.value.length > 0
+  && visibleNetworks.value.every(n => !networkPicker.draftBlocked.has(n.id))
+)
+
 function isNetworkAuthorized(id: string): boolean {
   return !networkPicker.draftBlocked.has(id)
 }
@@ -2440,6 +2465,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </button>
               </div>
 
+              <!-- Bulk actions — scoped to the currently visible networks -->
+              <div v-if="visibleNetworks.length > 0" class="flex items-center justify-end gap-[4px]">
+                <button
+                  type="button"
+                  :disabled="allVisibleAuthorized"
+                  class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  @click="authorizeAllVisible"
+                >
+                  Tout autoriser
+                </button>
+                <span class="text-text-neutral-secondary" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  :disabled="allVisibleBlocked"
+                  class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  @click="blockAllVisible"
+                >
+                  Tout bloquer
+                </button>
+              </div>
+
               <!-- 2-column card grid -->
               <div v-if="visibleNetworks.length === 0" class="flex flex-col items-center justify-center py-[32px] gap-[8px] text-center">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -2599,8 +2645,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <!-- List -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px]">
-          <div v-if="visibleNetworks.length === 0" class="flex flex-col items-center justify-center py-[48px] gap-[8px] text-center">
+        <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px] flex flex-col gap-[8px]">
+          <div v-if="visibleNetworks.length > 0" class="flex items-center justify-end gap-[4px] shrink-0">
+            <button
+              type="button"
+              :disabled="allVisibleAuthorized"
+              class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+              @click="authorizeAllVisible"
+            >
+              Tout autoriser
+            </button>
+            <span class="text-text-neutral-secondary" aria-hidden="true">·</span>
+            <button
+              type="button"
+              :disabled="allVisibleBlocked"
+              class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+              @click="blockAllVisible"
+            >
+              Tout bloquer
+            </button>
+          </div>
+          <div v-if="visibleNetworks.length === 0" class="flex-1 flex flex-col items-center justify-center gap-[8px] text-center py-[48px]">
             <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
               Aucun réseau trouvé
             </p>
@@ -2773,8 +2838,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </div>
 
             <!-- List (3-column card grid, per modal Figma 6010-50488) -->
-            <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px]">
-              <div v-if="visibleNetworks.length === 0" class="flex flex-col items-center justify-center py-[48px] gap-[8px] text-center">
+            <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px] flex flex-col gap-[8px]">
+              <div v-if="visibleNetworks.length > 0" class="flex items-center justify-end gap-[4px] shrink-0">
+                <button
+                  type="button"
+                  :disabled="allVisibleAuthorized"
+                  class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  @click="authorizeAllVisible"
+                >
+                  Tout autoriser
+                </button>
+                <span class="text-text-neutral-secondary" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  :disabled="allVisibleBlocked"
+                  class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  @click="blockAllVisible"
+                >
+                  Tout bloquer
+                </button>
+              </div>
+              <div v-if="visibleNetworks.length === 0" class="flex-1 flex flex-col items-center justify-center gap-[8px] text-center py-[48px]">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                   Aucun réseau trouvé
                 </p>
