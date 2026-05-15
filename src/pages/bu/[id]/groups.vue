@@ -2500,7 +2500,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-modal="true"
           aria-labelledby="network-picker-modal-title"
         >
-          <div class="pointer-events-auto w-full max-w-[840px] max-h-[calc(100vh-48px)] bg-neutral rounded-[24px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
+          <div class="pointer-events-auto w-full max-w-[1000px] h-full max-h-[800px] bg-neutral rounded-[24px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
             <!-- Header -->
             <div class="flex flex-col gap-[16px] p-[24px] border-b border-border-neutral-secondary shrink-0">
               <div class="flex items-start justify-between gap-[16px]">
