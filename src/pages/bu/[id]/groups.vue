@@ -1107,24 +1107,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             Informations
           </p>
           <div class="bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px]">
-            <div class="flex items-start gap-[16px] w-full">
-              <div class="flex-1 min-w-0">
-                <Input
-                  v-model="settingsForm.name"
-                  label="Nom du groupe"
-                  placeholder="Nom du groupe"
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <Dropdown
-                  v-model="settingsForm.manager"
-                  label="Manager"
-                  :items="managerItems"
-                  :searchable="false"
-                  :show-hint="false"
-                  placeholder="Sélectionner un manager"
-                />
-              </div>
+            <div class="flex flex-col gap-[16px] w-full">
+              <Input
+                v-model="settingsForm.name"
+                label="Nom du groupe"
+                placeholder="Nom du groupe"
+              />
+              <Dropdown
+                v-model="settingsForm.manager"
+                label="Manager"
+                :items="managerItems"
+                :searchable="false"
+                :show-hint="false"
+                placeholder="Sélectionner un manager"
+              />
             </div>
           </div>
         </div>
