@@ -191,6 +191,7 @@ function resetDetailState() {
   vacanceForm.creating = false
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
+  reseauDrawerOpen.value = false
   clearUndo()
   dismissToast()
 }
@@ -303,6 +304,12 @@ const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
   ],
 })
 
+// Drawer state for the Blocage réseau rule (Figma 6010-29265). No master
+// toggle — a single configuration card with a "Sélectionner des réseaux"
+// CTA that would open a network picker (not in scope for this mock).
+const reseauDrawerOpen = ref(false)
+const reseauForm = reactive<{ selectedNetworks: string[] }>({ selectedNetworks: [] })
+
 // Drawer state for the Seuil d'alerte rule (Figma 5988-37178). Threshold type
 // is either a percentage of the recharge budget or a monthly cap in euros.
 const alerteDrawerOpen = ref(false)
@@ -388,6 +395,7 @@ function onRuleClick(rule: ChargingRule) {
     alerteDrawerOpen.value = false
     autorisationsDrawerOpen.value = false
     vacanceDrawerOpen.value = false
+    reseauDrawerOpen.value = false
     vacanceForm.creating = false
     vacanceForm.draft.name = ''
     vacanceForm.draft.range = ''
@@ -403,6 +411,7 @@ function onRuleClick(rule: ChargingRule) {
   alerteDrawerOpen.value = false
   autorisationsDrawerOpen.value = false
   vacanceDrawerOpen.value = false
+  reseauDrawerOpen.value = false
 
   if (rule.id === 'budget') {
     selectedRuleId.value = rule.id
@@ -426,6 +435,11 @@ function onRuleClick(rule: ChargingRule) {
     selectedRuleId.value = rule.id
     vacanceForm.active = rule.statusIcon === 'check'
     vacanceDrawerOpen.value = true
+    return
+  }
+  if (rule.id === 'reseau') {
+    selectedRuleId.value = rule.id
+    reseauDrawerOpen.value = true
     return
   }
   selectedRuleId.value = rule.id
@@ -469,6 +483,23 @@ function closeVacanceDrawer() {
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
   selectedRuleId.value = null
+}
+
+function closeReseauDrawer() {
+  reseauDrawerOpen.value = false
+  selectedRuleId.value = null
+}
+
+function saveReseau() {
+  const rule = rules.find(r => r.id === 'reseau')
+  if (rule) {
+    const hasSelection = reseauForm.selectedNetworks.length > 0
+    rule.statusIcon = hasSelection ? 'check' : 'x-mark'
+    rule.statusLabel = hasSelection ? 'Activé' : 'Désactivé'
+  }
+  reseauDrawerOpen.value = false
+  selectedRuleId.value = null
+  showSuccessToast('Blocage réseau mis à jour', '')
 }
 
 function saveVacance() {
@@ -2088,6 +2119,65 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeVacanceDrawer" />
           <Button type="primary" size="md" label="Enregistrer" @click="saveVacance" />
+        </div>
+      </aside>
+    </Transition>
+
+    <!-- ── Blocage réseau drawer (Figma 6010-29265) ─────────────────────── -->
+    <Transition
+      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
+    >
+      <aside
+        v-if="reseauDrawerOpen"
+        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Blocage réseau"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            Blocage réseau
+          </p>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            aria-label="Fermer"
+            @click="closeReseauDrawer"
+          >
+            <Icon name="x-mark" variant="outline" :size="20" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto p-[16px]">
+          <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[8px]">
+              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Bloqué des réseaux
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Sélectionner des réseaux à bloqué, pour tout les autres les recharges seront autorisées
+              </p>
+            </div>
+            <button
+              type="button"
+              class="w-full flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
+            >
+              Sélectionner des réseaux
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
+          <Button type="secondary" size="md" label="Annuler" @click="closeReseauDrawer" />
+          <Button type="primary" size="md" label="Enregistrer" @click="saveReseau" />
         </div>
       </aside>
     </Transition>
