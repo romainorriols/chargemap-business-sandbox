@@ -5,6 +5,7 @@
 const EMPTY_STATE_KEY          = 'cm-sandbox-empty-state'
 const MAX_WIDTH_KEY            = 'cm-sandbox-max-width-by-page'
 const NETWORK_PICKER_MODE_KEY  = 'cm-sandbox-network-picker-mode'
+const NETWORK_LOGO_MODE_KEY    = 'cm-sandbox-network-logo-mode'
 
 export type SandboxMaxWidth = 2192 | 1600 | 800
 
@@ -12,6 +13,9 @@ export const SANDBOX_MAX_WIDTH_OPTIONS: readonly SandboxMaxWidth[] = [2192, 1600
 
 export type NetworkPickerMode = 'panel' | 'modal'
 export const NETWORK_PICKER_MODE_OPTIONS: readonly NetworkPickerMode[] = ['panel', 'modal'] as const
+
+export type NetworkLogoMode = 'real' | 'generic'
+export const NETWORK_LOGO_MODE_OPTIONS: readonly NetworkLogoMode[] = ['real', 'generic'] as const
 
 // Default max-width per page key. All defaults must be one of the
 // SANDBOX_MAX_WIDTH_OPTIONS so the segmented control always has an
@@ -49,6 +53,7 @@ export const useUiStore = defineStore('ui', () => {
   let initialEmpty = false
   let initialMaxByPage: Partial<Record<string, SandboxMaxWidth>> = {}
   let initialPickerMode: NetworkPickerMode = 'panel'
+  let initialLogoMode: NetworkLogoMode = 'real'
   if (import.meta.client) {
     const storedEmpty = localStorage.getItem(EMPTY_STATE_KEY)
     if (storedEmpty !== null) initialEmpty = storedEmpty === 'true'
@@ -65,10 +70,15 @@ export const useUiStore = defineStore('ui', () => {
     if (storedPickerMode === 'panel' || storedPickerMode === 'modal') {
       initialPickerMode = storedPickerMode
     }
+    const storedLogoMode = localStorage.getItem(NETWORK_LOGO_MODE_KEY)
+    if (storedLogoMode === 'real' || storedLogoMode === 'generic') {
+      initialLogoMode = storedLogoMode
+    }
   }
   const showEmptyState     = ref(initialEmpty)
   const maxWidthByPage     = ref<Partial<Record<string, SandboxMaxWidth>>>(initialMaxByPage)
   const networkPickerMode  = ref<NetworkPickerMode>(initialPickerMode)
+  const networkLogoMode    = ref<NetworkLogoMode>(initialLogoMode)
 
   /** Read the active max-width for a page key — user override or default. */
   function getMaxWidth(key: string): SandboxMaxWidth {
@@ -83,7 +93,8 @@ export const useUiStore = defineStore('ui', () => {
     watch(showEmptyState,    v => localStorage.setItem(EMPTY_STATE_KEY, String(v)))
     watch(maxWidthByPage,    v => localStorage.setItem(MAX_WIDTH_KEY, JSON.stringify(v)), { deep: true })
     watch(networkPickerMode, v => localStorage.setItem(NETWORK_PICKER_MODE_KEY, v))
+    watch(networkLogoMode,   v => localStorage.setItem(NETWORK_LOGO_MODE_KEY, v))
   }
 
-  return { showEmptyState, maxWidthByPage, networkPickerMode, getMaxWidth, setMaxWidth }
+  return { showEmptyState, maxWidthByPage, networkPickerMode, networkLogoMode, getMaxWidth, setMaxWidth }
 })
