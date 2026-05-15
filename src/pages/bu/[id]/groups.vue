@@ -188,6 +188,9 @@ function resetDetailState() {
   alerteDrawerOpen.value = false
   autorisationsDrawerOpen.value = false
   vacanceDrawerOpen.value = false
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
   clearUndo()
   dismissToast()
 }
@@ -222,12 +225,58 @@ const selectedRuleId = ref<string | null>(null)
 const budgetDrawerOpen = ref(false)
 const budgetForm = reactive({ active: false, amount: '230,00' })
 
-// Drawer state for the Blocage vacance rule (Figma 5980-30694). Master
-// toggle gates the whole feature; the body sits at an empty state with a
-// dashed "+ Nouvelle période" button (period editor itself is out of scope
-// for this mock).
+// Drawer state for the Blocage vacance rule (Figma 5980-30694 / 5980-31045).
+// Master toggle gates the whole feature; periods are added inline via the
+// creation form. The "+ Nouvelle période" CTA stays at the bottom regardless
+// of how many periods exist.
 const vacanceDrawerOpen = ref(false)
-const vacanceForm = reactive({ active: true })
+interface VacancePeriod {
+  id: string
+  name: string
+  active: boolean
+  start: string  // dd/mm/yyyy
+  end: string    // dd/mm/yyyy
+}
+const vacanceForm = reactive<{
+  active: boolean
+  periods: VacancePeriod[]
+  creating: boolean
+  draft: { name: string; range: string }
+}>({
+  active: true,
+  periods: [],
+  creating: false,
+  draft: { name: '', range: '' },
+})
+let vacancePeriodSeq = 0
+function openVacanceCreate() {
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
+  vacanceForm.creating = true
+}
+function cancelVacanceCreate() {
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
+}
+function addVacancePeriod() {
+  const rawName = vacanceForm.draft.name.trim()
+  if (!rawName) return
+  // Default placeholder dates so a freshly created period card looks like the
+  // Figma mock even without a real date picker wired up. If the user typed
+  // something into "Sélectionnez une période" we'd parse it here.
+  const period: VacancePeriod = {
+    id: `vp-${++vacancePeriodSeq}`,
+    name: /\d{4}$/.test(rawName) ? rawName : `${rawName} 2026`,
+    active: false,
+    start: '20/12/2025',
+    end: '31/12/2025',
+  }
+  vacanceForm.periods.push(period)
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
+}
 
 // Drawer state for the Autorisations quotidiennes rule (Figma 5980-29659).
 // Master toggle gates the whole feature; each day carries its own toggle
@@ -402,6 +451,9 @@ function saveAutorisations() {
 
 function closeVacanceDrawer() {
   vacanceDrawerOpen.value = false
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
   selectedRuleId.value = null
 }
 
@@ -412,6 +464,9 @@ function saveVacance() {
     rule.statusLabel = vacanceForm.active ? 'Activé' : 'Désactivé'
   }
   vacanceDrawerOpen.value = false
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
   selectedRuleId.value = null
   showSuccessToast('Blocage vacance mis à jour', '')
 }
@@ -1894,7 +1949,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               />
             </div>
 
-            <!-- Empty state — "+ Nouvelle période" CTA, only when master is active -->
+            <!-- Period list + creation form + empty CTA — gated by master toggle -->
             <Transition
               enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
               enter-from-class="opacity-0 -translate-y-[4px]"
@@ -1903,17 +1958,109 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               leave-from-class="opacity-100 translate-y-0"
               leave-to-class="opacity-0 -translate-y-[4px]"
             >
-              <button
-                v-if="vacanceForm.active"
-                type="button"
-                class="w-full h-[100px] flex items-center justify-center gap-[12px] px-[16px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral text-text-neutral-secondary hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand focus-visible:border-brand"
-                aria-label="Ajouter une nouvelle période de vacance"
-              >
-                <Icon name="plus" variant="outline" :size="24" class="shrink-0" />
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]">
-                  Nouvelle période
-                </span>
-              </button>
+              <div v-if="vacanceForm.active" class="flex flex-col gap-[16px]">
+
+                <!-- Saved period cards -->
+                <TransitionGroup
+                  tag="div"
+                  class="flex flex-col gap-[16px]"
+                  enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                  enter-from-class="opacity-0 -translate-y-[6px]"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none absolute"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-[4px]"
+                >
+                  <div
+                    v-for="period in vacanceForm.periods"
+                    :key="period.id"
+                    class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex items-center gap-[16px]"
+                  >
+                    <Toggle
+                      v-model="period.active"
+                      size="sm"
+                      :aria-label="`Activer ${period.name}`"
+                    />
+                    <div class="flex-1 min-w-0 flex flex-col">
+                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        {{ period.name }}
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                        {{ period.start }} - {{ period.end }}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                      :aria-label="`Options pour ${period.name}`"
+                    >
+                      <Icon name="ellipsis-horizontal" variant="outline" :size="20" />
+                    </button>
+                  </div>
+                </TransitionGroup>
+
+                <!-- Inline creation form -->
+                <Transition
+                  enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                  enter-from-class="opacity-0 -translate-y-[6px]"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-[4px]"
+                >
+                  <div
+                    v-if="vacanceForm.creating"
+                    class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[12px]"
+                  >
+                    <Input
+                      v-model="vacanceForm.draft.name"
+                      type="default"
+                      size="md"
+                      placeholder="Nom"
+                      aria-label="Nom de la période"
+                      @keydown.enter="addVacancePeriod"
+                    />
+                    <Input
+                      v-model="vacanceForm.draft.range"
+                      type="leadingIcon"
+                      icon="calendar-days"
+                      size="md"
+                      placeholder="Sélectionnez une période"
+                      aria-label="Sélectionnez une période"
+                    />
+                    <div class="flex items-center gap-[8px]">
+                      <button
+                        type="button"
+                        class="flex-1 h-[40px] flex items-center justify-center px-[16px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
+                        @click="cancelVacanceCreate"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        class="flex-1 h-[40px] flex items-center justify-center px-[16px] rounded-[8px] border border-brand bg-brand text-white font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-brand-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="!vacanceForm.draft.name.trim()"
+                        @click="addVacancePeriod"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </div>
+                </Transition>
+
+                <!-- Always-visible empty CTA — opens the inline form -->
+                <button
+                  type="button"
+                  class="w-full h-[100px] flex items-center justify-center gap-[12px] px-[16px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral text-text-neutral-secondary hover:bg-neutral-hover hover:border-border-neutral transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand focus-visible:border-brand"
+                  aria-label="Ajouter une nouvelle période de vacance"
+                  @click="openVacanceCreate"
+                >
+                  <Icon name="plus" variant="outline" :size="24" class="shrink-0" />
+                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]">
+                    Nouvelle période
+                  </span>
+                </button>
+              </div>
             </Transition>
           </div>
         </div>
