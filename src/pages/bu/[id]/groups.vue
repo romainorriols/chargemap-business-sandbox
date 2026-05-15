@@ -2409,8 +2409,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 'transition-[background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
                 'outline-none focus-visible:shadow-ring-gray',
                 isNetworkAuthorized(net.id)
-                  ? 'bg-neutral border-border-neutral-tertiary hover:border-border-neutral-secondary'
-                  : 'bg-neutral-secondary border-border-neutral-tertiary hover:border-border-neutral-secondary',
+                  ? 'bg-neutral border-border-neutral-tertiary hover:bg-neutral-secondary'
+                  : 'bg-neutral-secondary border-border-neutral-tertiary hover:bg-neutral-tertiary',
               ]"
               @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
               @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
