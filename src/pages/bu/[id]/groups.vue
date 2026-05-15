@@ -381,6 +381,20 @@ const rules: ChargingRule[] = reactive([
 ])
 
 function onRuleClick(rule: ChargingRule) {
+  // Re-clicking the already-active card toggles the drawer off and clears the
+  // active state — same affordance as clicking the header X.
+  if (selectedRuleId.value === rule.id) {
+    budgetDrawerOpen.value = false
+    alerteDrawerOpen.value = false
+    autorisationsDrawerOpen.value = false
+    vacanceDrawerOpen.value = false
+    vacanceForm.creating = false
+    vacanceForm.draft.name = ''
+    vacanceForm.draft.range = ''
+    selectedRuleId.value = null
+    return
+  }
+
   // Clicking a card while another rule's drawer is open closes the open one
   // first so the two drawers never stack. The leave + enter animations run in
   // parallel; the entering drawer renders on top so the leaving one slides
@@ -414,7 +428,7 @@ function onRuleClick(rule: ChargingRule) {
     vacanceDrawerOpen.value = true
     return
   }
-  selectedRuleId.value = selectedRuleId.value === rule.id ? null : rule.id
+  selectedRuleId.value = rule.id
 }
 
 function closeBudgetDrawer() {
