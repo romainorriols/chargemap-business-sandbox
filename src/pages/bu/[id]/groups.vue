@@ -2467,6 +2467,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
+    <!-- ── Wide-mode backdrop — only when the panel is opened full-width ── -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="networkPickerOpen && uiStore.networkPickerMode === 'wide'"
+        class="fixed inset-0 z-20 bg-black/40"
+        aria-hidden="true"
+        @click="cancelNetworkPicker"
+      />
+    </Transition>
+
     <!-- ── Network picker panel (Figma 6010-29165) — sits left of the drawer ── -->
     <Transition
       enter-active-class="transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
@@ -2477,10 +2494,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       leave-to-class="opacity-0 translate-x-[16px]"
     >
       <aside
-        v-if="networkPickerOpen && uiStore.networkPickerMode === 'panel'"
-        class="fixed top-[8px] bottom-[8px] right-[440px] left-[8px] md:left-[312px] z-30 bg-neutral rounded-[24px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
+        v-if="networkPickerOpen && (uiStore.networkPickerMode === 'panel' || uiStore.networkPickerMode === 'wide')"
+        :class="[
+          'fixed top-[8px] bottom-[8px] right-[440px] z-30 bg-neutral rounded-[24px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip',
+          uiStore.networkPickerMode === 'wide'
+            ? 'left-[8px]'
+            : 'left-[8px] md:left-[312px]',
+        ]"
         role="dialog"
-        aria-modal="false"
+        :aria-modal="uiStore.networkPickerMode === 'wide' ? 'true' : 'false'"
         aria-label="Bloquez des réseaux"
       >
         <!-- Header -->

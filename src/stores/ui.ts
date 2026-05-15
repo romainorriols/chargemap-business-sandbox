@@ -11,8 +11,8 @@ export type SandboxMaxWidth = 2192 | 1600 | 800
 
 export const SANDBOX_MAX_WIDTH_OPTIONS: readonly SandboxMaxWidth[] = [2192, 1600, 800] as const
 
-export type NetworkPickerMode = 'panel' | 'modal' | 'drawer'
-export const NETWORK_PICKER_MODE_OPTIONS: readonly NetworkPickerMode[] = ['panel', 'modal', 'drawer'] as const
+export type NetworkPickerMode = 'panel' | 'modal' | 'drawer' | 'wide'
+export const NETWORK_PICKER_MODE_OPTIONS: readonly NetworkPickerMode[] = ['panel', 'modal', 'drawer', 'wide'] as const
 
 export type NetworkLogoMode = 'real' | 'generic'
 export const NETWORK_LOGO_MODE_OPTIONS: readonly NetworkLogoMode[] = ['real', 'generic'] as const
@@ -67,7 +67,12 @@ export const useUiStore = defineStore('ui', () => {
       } catch { /* ignore */ }
     }
     const storedPickerMode = localStorage.getItem(NETWORK_PICKER_MODE_KEY)
-    if (storedPickerMode === 'panel' || storedPickerMode === 'modal' || storedPickerMode === 'drawer') {
+    if (
+      storedPickerMode === 'panel'  ||
+      storedPickerMode === 'modal'  ||
+      storedPickerMode === 'drawer' ||
+      storedPickerMode === 'wide'
+    ) {
       initialPickerMode = storedPickerMode
     }
     const storedLogoMode = localStorage.getItem(NETWORK_LOGO_MODE_KEY)
