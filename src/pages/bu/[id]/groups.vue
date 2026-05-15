@@ -2395,7 +2395,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               Essayez un autre terme de recherche ou ajustez le filtre.
             </p>
           </div>
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[16px]">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]">
             <article
               v-for="(net, i) in visibleNetworks"
               :key="net.id"
