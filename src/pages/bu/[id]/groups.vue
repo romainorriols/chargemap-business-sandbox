@@ -654,6 +654,20 @@ function closeReseauDrawer() {
   selectedRuleId.value = null
 }
 
+// Trash button on the "Liste de blocage" summary card — clears the persisted
+// selection AND the in-flight draft so the launcher card returns to its
+// empty state, and flips the rule status back to Désactivé. The réseau
+// drawer stays open so the user can decide what to do next.
+function clearReseauBlocklist() {
+  reseauForm.blockedNetworks = []
+  networkPicker.draftBlocked.clear()
+  const rule = rules.find(r => r.id === 'reseau')
+  if (rule) {
+    rule.statusIcon = 'x-mark'
+    rule.statusLabel = 'Désactivé'
+  }
+}
+
 function saveReseau() {
   // In drawer mode the picker lives inside the rule drawer itself, so the
   // Enregistrer click is what commits the draft to the persisted selection.
@@ -2329,9 +2343,42 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Body -->
         <div class="flex-1 min-h-0 overflow-y-auto p-[16px]">
 
-          <!-- panel / modal mode: launcher card that opens the side picker -->
+          <!-- panel / modal / wide modes: launcher card OR saved-state summary -->
           <template v-if="uiStore.networkPickerMode !== 'drawer'">
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+
+            <!-- Saved state: blocklist exists → summary card with edit / delete -->
+            <div
+              v-if="reseauForm.blockedNetworks.length > 0"
+              class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex items-center gap-[16px]"
+            >
+              <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
+                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                  Liste de blocage
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                  {{ reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
+                </p>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                aria-label="Modifier la liste de blocage"
+                @click="openNetworkPicker"
+              >
+                <Icon name="pencil" variant="outline" :size="20" />
+              </button>
+              <button
+                type="button"
+                class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                aria-label="Vider la liste de blocage"
+                @click="clearReseauBlocklist"
+              >
+                <Icon name="trash" variant="outline" :size="20" />
+              </button>
+            </div>
+
+            <!-- Empty state: launcher card that opens the side picker -->
+            <div v-else class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
               <div class="flex flex-col gap-[8px]">
                 <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
                   Bloqué des réseaux
@@ -2346,9 +2393,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 :class="networkPickerOpen ? 'bg-neutral-secondary' : ''"
                 @click="openNetworkPicker"
               >
-                {{ reseauForm.blockedNetworks.length > 0
-                  ? `${reseauForm.blockedNetworks.length} ${reseauForm.blockedNetworks.length > 1 ? 'réseaux bloqués' : 'réseau bloqué'}`
-                  : 'Sélectionner des réseaux' }}
+                Sélectionner des réseaux
               </button>
             </div>
           </template>
