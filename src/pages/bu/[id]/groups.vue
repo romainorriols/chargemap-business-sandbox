@@ -2031,15 +2031,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <div class="flex items-center gap-[8px]">
                       <button
                         type="button"
-                        class="flex-1 h-[40px] flex items-center justify-center px-[16px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
+                        class="flex-1 h-[40px] flex items-center justify-center px-[16px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
                         @click="cancelVacanceCreate"
                       >
                         Annuler
                       </button>
                       <button
                         type="button"
-                        class="flex-1 h-[40px] flex items-center justify-center px-[16px] rounded-[8px] border border-brand bg-brand text-white font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-brand-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                         :disabled="!vacanceForm.draft.name.trim()"
+                        :class="[
+                          'flex-1 h-[40px] flex items-center justify-center px-[16px] rounded-[8px] font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none outline-none',
+                          !vacanceForm.draft.name.trim()
+                            ? 'bg-neutral-disabled text-text-neutral-disabled cursor-not-allowed'
+                            : 'bg-brand text-white hover:bg-brand-hover focus-visible:shadow-ring-brand active:scale-[0.97]',
+                        ]"
                         @click="addVacancePeriod"
                       >
                         Ajouter
