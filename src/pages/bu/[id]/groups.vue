@@ -39,6 +39,7 @@ interface Badge {
 interface Group {
   id: string
   name: string
+  manager: string
 }
 
 const driverPool: BadgeDriver[] = [
@@ -103,13 +104,13 @@ function seedBadges(groupId: string | null, count: number): Badge[] {
 }
 
 const groups: Group[] = [
-  { id: 'g-1', name: 'Groupe logistique Rhône' },
-  { id: 'g-2', name: 'Flotte commerciale Île-de-France' },
-  { id: 'g-3', name: 'Techniciens itinérants Sud' },
-  { id: 'g-4', name: 'Service livraison Lyon Centre' },
-  { id: 'g-5', name: 'Équipe terrain Aquitaine' },
-  { id: 'g-6', name: 'Pôle dirigeants Paris' },
-  { id: 'g-7', name: 'Maintenance bornes Est' },
+  { id: 'g-1', name: 'Groupe logistique Rhône',          manager: 'Marc Dubois'      },
+  { id: 'g-2', name: 'Flotte commerciale Île-de-France', manager: 'Camille Laurent'  },
+  { id: 'g-3', name: 'Techniciens itinérants Sud',       manager: 'Antoine Robert'   },
+  { id: 'g-4', name: 'Service livraison Lyon Centre',    manager: 'Sophie Moreau'    },
+  { id: 'g-5', name: 'Équipe terrain Aquitaine',         manager: 'Julien Bernard'   },
+  { id: 'g-6', name: 'Pôle dirigeants Paris',            manager: 'Émilie Faure'     },
+  { id: 'g-7', name: 'Maintenance bornes Est',           manager: 'Hugo Lefèvre'     },
 ]
 
 const allBadges = reactive<Badge[]>([
@@ -1016,7 +1017,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
     <div
       v-if="!selectedGroup"
       class="mx-auto w-full flex flex-col gap-[32px]"
-      :style="{ maxWidth: uiStore.getMaxWidth('/bu/groups') + 'px' }"
+      :style="{
+        maxWidth: uiStore.groupListVariant === 'compact'
+          ? '1280px'
+          : uiStore.getMaxWidth('/bu/groups') + 'px',
+      }"
     >
 
       <!-- Page header -->
@@ -1055,12 +1060,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             :style="{ animationDelay: `${100 + i * 40}ms` }"
             :class="[
               'relative anim-fade-up cursor-pointer',
-              'bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm',
+              'bg-neutral border border-border-neutral-secondary shadow-sm',
               'p-[24px] flex flex-col gap-[16px]',
               'transition-[transform,box-shadow,border-color] duration-200 ease-out motion-reduce:transition-none',
               'hover:border-border-neutral hover:shadow-md hover:-translate-y-[2px]',
               'outline-none focus-visible:shadow-ring-gray',
               openMenuId === g.id ? 'z-30' : 'z-0',
+              uiStore.groupListVariant === 'compact' ? 'rounded-[8px]' : 'rounded-[16px]',
             ]"
             @click="openGroup(g.id)"
             @keydown.enter="openGroup(g.id)"
@@ -1068,10 +1074,28 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           >
             <div class="flex items-start gap-[16px] w-full">
               <div class="flex-1 min-w-0 flex flex-col gap-[8px] items-start">
-                <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+                <!-- Compact: naked solid folder icon (24px). Detailed: brand tile. -->
+                <Icon
+                  v-if="uiStore.groupListVariant === 'compact'"
+                  name="folder"
+                  variant="solid"
+                  :size="24"
+                  class="text-icon-neutral-primary"
+                />
+                <div
+                  v-else
+                  class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand"
+                >
                   <Icon name="folder" variant="solid" :size="24" class="text-white" />
                 </div>
-                <p class="font-sans font-semibold text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral w-full truncate">
+                <p
+                  :class="[
+                    'font-sans w-full truncate text-text-neutral',
+                    uiStore.groupListVariant === 'compact'
+                      ? 'font-medium text-[16px] leading-[1.5] tracking-[-0.48px]'
+                      : 'font-semibold text-[20px] leading-[1.5] tracking-[-0.6px]',
+                  ]"
+                >
                   {{ g.name }}
                 </p>
               </div>
@@ -1139,7 +1163,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
             <div class="h-px w-full shrink-0 bg-border-neutral-tertiary" />
 
-            <div class="flex items-stretch gap-[8px] w-full">
+            <!-- Compact: 2 stats (Badges count + Manager name) -->
+            <div v-if="uiStore.groupListVariant === 'compact'" class="flex items-stretch gap-[8px] w-full">
+              <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
+                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ groupStats(g.id).badges }}
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Badges
+                </p>
+              </div>
+              <div class="w-px self-stretch bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
+                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                  {{ g.manager }}
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Manager
+                </p>
+              </div>
+            </div>
+
+            <!-- Detailed: 3 stats (Badges / Véhicules / Conducteurs) -->
+            <div v-else class="flex items-stretch gap-[8px] w-full">
               <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
                 <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
                   {{ groupStats(g.id).badges }}
