@@ -2405,41 +2405,46 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
               :style="{ animationDelay: `${i * 20}ms` }"
               :class="[
-                'anim-fade-up cursor-pointer rounded-[16px] border shadow-sm p-[16px] flex flex-col gap-[12px]',
-                'transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out motion-reduce:transition-none',
-                'hover:shadow-md hover:-translate-y-[2px]',
+                'anim-fade-up cursor-pointer flex items-start gap-[16px] p-[8px] rounded-[16px] border overflow-clip',
+                'transition-[background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
                 'outline-none focus-visible:shadow-ring-gray',
                 isNetworkAuthorized(net.id)
-                  ? 'bg-neutral border-border-neutral-secondary hover:border-border-neutral'
-                  : 'bg-neutral-secondary border-border-neutral-secondary hover:border-border-neutral',
+                  ? 'bg-neutral border-border-neutral-tertiary hover:border-border-neutral-secondary'
+                  : 'bg-neutral-secondary border-border-neutral-tertiary hover:border-border-neutral-secondary',
               ]"
               @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
               @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
               @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
             >
-              <div class="flex items-start justify-between gap-[12px]">
-                <div class="shrink-0 size-[40px] rounded-[12px] border border-border-neutral-tertiary overflow-hidden bg-neutral">
-                  <img :src="net.logo" :alt="`Logo ${net.name}`" class="size-full object-cover" loading="lazy" />
+              <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
+                <div class="shrink-0 size-[37px] rounded-[12px] border border-border-neutral-tertiary overflow-hidden bg-neutral">
+                  <img
+                    :src="net.logo"
+                    :alt="`Logo ${net.name}`"
+                    :class="[
+                      'size-full object-cover transition-[filter,opacity] duration-200 ease-out motion-reduce:transition-none',
+                      isNetworkAuthorized(net.id) ? '' : 'grayscale opacity-50',
+                    ]"
+                    loading="lazy"
+                  />
                 </div>
-                <Toggle
-                  :model-value="isNetworkAuthorized(net.id)"
-                  size="sm"
-                  :aria-label="`Autoriser ${net.name}`"
-                  @update:model-value="(v) => setNetworkAuthorized(net.id, v)"
-                  @click.stop
-                />
+                <div class="flex flex-col">
+                  <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                    {{ net.name }}
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                    <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                    <span class="text-text-neutral">{{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}</span>
+                  </p>
+                </div>
               </div>
-              <div class="flex flex-col gap-[2px] min-w-0">
-                <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                  {{ net.name }}
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                  <span>{{ fmtStations(net.stations) }} stations </span>
-                  <span :class="isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-text-danger-medium font-medium'">
-                    {{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}
-                  </span>
-                </p>
-              </div>
+              <Toggle
+                :model-value="isNetworkAuthorized(net.id)"
+                size="sm"
+                :aria-label="`Autoriser ${net.name}`"
+                @update:model-value="(v) => setNetworkAuthorized(net.id, v)"
+                @click.stop
+              />
             </article>
           </div>
         </div>
@@ -2557,7 +2562,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
 
-            <!-- List (full-width rows, per modal Figma 6010-43377) -->
+            <!-- List (3-column card grid, per modal Figma 6010-50488) -->
             <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px]">
               <div v-if="visibleNetworks.length === 0" class="flex flex-col items-center justify-center py-[48px] gap-[8px] text-center">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -2567,36 +2572,56 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   Essayez un autre terme de recherche ou ajustez le filtre.
                 </p>
               </div>
-              <div v-else class="flex flex-col gap-[8px]">
-                <div
+              <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[16px]">
+                <article
                   v-for="net in visibleNetworks"
                   :key="net.id"
+                  role="button"
+                  tabindex="0"
+                  :aria-pressed="!isNetworkAuthorized(net.id)"
+                  :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
                   :class="[
-                    'flex items-center gap-[16px] p-[8px] rounded-[16px] transition-colors duration-150 ease-out motion-reduce:transition-none',
-                    isNetworkAuthorized(net.id) ? 'bg-neutral' : 'bg-neutral-secondary',
+                    'cursor-pointer flex items-start gap-[16px] p-[8px] rounded-[16px] border overflow-clip',
+                    'transition-[background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
+                    'outline-none focus-visible:shadow-ring-gray',
+                    isNetworkAuthorized(net.id)
+                      ? 'bg-neutral border-border-neutral-tertiary hover:border-border-neutral-secondary'
+                      : 'bg-neutral-secondary border-border-neutral-tertiary hover:border-border-neutral-secondary',
                   ]"
+                  @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
+                  @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
+                  @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                 >
-                  <div class="shrink-0 size-[37px] rounded-[12px] border border-border-neutral-tertiary overflow-hidden bg-neutral">
-                    <img :src="net.logo" :alt="`Logo ${net.name}`" class="size-full object-cover" loading="lazy" />
-                  </div>
-                  <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
-                    <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                      {{ net.name }}
-                    </p>
-                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                      <span>{{ fmtStations(net.stations) }} stations </span>
-                      <span :class="isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-text-danger-medium'">
-                        {{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}
-                      </span>
-                    </p>
+                  <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
+                    <div class="shrink-0 size-[37px] rounded-[12px] border border-border-neutral-tertiary overflow-hidden bg-neutral">
+                      <img
+                        :src="net.logo"
+                        :alt="`Logo ${net.name}`"
+                        :class="[
+                          'size-full object-cover transition-[filter,opacity] duration-200 ease-out motion-reduce:transition-none',
+                          isNetworkAuthorized(net.id) ? '' : 'grayscale opacity-50',
+                        ]"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div class="flex flex-col">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                        {{ net.name }}
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                        <span class="text-text-neutral">{{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}</span>
+                      </p>
+                    </div>
                   </div>
                   <Toggle
                     :model-value="isNetworkAuthorized(net.id)"
                     size="sm"
                     :aria-label="`Autoriser ${net.name}`"
                     @update:model-value="(v) => setNetworkAuthorized(net.id, v)"
+                    @click.stop
                   />
-                </div>
+                </article>
               </div>
             </div>
 
