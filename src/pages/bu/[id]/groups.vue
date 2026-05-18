@@ -212,6 +212,98 @@ function deleteSettingsGroup() {
   showSuccessToast('Groupe supprimé', '')
 }
 
+// ── Nouveau groupe (Figma 6123-25902) ─────────────────────────────────────
+// Full-page creation view layered on top of the listing. Two cards stacked
+// vertically: Informations (name + manager) and Composition (filterable
+// table of ungrouped badges with multi-select). Saving creates the group,
+// rattaches the selected badges, and drops the user back to the listing.
+const isCreatingGroup = ref(false)
+const createForm = reactive<{ name: string; manager: string }>({ name: '', manager: '' })
+const createSelected = reactive(new Set<string>())
+const createSearch = ref('')
+const createItineranceFilter = ref<'all' | 'on' | 'off'>('all')
+const createRattachementFilter = ref<'all' | 'full' | 'vehicle' | 'driver' | 'none'>('all')
+const createPage = ref(1)
+const createPerPage = 20
+
+const filteredCreateAvailable = computed(() => {
+  const q = createSearch.value.trim().toLowerCase()
+  const it = createItineranceFilter.value
+  const ra = createRattachementFilter.value
+  return availableBadges.value.filter((b) => {
+    if (!searchMatches(b, q)) return false
+    if (it === 'on'  && !b.itinerance) return false
+    if (it === 'off' &&  b.itinerance) return false
+    const hasD = !!b.driver
+    const hasV = !!b.vehicle
+    if (ra === 'full'    && !(hasD && hasV)) return false
+    if (ra === 'vehicle' && !(hasV && !hasD)) return false
+    if (ra === 'driver'  && !(hasD && !hasV)) return false
+    if (ra === 'none'    && !(!hasD && !hasV)) return false
+    return true
+  })
+})
+const createPageCount = computed(() => Math.max(1, Math.ceil(filteredCreateAvailable.value.length / createPerPage)))
+const createPaginated = computed(() => {
+  const start = (createPage.value - 1) * createPerPage
+  return filteredCreateAvailable.value.slice(start, start + createPerPage)
+})
+const createRangeStart = computed(() => filteredCreateAvailable.value.length === 0 ? 0 : (createPage.value - 1) * createPerPage + 1)
+const createRangeEnd = computed(() => Math.min(createPage.value * createPerPage, filteredCreateAvailable.value.length))
+watch(createSearch, () => { createPage.value = 1 })
+watch(createItineranceFilter, () => { createPage.value = 1 })
+watch(createRattachementFilter, () => { createPage.value = 1 })
+
+const createVisibleAllSelected = computed(() =>
+  createPaginated.value.length > 0 && createPaginated.value.every(b => createSelected.has(b.id)),
+)
+const createVisibleSomeSelected = computed(() =>
+  createPaginated.value.some(b => createSelected.has(b.id)) && !createVisibleAllSelected.value,
+)
+function toggleCreateSelectAll() {
+  if (createVisibleAllSelected.value) createPaginated.value.forEach(b => createSelected.delete(b.id))
+  else createPaginated.value.forEach(b => createSelected.add(b.id))
+}
+function toggleCreateSelection(id: string) {
+  if (createSelected.has(id)) createSelected.delete(id)
+  else createSelected.add(id)
+}
+
+function enterCreateGroup() {
+  createForm.name = ''
+  createForm.manager = ''
+  createSelected.clear()
+  createSearch.value = ''
+  createItineranceFilter.value = 'all'
+  createRattachementFilter.value = 'all'
+  createPage.value = 1
+  isCreatingGroup.value = true
+}
+function cancelCreateGroup() {
+  isCreatingGroup.value = false
+  createForm.name = ''
+  createForm.manager = ''
+  createSelected.clear()
+}
+function saveCreateGroup() {
+  const name = createForm.name.trim()
+  if (!name) return
+  const newId = `g-${Date.now()}`
+  groups.push({ id: newId, name, manager: createForm.manager })
+  if (createSelected.size > 0) {
+    const ids = new Set(createSelected)
+    allBadges.forEach((b) => { if (ids.has(b.id)) b.groupId = newId })
+  }
+  const count = createSelected.size
+  cancelCreateGroup()
+  const detail = count === 0
+    ? ''
+    : count === 1
+      ? '1 badge rattaché'
+      : `${count} badges rattachés`
+  showSuccessToast('Groupe créé', detail)
+}
+
 // Loading skeleton (Figma /billing pattern): 600ms simulated fetch on
 // every detail entry so the table cross-fades in instead of popping.
 const isLoading = ref(false)
@@ -1218,6 +1310,227 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </div>
     </div>
 
+    <!-- ── NOUVEAU GROUPE (Figma 6123-25902) ───────────────────────────── -->
+    <div
+      v-else-if="isCreatingGroup"
+      class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
+    >
+      <!-- Header: Retour back + page title -->
+      <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
+        <button
+          type="button"
+          class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+          @click="cancelCreateGroup"
+        >
+          <Icon name="arrow-left" variant="outline" :size="16" />
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+            Retour
+          </span>
+        </button>
+        <h1 :class="headingClass">
+          Nouveau groupe
+        </h1>
+      </div>
+
+      <!-- Informations card -->
+      <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 40ms">
+        <div class="px-[16px] py-[12px] border-b border-border-neutral-tertiary">
+          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+            Informations
+          </p>
+          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            Le manager du groupe recevra toutes les notifications qui y sont liés
+          </p>
+        </div>
+        <div class="px-[16px] py-[16px] flex flex-col md:flex-row gap-[16px]">
+          <div class="flex-1 min-w-0">
+            <Input
+              v-model="createForm.name"
+              label="Nom du groupe"
+              placeholder="Ex. Groupe logistique Rhône"
+            />
+          </div>
+          <div class="flex-1 min-w-0">
+            <Dropdown
+              v-model="createForm.manager"
+              :items="managerItems"
+              label="Manager du groupe"
+              placeholder="Sélectionnez un manager"
+              :searchable="true"
+              search-placeholder="Rechercher un manager"
+              :show-hint="false"
+              :teleport="true"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Composition card -->
+      <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 80ms">
+        <div class="px-[16px] py-[12px] border-b border-border-neutral-tertiary">
+          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+            Composition
+          </p>
+          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            Sélectionnez les badges à ajouter à ce groupe
+          </p>
+        </div>
+        <div class="px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Filter row -->
+          <div class="flex flex-col lg:flex-row lg:items-center gap-[8px]">
+            <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+              <Input
+                v-model="createSearch"
+                type="leadingIcon"
+                icon="magnifying-glass"
+                placeholder="Recherche"
+              />
+            </div>
+            <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+              <Dropdown
+                v-model="createItineranceFilter"
+                :items="itineranceItems"
+                input-type="leadingIcon"
+                icon="highway"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+                :teleport="true"
+              />
+            </div>
+            <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+              <Dropdown
+                v-model="createRattachementFilter"
+                :items="rattachementItems"
+                input-type="leadingIcon"
+                icon="link"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+                :teleport="true"
+              />
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div>
+            <!-- Header row -->
+            <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
+              <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
+                <button
+                  type="button"
+                  role="checkbox"
+                  :aria-checked="createVisibleSomeSelected ? 'mixed' : (createVisibleAllSelected ? 'true' : 'false')"
+                  :aria-label="createVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
+                  :class="[
+                    'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
+                    (createVisibleAllSelected || createVisibleSomeSelected)
+                      ? 'bg-brand border-brand'
+                      : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
+                  ]"
+                  @click="toggleCreateSelectAll"
+                >
+                  <Icon v-if="createVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
+                  <Icon v-else-if="createVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
+                </button>
+              </div>
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Badge
+              </div>
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Véhicule
+              </div>
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Conducteur
+              </div>
+              <div class="w-[68px] shrink-0" aria-hidden="true" />
+            </div>
+
+            <!-- Empty -->
+            <div
+              v-if="createPaginated.length === 0"
+              class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+            >
+              <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                {{ createSearch || createItineranceFilter !== 'all' || createRattachementFilter !== 'all' ? 'Aucun badge' : 'Aucun badge disponible' }}
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                {{ createSearch || createItineranceFilter !== 'all' || createRattachementFilter !== 'all'
+                  ? 'Aucun badge non rattaché ne correspond aux filtres.'
+                  : 'Tous les badges sont déjà rattachés à un groupe.' }}
+              </p>
+            </div>
+
+            <!-- Rows -->
+            <div v-else>
+              <button
+                v-for="(b, i) in createPaginated"
+                :key="b.id"
+                type="button"
+                :aria-pressed="createSelected.has(b.id)"
+                :style="{ animationDelay: `${i * 20}ms` }"
+                :class="[
+                  'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 text-left anim-fade-up',
+                  'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
+                  createSelected.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
+                ]"
+                @click="toggleCreateSelection(b.id)"
+              >
+                <div class="w-full md:w-[48px] shrink-0 px-[24px] md:px-[16px] pt-[16px] md:pt-[12px] md:py-[12px] flex md:items-center">
+                  <span
+                    role="checkbox"
+                    :aria-checked="createSelected.has(b.id)"
+                    :class="[
+                      'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
+                      createSelected.has(b.id)
+                        ? 'bg-brand border-brand'
+                        : 'bg-neutral border-border-neutral-secondary group-hover/row:border-border-neutral',
+                    ]"
+                  >
+                    <Icon v-if="createSelected.has(b.id)" name="check" variant="solid" :size="12" class="text-white" />
+                  </span>
+                </div>
+                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
+                  <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                    {{ b.identifier }}
+                  </p>
+                </div>
+                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
+                  <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                    <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
+                    <span v-else>--</span>
+                  </p>
+                </div>
+                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                  <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                    <template v-if="b.driver">{{ b.driver.name }}</template>
+                    <span v-else>--</span>
+                  </p>
+                </div>
+                <div class="w-full md:w-[68px] shrink-0" aria-hidden="true" />
+              </button>
+            </div>
+
+            <TableFooter
+              v-if="filteredCreateAvailable.length > 0"
+              :page="createPage"
+              :page-count="createPageCount"
+              :range-start="createRangeStart"
+              :range-end="createRangeEnd"
+              :total="filteredCreateAvailable.length"
+              @update:page="(n) => (createPage = n)"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer actions — equal-width Annuler + Enregistrer -->
+      <div class="grid grid-cols-2 gap-[16px] anim-fade-up" style="animation-delay: 120ms">
+        <Button type="secondary" size="md" label="Annuler" class="w-full" @click="cancelCreateGroup" />
+        <Button type="primary" size="md" label="Enregistrer" class="w-full" :disabled="!createForm.name.trim()" @click="saveCreateGroup" />
+      </div>
+    </div>
+
     <!-- ── LISTING ─────────────────────────────────────────────────────── -->
     <div
       v-else-if="!selectedGroup"
@@ -1239,6 +1552,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           size="md"
           icon-left="plus"
           label="Nouveau groupe"
+          @click="enterCreateGroup"
         />
       </div>
 
