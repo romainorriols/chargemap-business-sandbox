@@ -2718,10 +2718,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                     <div
                       v-if="net.superPartner"
-                      class="shrink-0 inline-flex items-center gap-[4px] pl-[10px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
+                      class="shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
                     >
-                      <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[16px] shrink-0" />
-                      <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap">
+                      <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[12px] shrink-0" />
+                      <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#9234ea] whitespace-nowrap">
                         Super Partners
                       </span>
                     </div>
