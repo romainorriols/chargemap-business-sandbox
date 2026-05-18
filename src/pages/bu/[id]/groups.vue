@@ -2382,7 +2382,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
-    <!-- ── Blocage vacance drawer (Figma 5980-30694) ───────────────────── -->
+    <!-- ── Blocage vacance drawer (Figma 5980-31045) — Configuration-style
+         layout: Section Title block, Activé row, then the saved
+         periods / creation form / "Nouvelle période" CTA. -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="vacanceDrawerOpen"
+        class="fixed inset-0 z-[39] bg-black/40"
+        aria-hidden="true"
+        @click="closeVacanceDrawer"
+      />
+    </Transition>
+
     <Transition
       enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
       enter-from-class="translate-x-full"
@@ -2414,30 +2432,42 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <!-- Body -->
-        <div class="flex-1 min-h-0 overflow-y-auto p-[16px]">
-          <div class="flex flex-col gap-[16px]">
-            <!-- Master "Activé" card -->
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]">
-              <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
-              </p>
-              <Toggle
-                v-model="vacanceForm.active"
-                size="sm"
-                aria-label="Activer le blocage vacance"
-              />
-            </div>
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Section header — rule title + description -->
+          <div class="flex flex-col gap-[4px]">
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              Blocage vacance
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
+            </p>
+          </div>
 
-            <!-- Period list + creation form + empty CTA — gated by master toggle -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
-            >
-              <div v-if="vacanceForm.active" class="flex flex-col gap-[16px]">
+          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+          <!-- Activé toggle row -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Activé
+            </span>
+            <Toggle
+              v-model="vacanceForm.active"
+              size="md"
+              aria-label="Activer le blocage vacance"
+            />
+          </div>
+
+          <!-- Period list + creation form + empty CTA — gated by master toggle -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <div v-if="vacanceForm.active" class="flex flex-col gap-[16px]">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
                 <!-- Saved period cards -->
                 <TransitionGroup
@@ -2546,7 +2576,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </button>
               </div>
             </Transition>
-          </div>
         </div>
 
         <!-- Footer -->
