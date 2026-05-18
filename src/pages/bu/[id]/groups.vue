@@ -2586,7 +2586,26 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
-    <!-- ── Blocage réseau drawer (Figma 6010-29265) ─────────────────────── -->
+    <!-- ── Blocage réseau drawer (Figma 6123-13732) — Configuration-style
+         layout. Body is a single row pairing "Réseaux autorisés" with
+         a count and a "Bloquer des réseaux" CTA that opens the picker
+         modal. -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="reseauDrawerOpen"
+        class="fixed inset-0 z-[39] bg-black/40"
+        aria-hidden="true"
+        @click="closeReseauDrawer"
+      />
+    </Transition>
+
     <Transition
       enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
       enter-from-class="translate-x-full"
@@ -2600,12 +2619,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Blocage réseau"
+        aria-label="Configuration du blocage réseau"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Blocage réseau
+            Configuration
           </p>
           <button
             type="button"
@@ -2617,56 +2636,31 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — launcher card or saved-state summary. The network grid
-             lives in the modal opened via "Sélectionner des réseaux". -->
-        <div class="flex-1 min-h-0 overflow-y-auto p-[16px]">
-          <div
-            v-if="reseauForm.blockedNetworks.length > 0"
-            class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex items-center gap-[16px]"
-          >
-            <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
-              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                Liste de blocage
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                {{ reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
-              </p>
-            </div>
-            <button
-              type="button"
-              class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-              aria-label="Modifier la liste de blocage"
-              @click="openNetworkPicker"
-            >
-              <Icon name="pencil" variant="outline" :size="20" />
-            </button>
-            <button
-              type="button"
-              class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-              aria-label="Vider la liste de blocage"
-              @click="clearReseauBlocklist"
-            >
-              <Icon name="trash" variant="outline" :size="20" />
-            </button>
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Section header — rule title + description -->
+          <div class="flex flex-col gap-[4px]">
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              Blocage réseau
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Permet de définir sur quels réseaux la recharge est autorisée ou bloquée, afin de mieux contrôler vos usages
+            </p>
           </div>
 
-          <div v-else class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
-            <div class="flex flex-col gap-[8px]">
-              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                Bloqué des réseaux
+          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+          <!-- Réseaux autorisés count + CTA -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <div class="flex-1 min-w-0 flex flex-col">
+              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                Réseaux autorisés
               </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Sélectionner des réseaux à bloqué, pour tout les autres les recharges seront autorisées
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                {{ networks.length - reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
               </p>
             </div>
-            <button
-              type="button"
-              class="w-full flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.97]"
-              :class="networkPickerOpen ? 'bg-neutral-secondary' : ''"
-              @click="openNetworkPicker"
-            >
-              Sélectionner des réseaux
-            </button>
+            <Button type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
           </div>
         </div>
 
