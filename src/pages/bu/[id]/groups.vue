@@ -1974,7 +1974,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       <div class="h-[60px]" />
     </div>
 
-    <!-- ── Budget de recharge drawer (Figma 5980-28115 / 5980-29598) ──── -->
+    <!-- ── Budget de recharge drawer (Figma 5980-28115) ─────────────────
+         Header drops the rule name in favour of "Configuration"; the
+         body opens with the section title + description, then stacks
+         label/control rows with hairline separators. Backdrop closes
+         on outside click. -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="budgetDrawerOpen"
+        class="fixed inset-0 z-[39] bg-black/40"
+        aria-hidden="true"
+        @click="closeBudgetDrawer"
+      />
+    </Transition>
+
     <Transition
       enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
       enter-from-class="translate-x-full"
@@ -1988,12 +2008,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Budget de recharge"
+        aria-label="Configuration du budget de recharge"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Budget de recharge
+            Configuration
           </p>
           <button
             type="button"
@@ -2006,11 +2026,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <!-- Body -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[8px]">
-          <!-- Toggle row -->
-          <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] rounded-[12px] border border-border-neutral-secondary bg-neutral">
-            <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-              {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Section header — rule title + description -->
+          <div class="flex flex-col gap-[4px]">
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              Budget de recharge
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Fixer un budget limite à vos conducteurs par mois, une fois la limite atteinte les conducteurs peuvent activé un relais via CB
+            </p>
+          </div>
+
+          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+          <!-- Activé toggle row -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Activé
             </span>
             <Toggle
               v-model="budgetForm.active"
@@ -2019,7 +2051,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </div>
 
-          <!-- Budget mensuel (visible only when active) -->
+          <!-- Separator + Budget mensuel row only when active -->
           <Transition
             enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
             enter-from-class="opacity-0 -translate-y-[4px]"
@@ -2028,22 +2060,22 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
-            <div
-              v-if="budgetForm.active"
-              class="flex items-center gap-[16px] pl-[16px] pr-[8px] py-[8px] rounded-[12px] border border-border-neutral-secondary bg-neutral"
-            >
-              <span class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Budget mensuel
-              </span>
-              <div class="shrink-0 w-[180px]">
-                <Input
-                  v-model="budgetForm.amount"
-                  type="trailingText"
-                  :addon-trailing-text="'Eur'"
-                  :show-currency-icon="false"
-                  :trailing-separator="false"
-                  placeholder="0,00"
-                />
+            <div v-if="budgetForm.active" class="flex flex-col gap-[16px]">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                  Budget mensuel
+                </span>
+                <div class="shrink-0 w-[150px]">
+                  <Input
+                    v-model="budgetForm.amount"
+                    type="trailingText"
+                    :addon-trailing-text="'Eur'"
+                    :show-currency-icon="false"
+                    :trailing-separator="false"
+                    placeholder="0,00"
+                  />
+                </div>
               </div>
             </div>
           </Transition>
