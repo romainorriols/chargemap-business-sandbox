@@ -138,7 +138,7 @@ const controls = computed<Control[]>(() => [
               :aria-pressed="uiStore.networkPickerMode === m"
               @click="uiStore.networkPickerMode = m as NetworkPickerMode"
             >
-              {{ m === 'panel' ? 'Panel' : m === 'modal' ? 'Modal' : m === 'drawer' ? 'Drawer' : 'Wide' }}
+              {{ m === 'panel' ? 'Panel' : m === 'modal' ? 'Modal' : m === 'drawer' ? 'Drawer' : m === 'wide' ? 'Wide' : 'Inline' }}
             </button>
           </div>
         </div>
