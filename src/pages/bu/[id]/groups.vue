@@ -2829,7 +2829,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                     @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                   >
-                    <div class="flex items-center gap-[8px] shrink-0">
+                    <div class="flex items-center gap-[12px] shrink-0">
                       <div
                         :class="[
                           'shrink-0 size-[38px] rounded-[12px] overflow-hidden flex items-center justify-center border',
