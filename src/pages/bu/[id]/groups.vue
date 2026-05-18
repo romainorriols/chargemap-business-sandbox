@@ -2651,12 +2651,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   :aria-pressed="!isNetworkAuthorized(net.id)"
                   :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
                   :class="[
-                    'cursor-pointer flex flex-col gap-[8px] p-[16px] rounded-[16px] overflow-clip h-[101px]',
-                    'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
+                    'cursor-pointer flex flex-col gap-[8px] p-[16px] rounded-[16px] border overflow-clip h-[101px]',
+                    'transition-[background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
                     'outline-none focus-visible:shadow-ring-gray',
                     isNetworkAuthorized(net.id)
-                      ? 'bg-neutral hover:bg-neutral-secondary'
-                      : 'bg-neutral-secondary hover:bg-neutral-tertiary',
+                      ? 'bg-neutral border-border-neutral-secondary hover:bg-neutral-secondary hover:border-border-neutral'
+                      : 'bg-neutral-secondary border-border-neutral-tertiary hover:bg-neutral-tertiary',
                   ]"
                   @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                   @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
