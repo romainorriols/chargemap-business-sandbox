@@ -258,6 +258,8 @@ function resetDetailState() {
   vacanceForm.draft.range = ''
   reseauDrawerOpen.value = false
   networkPickerOpen.value = false
+  paysDrawerOpen.value = false
+  countryPickerOpen.value = false
   clearUndo()
   dismissToast()
 }
@@ -377,6 +379,16 @@ const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
 // Selection is committed only when the user clicks "Valider la selection".
 const reseauDrawerOpen = ref(false)
 const reseauForm = reactive<{ blockedNetworks: string[] }>({ blockedNetworks: [] })
+
+// Blocage pays — same Configuration drawer shape as the réseau rule, plus an
+// Activé toggle (Figma 6123-15654). The country picker modal (Figma
+// 6123-14165) reuses the réseau picker structure: search + Trier, Tout
+// autorisé / Tout bloqué bulk actions, list of country-card-inline rows.
+const paysDrawerOpen = ref(false)
+const paysForm = reactive<{ active: boolean; blockedCountries: string[] }>({
+  active: false,
+  blockedCountries: [],
+})
 
 interface ChargingNetwork {
   id: string
@@ -503,6 +515,89 @@ function initialsFor(name: string): string {
   return name.replace(/[^A-Za-zÀ-ÿ]/g, '').slice(0, 2).toUpperCase()
 }
 
+// Country list backing the Blocage pays rule. Flags are pulled from the
+// circle-flags CDN already used in settings.vue. Names are stored sorted
+// alphabetically so the picker list matches the Figma reading order.
+const countryFlag = (cc: string) =>
+  `https://hatscripts.github.io/circle-flags/flags/${cc.toLowerCase()}.svg`
+interface Country { id: string; name: string; flagUrl: string }
+const countries: Country[] = ([
+  ['AL', 'Albanie'], ['DE', 'Allemagne'], ['AD', 'Andorre'], ['AT', 'Autriche'],
+  ['BE', 'Belgique'], ['BA', 'Bosnie-Herzégovine'], ['BG', 'Bulgarie'],
+  ['HR', 'Croatie'], ['CY', 'Chypre'], ['CZ', 'République tchèque'],
+  ['DK', 'Danemark'], ['ES', 'Espagne'], ['EE', 'Estonie'], ['FI', 'Finlande'],
+  ['FR', 'France'], ['GR', 'Grèce'], ['HU', 'Hongrie'], ['IE', 'Irlande'],
+  ['IS', 'Islande'], ['IT', 'Italie'], ['LV', 'Lettonie'], ['LI', 'Liechtenstein'],
+  ['LT', 'Lituanie'], ['LU', 'Luxembourg'], ['MK', 'Macédoine du Nord'],
+  ['MT', 'Malte'], ['MD', 'Moldavie'], ['MC', 'Monaco'], ['ME', 'Monténégro'],
+  ['NO', 'Norvège'], ['NL', 'Pays-Bas'], ['PL', 'Pologne'], ['PT', 'Portugal'],
+  ['RO', 'Roumanie'], ['SM', 'Saint-Marin'], ['RS', 'Serbie'], ['SK', 'Slovaquie'],
+  ['SI', 'Slovénie'], ['SE', 'Suède'], ['CH', 'Suisse'], ['TR', 'Turquie'],
+  ['UA', 'Ukraine'], ['GB', 'Royaume-Uni'], ['VA', 'Vatican'],
+] as const).map(([id, name]) => ({ id, name, flagUrl: countryFlag(id) }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+
+const countryPickerOpen = ref(false)
+const countryPicker = reactive<{ search: string; draftBlocked: Set<string> }>({
+  search: '',
+  draftBlocked: new Set<string>(),
+})
+const visibleCountries = computed(() => {
+  const q = countryPicker.search.trim().toLowerCase()
+  if (!q) return countries
+  return countries.filter(c => c.name.toLowerCase().includes(q))
+})
+const draftBlockedCountriesCount = computed(() => countryPicker.draftBlocked.size)
+
+function openCountryPicker() {
+  countryPicker.draftBlocked = new Set(paysForm.blockedCountries)
+  countryPicker.search = ''
+  countryPickerOpen.value = true
+}
+function cancelCountryPicker() {
+  countryPickerOpen.value = false
+  countryPicker.draftBlocked.clear()
+  countryPicker.search = ''
+}
+function confirmCountryPicker() {
+  paysForm.blockedCountries = [...countryPicker.draftBlocked]
+  countryPickerOpen.value = false
+  countryPicker.search = ''
+}
+function isCountryAuthorized(id: string): boolean {
+  return !countryPicker.draftBlocked.has(id)
+}
+function setCountryAuthorized(id: string, authorized: boolean) {
+  if (authorized) countryPicker.draftBlocked.delete(id)
+  else countryPicker.draftBlocked.add(id)
+}
+function blockAllVisibleCountries() {
+  for (const c of visibleCountries.value) countryPicker.draftBlocked.add(c.id)
+}
+function authorizeAllVisibleCountries() {
+  for (const c of visibleCountries.value) countryPicker.draftBlocked.delete(c.id)
+}
+const allVisibleCountriesBlocked = computed(() =>
+  visibleCountries.value.length > 0
+  && visibleCountries.value.every(c => countryPicker.draftBlocked.has(c.id))
+)
+const allVisibleCountriesAuthorized = computed(() =>
+  visibleCountries.value.length > 0
+  && visibleCountries.value.every(c => !countryPicker.draftBlocked.has(c.id))
+)
+function onCountryPickerKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && countryPickerOpen.value) {
+    e.stopPropagation()
+    cancelCountryPicker()
+  }
+}
+if (import.meta.client) {
+  watch(countryPickerOpen, (open) => {
+    if (open) window.addEventListener('keydown', onCountryPickerKeydown)
+    else window.removeEventListener('keydown', onCountryPickerKeydown)
+  })
+}
+
 // Drawer state for the Seuil d'alerte rule (Figma 5988-37178). Threshold type
 // is either a percentage of the recharge budget or a monthly cap in euros.
 const alerteDrawerOpen = ref(false)
@@ -589,7 +684,9 @@ function onRuleClick(rule: ChargingRule) {
     autorisationsDrawerOpen.value = false
     vacanceDrawerOpen.value = false
     reseauDrawerOpen.value = false
+    paysDrawerOpen.value = false
     networkPickerOpen.value = false
+    countryPickerOpen.value = false
     vacanceForm.creating = false
     vacanceForm.draft.name = ''
     vacanceForm.draft.range = ''
@@ -606,6 +703,7 @@ function onRuleClick(rule: ChargingRule) {
   autorisationsDrawerOpen.value = false
   vacanceDrawerOpen.value = false
   reseauDrawerOpen.value = false
+  paysDrawerOpen.value = false
 
   if (rule.id === 'budget') {
     selectedRuleId.value = rule.id
@@ -634,6 +732,12 @@ function onRuleClick(rule: ChargingRule) {
   if (rule.id === 'reseau') {
     selectedRuleId.value = rule.id
     reseauDrawerOpen.value = true
+    return
+  }
+  if (rule.id === 'pays') {
+    selectedRuleId.value = rule.id
+    paysForm.active = rule.statusIcon === 'check'
+    paysDrawerOpen.value = true
     return
   }
   selectedRuleId.value = rule.id
@@ -713,6 +817,32 @@ function saveReseau() {
   networkPicker.search = ''
   selectedRuleId.value = null
   showSuccessToast('Blocage réseau mis à jour', '')
+}
+
+function closePaysDrawer() {
+  paysDrawerOpen.value = false
+  countryPickerOpen.value = false
+  countryPicker.draftBlocked.clear()
+  countryPicker.search = ''
+  selectedRuleId.value = null
+}
+
+function clearPaysBlocklist() {
+  paysForm.blockedCountries = []
+  countryPicker.draftBlocked.clear()
+}
+
+function savePays() {
+  const rule = rules.find(r => r.id === 'pays')
+  if (rule) {
+    rule.statusIcon = paysForm.active ? 'check' : 'x-mark'
+    rule.statusLabel = paysForm.active ? 'Activé' : 'Désactivé'
+  }
+  paysDrawerOpen.value = false
+  countryPickerOpen.value = false
+  countryPicker.search = ''
+  selectedRuleId.value = null
+  showSuccessToast('Blocage pays mis à jour', '')
 }
 
 function saveVacance() {
@@ -2688,6 +2818,125 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
+    <!-- ── Blocage pays drawer (Figma 6123-15654) — Configuration-style
+         layout with Activé toggle, then a "Pays bloqués" row pairing a
+         count with a "Bloquer des pays" CTA that opens the country picker
+         modal. -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="paysDrawerOpen"
+        class="fixed inset-0 z-[39] bg-black/40"
+        aria-hidden="true"
+        @click="closePaysDrawer"
+      />
+    </Transition>
+
+    <Transition
+      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      enter-from-class="translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+      leave-from-class="translate-x-0"
+      leave-to-class="translate-x-full"
+    >
+      <aside
+        v-if="paysDrawerOpen"
+        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Configuration du blocage pays"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+            Configuration
+          </p>
+          <button
+            type="button"
+            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            aria-label="Fermer"
+            @click="closePaysDrawer"
+          >
+            <Icon name="x-mark" variant="outline" :size="20" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Section header — rule title + description -->
+          <div class="flex flex-col gap-[4px]">
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              Blocage pays
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Grâce à la restriction géographique, vous pouvez définir les pays dans lesquels la recharge est autorisée ou non.
+            </p>
+          </div>
+
+          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+          <!-- Activé toggle row -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Activé
+            </span>
+            <Toggle
+              v-model="paysForm.active"
+              size="md"
+              aria-label="Activer le blocage pays"
+            />
+          </div>
+
+          <!-- Pays bloqués (saved state with pencil + trash) or default state
+               with "Bloquer des pays" CTA when no country is blocked yet. -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <div class="flex-1 min-w-0 flex flex-col">
+              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                Pays bloqués
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                {{ paysForm.blockedCountries.length }}/{{ countries.length }} pays
+              </p>
+            </div>
+            <template v-if="paysForm.blockedCountries.length > 0">
+              <div class="shrink-0 flex items-center gap-[8px]">
+                <button
+                  type="button"
+                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Modifier la liste de blocage"
+                  @click="openCountryPicker"
+                >
+                  <Icon name="pencil" variant="outline" :size="18" />
+                </button>
+                <button
+                  type="button"
+                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Vider la liste de blocage"
+                  @click="clearPaysBlocklist"
+                >
+                  <Icon name="trash" variant="outline" :size="18" />
+                </button>
+              </div>
+            </template>
+            <Button v-else type="secondary" size="md" label="Bloquer des pays" @click="openCountryPicker" />
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
+          <Button type="secondary" size="md" label="Annuler" @click="closePaysDrawer" />
+          <Button type="primary" size="md" label="Enregistrer" @click="savePays" />
+        </div>
+      </aside>
+    </Transition>
+
     <!-- ── Network picker modal (Figma 6106-17325) — centered 800×800
          popup. Header = title + subtitle only. Filters row pairs
          Search + Trier with the Tout autorisé · Tout bloqué bulk
@@ -2908,6 +3157,197 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
           </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ── Country picker modal (Figma 6123-14165) — same single-card
+         pattern as the network picker, no side panel. Country rows show
+         a circular flag, name, and "Pays autorisé / Pays bloqué". -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="countryPickerOpen"
+          class="fixed inset-0 z-[60] bg-black/40"
+          aria-hidden="true"
+          @click="cancelCountryPicker"
+        />
+      </Transition>
+
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.96] translate-y-[8px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] translate-y-[6px]"
+      >
+        <div
+          v-if="countryPickerOpen"
+          class="fixed inset-0 z-[61] flex items-center justify-center p-[24px] pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="country-picker-modal-title"
+        >
+          <div
+            class="pointer-events-auto w-full h-full max-h-[800px] max-w-[800px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip"
+          >
+            <div class="flex-1 min-w-0 max-h-full flex flex-col overflow-hidden">
+              <!-- Header — title + subtitle on the left, X close on the right -->
+              <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+                <div class="flex flex-col gap-[2px] min-w-0">
+                  <p id="country-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+                    Gérer les pays autorisés
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                    Les pays désactivés ne seront pas accessibles à vos conducteurs
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Fermer"
+                  @click="cancelCountryPicker"
+                >
+                  <Icon name="x-mark" variant="outline" :size="20" />
+                </button>
+              </div>
+
+              <!-- Filters row -->
+              <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+                <div class="flex items-center gap-[8px] min-w-0">
+                  <div class="w-[300px] min-w-[200px] max-w-full">
+                    <Input
+                      v-model="countryPicker.search"
+                      type="leadingIcon"
+                      icon="magnifying-glass"
+                      size="md"
+                      placeholder="Recherche"
+                      aria-label="Rechercher un pays"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    class="shrink-0 inline-flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.98]"
+                  >
+                    <Icon name="funnel" variant="outline" :size="20" />
+                    Trier
+                  </button>
+                </div>
+                <div class="shrink-0 flex items-center gap-[8px]">
+                  <button
+                    type="button"
+                    :disabled="allVisibleCountriesAuthorized"
+                    class="inline-flex items-center justify-center px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                    @click="authorizeAllVisibleCountries"
+                  >
+                    Tout autorisé
+                  </button>
+                  <div class="h-[24px] w-px bg-border-neutral-tertiary" aria-hidden="true" />
+                  <button
+                    type="button"
+                    :disabled="allVisibleCountriesBlocked"
+                    class="inline-flex items-center justify-center px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                    @click="blockAllVisibleCountries"
+                  >
+                    Tout bloqué
+                  </button>
+                </div>
+              </div>
+
+              <!-- Scrollable list -->
+              <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[8px]">
+                <div v-if="visibleCountries.length === 0" class="h-full flex flex-col items-center justify-center gap-[8px] text-center py-[48px]">
+                  <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                    Aucun pays trouvé
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Essayez un autre terme de recherche.
+                  </p>
+                </div>
+                <template v-else>
+                  <template v-for="(c, i) in visibleCountries" :key="c.id">
+                    <div
+                      v-if="i > 0"
+                      class="my-[8px] h-px bg-border-neutral-tertiary"
+                      aria-hidden="true"
+                    />
+                    <article
+                      role="button"
+                      tabindex="0"
+                      :aria-pressed="!isCountryAuthorized(c.id)"
+                      :aria-label="`${c.name} — ${isCountryAuthorized(c.id) ? 'autorisé' : 'bloqué'}.`"
+                      :class="[
+                        'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px] overflow-clip',
+                        'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
+                        'outline-none focus-visible:shadow-ring-gray',
+                        isCountryAuthorized(c.id)
+                          ? 'bg-neutral hover:bg-neutral-secondary'
+                          : 'bg-neutral-secondary hover:bg-neutral-tertiary',
+                      ]"
+                      @click="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
+                      @keydown.enter.prevent="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
+                      @keydown.space.prevent="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
+                    >
+                      <div class="flex items-center gap-[12px] shrink-0">
+                        <img
+                          :src="c.flagUrl"
+                          alt=""
+                          aria-hidden="true"
+                          class="shrink-0 size-[38px] rounded-full object-cover"
+                          loading="lazy"
+                        />
+                        <div class="w-[250px] flex flex-col">
+                          <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                            {{ c.name }}
+                          </p>
+                          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                            <template v-if="isCountryAuthorized(c.id)">
+                              <span class="text-text-neutral-secondary">Pays </span>
+                              <span class="text-text-neutral">autorisé</span>
+                            </template>
+                            <span v-else class="text-text-neutral-secondary">
+                              Pays bloqué
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <Toggle
+                        :model-value="isCountryAuthorized(c.id)"
+                        size="sm"
+                        :aria-label="`Autoriser ${c.name}`"
+                        @update:model-value="(v) => setCountryAuthorized(c.id, v)"
+                        @click.stop
+                      />
+                    </article>
+                  </template>
+                </template>
+              </div>
+
+              <!-- Footer — count + Annuler / Valider -->
+              <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
+                <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
+                  <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                    {{ draftBlockedCountriesCount }}/{{ countries.length }}
+                  </span>
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Pays bloqués
+                  </span>
+                </p>
+                <div class="shrink-0 flex items-center gap-[12px]">
+                  <Button type="secondary" size="md" label="Annuler" @click="cancelCountryPicker" />
+                  <Button type="primary" size="md" label="Valider" @click="confirmCountryPicker" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </Transition>
