@@ -2956,7 +2956,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
-    <!-- ── Network picker modal (Figma 6010-43377) — centered popup variant ── -->
+    <!-- ── Network picker modal (Figma 6092-32266) — centered 1000×800
+         popup. Stacks Title / Subtitle, then search + Trier + Tous /
+         Super Partners tabs, separator count row, 3-column initials
+         grid, footer with Annuler + Valider la selection. -->
     <Teleport to="body">
       <Transition
         enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
@@ -2989,46 +2992,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-modal="true"
           aria-labelledby="network-picker-modal-title"
         >
-          <div class="pointer-events-auto w-full max-w-[1000px] h-full max-h-[800px] bg-neutral rounded-[24px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
-            <!-- Header -->
+          <div class="pointer-events-auto w-full max-w-[1000px] h-full max-h-[800px] bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
+            <!-- Header — Title + Subtitle stacked above Search + Trier + Tous/Super Partners tabs -->
             <div class="flex flex-col gap-[16px] p-[24px] border-b border-border-neutral-secondary shrink-0">
-              <div class="flex items-start justify-between gap-[16px]">
-                <div class="flex flex-col gap-[2px] min-w-0">
-                  <p id="network-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                    Bloquez des réseaux
-                  </p>
-                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                    Désactiver les réseaux sur lesquelles vous ne souhaitez plus permettre la recharge
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                  aria-label="Fermer"
-                  @click="cancelNetworkPicker"
-                >
-                  <Icon name="x-mark" variant="outline" :size="20" />
-                </button>
+              <div class="flex flex-col gap-[2px] min-w-0">
+                <p id="network-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                  Gérer les réseaux autorisés
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Les réseaux désactivés ne seront pas accessibles à vos conducteurs
+                </p>
               </div>
-              <div class="flex items-center justify-between gap-[16px] flex-wrap">
-                <div class="shrink-0 inline-flex items-center gap-[4px] p-[4px] rounded-[8px] bg-neutral-secondary">
-                  <button
-                    v-for="tab in speedFilterTabs"
-                    :key="tab.value"
-                    type="button"
-                    :class="[
-                      'px-[12px] py-[8px] rounded-[6px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                      networkPicker.filter === tab.value
-                        ? 'bg-neutral text-text-neutral shadow-[0px_1px_1px_0px_rgba(0,0,0,0.05)]'
-                        : 'bg-transparent text-text-neutral-secondary hover:text-text-neutral',
-                    ]"
-                    @click="networkPicker.filter = tab.value"
-                  >
-                    {{ tab.label }}
-                  </button>
-                </div>
-                <div class="flex items-center gap-[8px] shrink-0">
-                  <div class="w-[300px] max-w-full">
+              <div class="flex items-start justify-between gap-[8px]">
+                <div class="flex items-center gap-[8px] min-w-0">
+                  <div class="w-[300px] min-w-[200px] max-w-full">
                     <Input
                       v-model="networkPicker.search"
                       type="leadingIcon"
@@ -3045,30 +3022,58 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     Trier
                   </button>
                 </div>
+                <div class="shrink-0 inline-flex items-center gap-[4px] p-[4px] rounded-[8px] bg-neutral-secondary">
+                  <button
+                    v-for="tab in partnerFilterTabs"
+                    :key="tab.value"
+                    type="button"
+                    :class="[
+                      'px-[12px] py-[8px] rounded-[6px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                      networkPicker.filter === tab.value
+                        ? 'bg-neutral text-text-neutral shadow-[0px_1px_1px_0px_rgba(0,0,0,0.05)]'
+                        : 'bg-transparent text-text-neutral-secondary hover:text-text-neutral',
+                    ]"
+                    @click="networkPicker.filter = tab.value"
+                  >
+                    {{ tab.label }}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- List (3-column card grid, per modal Figma 6010-50488) -->
-            <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px] flex flex-col gap-[8px]">
-              <div v-if="visibleNetworks.length > 0" class="flex items-center justify-end gap-[4px] shrink-0">
+            <!-- Count row + bulk actions — Figma `Frame 6107` -->
+            <div class="flex items-center justify-between gap-[8px] px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+              <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
+                <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ draftBlockedCount }}/{{ networks.length }}
+                </span>
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Réseaux bloqués
+                </span>
+              </p>
+              <div class="flex items-center gap-[8px]">
                 <button
                   type="button"
                   :disabled="allVisibleAuthorized"
-                  class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
                   @click="authorizeAllVisible"
                 >
-                  Tout autoriser
+                  Tout autorisé
                 </button>
-                <span class="text-text-neutral-secondary" aria-hidden="true">·</span>
+                <div class="h-[24px] w-px bg-border-neutral-tertiary" aria-hidden="true" />
                 <button
                   type="button"
                   :disabled="allVisibleBlocked"
-                  class="px-[8px] py-[4px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
                   @click="blockAllVisible"
                 >
-                  Tout bloquer
+                  Tout bloqué
                 </button>
               </div>
+            </div>
+
+            <!-- 3-column initials card grid (Figma 6092-32287) -->
+            <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[8px] flex flex-col gap-[8px]">
               <div v-if="visibleNetworks.length === 0" class="flex-1 flex flex-col items-center justify-center gap-[8px] text-center py-[48px]">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                   Aucun réseau trouvé
@@ -3086,12 +3091,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   :aria-pressed="!isNetworkAuthorized(net.id)"
                   :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
                   :class="[
-                    'cursor-pointer flex flex-col gap-[8px] p-[8px] rounded-[16px] border overflow-clip',
-                    'transition-[background-color,border-color] duration-200 ease-out motion-reduce:transition-none',
+                    'cursor-pointer flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip',
+                    'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                     'outline-none focus-visible:shadow-ring-gray',
                     isNetworkAuthorized(net.id)
-                      ? 'bg-neutral border-border-neutral-tertiary hover:bg-neutral-secondary'
-                      : 'bg-neutral-secondary border-border-neutral-tertiary hover:bg-neutral-tertiary',
+                      ? 'bg-neutral hover:bg-neutral-secondary'
+                      : 'bg-neutral-secondary hover:bg-neutral-tertiary',
                   ]"
                   @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                   @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
@@ -3139,20 +3144,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
 
-            <!-- Footer -->
-            <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
-              <p class="flex items-baseline gap-[4px] min-w-0 whitespace-nowrap">
-                <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                  {{ draftBlockedCount }}/{{ networks.length }}
-                </span>
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                  Réseaux bloqués
-                </span>
-              </p>
-              <div class="flex items-center gap-[8px]">
-                <Button type="secondary" size="md" label="Annuler" @click="cancelNetworkPicker" />
-                <Button type="primary" size="md" label="Valider la selection" @click="confirmNetworkPicker" />
-              </div>
+            <!-- Footer — right-aligned Annuler + Valider la selection -->
+            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
+              <Button type="secondary" size="md" label="Annuler" @click="cancelNetworkPicker" />
+              <Button type="primary" size="md" label="Valider la selection" @click="confirmNetworkPicker" />
             </div>
           </div>
         </div>
