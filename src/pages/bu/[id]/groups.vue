@@ -4,11 +4,7 @@ const uiStore = useUiStore()
 import { ref, computed, reactive, watch, onUnmounted } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
-import superPartnersDotMask from '@/assets/illustrations/super-partners-dot-mask.svg'
-import superPartnersTileAllego from '@/assets/illustrations/super-partners-tile-allego.png'
-import superPartnersTileAlterna from '@/assets/illustrations/super-partners-tile-alterna.png'
-import superPartnersTilePwdt from '@/assets/illustrations/super-partners-tile-pwdt.png'
-import superPartnersTileIonity from '@/assets/illustrations/super-partners-tile-ionity.png'
+import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -1404,30 +1400,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </div>
 
-      <!-- KPI row — sits above the tabs so the metrics stay visible across
-           both Informations and Règles de recharge (Figma 5931-23791). -->
+      <!-- KPI row — Manager / Badges / Véhicules / Conducteurs (Figma 6106-38930). -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 40ms">
         <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Manager</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">{{ selectedGroup.manager }}</p>
+        </div>
+        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Badges</p>
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
         </div>
         <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un véhicule</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-            {{ kpis.withVehicle }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-          </p>
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Véhicules</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withVehicle }}</p>
         </div>
         <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Attaché à un conducteur</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-            {{ kpis.withDriver }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-          </p>
-        </div>
-        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Itinérance activé</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">
-            {{ kpis.itinOn }}<span class="text-text-neutral-secondary">/{{ kpis.total }}</span>
-          </p>
+          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Conducteurs</p>
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withDriver }}</p>
         </div>
       </div>
 
@@ -2743,44 +2732,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1224px]' : 'max-w-[800px]',
             ]"
           >
-            <!-- Decorative Super Partners side panel (Figma 6106-14504). Pure
-                 marketing copy, no inputs. The dotted purple halo is a
-                 radial-gradient masked by the Figma dot pattern; logo tiles
-                 are absolutely placed at the authored coordinates. -->
+            <!-- Decorative Super Partners side panel — single PNG, no inputs. -->
             <aside
               v-if="uiStore.networkPickerVariant === 'super-partners'"
-              class="hidden lg:block shrink-0 w-[400px] h-full bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden relative"
+              class="hidden lg:block shrink-0 w-[400px] h-full bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden"
               aria-hidden="true"
             >
-              <div
-                class="absolute inset-0"
-                :style="{
-                  background: 'radial-gradient(circle 265px at 200px 400px, #9234ea 0%, rgba(146,52,234,0) 100%)',
-                  WebkitMaskImage: `url(${superPartnersDotMask})`,
-                  maskImage: `url(${superPartnersDotMask})`,
-                  WebkitMaskRepeat: 'no-repeat',
-                  maskRepeat: 'no-repeat',
-                  WebkitMaskSize: '400px 800px',
-                  maskSize: '400px 800px',
-                }"
-              />
-
-              <img :src="superPartnersTileAllego" alt="" class="absolute left-[77.96px] top-[199px] size-[60.527px] rounded-[24px] border border-border-neutral-secondary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
-              <img :src="superPartnersTileAlterna" alt="" class="absolute left-[292.34px] top-[280.82px] size-[60.527px] rounded-[24px] border border-border-neutral-secondary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
-              <div class="absolute left-[156.38px] top-[371.63px] size-[78.33px] rounded-[32px] bg-[#9234ea] border border-border-neutral-secondary overflow-hidden flex items-center justify-center shadow-[0px_12px_24px_-6px_rgba(146,52,234,0.45)]">
-                <img :src="superPartnersIcon" alt="" class="size-[55px]" style="filter:brightness(0) invert(1)" />
-              </div>
-              <img :src="superPartnersTileIonity" alt="" class="absolute left-[48px] top-[477.72px] size-[60.527px] rounded-[24px] border border-border-neutral-tertiary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
-              <img :src="superPartnersTilePwdt" alt="" class="absolute left-[272.69px] top-[539.47px] size-[60.527px] rounded-[24px] border border-border-neutral-secondary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
-
-              <div class="absolute left-[32px] right-[32px] top-[696px] flex flex-col gap-[0px] text-center">
-                <p class="font-sans font-semibold text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
-                  Label Super Partners
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                  Distingue les réseaux de recharge offrant des tarifs négociés et une expérience utilisateur de confiance
-                </p>
-              </div>
+              <img :src="superPartnersSide" alt="" class="w-full h-full object-cover" />
             </aside>
 
           <div class="pointer-events-auto flex-1 min-w-0 max-h-full bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
