@@ -3,6 +3,7 @@ const headingClass = usePageHeadingClass()
 const uiStore = useUiStore()
 import { ref, computed, reactive, watch, onUnmounted } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
+import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -2664,7 +2665,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <template v-for="(net, i) in visibleNetworks" :key="net.id">
                   <div
                     v-if="i > 0"
-                    class="mx-[12px] h-px bg-border-neutral-tertiary"
+                    class="h-px bg-border-neutral-tertiary"
                     aria-hidden="true"
                   />
                   <article
@@ -2673,7 +2674,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :aria-pressed="!isNetworkAuthorized(net.id)"
                     :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
                     :class="[
-                      'cursor-pointer flex items-center gap-[12px] p-[12px] rounded-[16px] overflow-clip',
+                      'cursor-pointer flex items-center justify-between gap-[12px] p-[12px] rounded-[16px] overflow-clip',
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'outline-none focus-visible:shadow-ring-gray',
                       isNetworkAuthorized(net.id)
@@ -2687,13 +2688,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <div class="flex items-center gap-[8px] flex-1 min-w-0">
                       <div
                         :class="[
-                          'shrink-0 size-[42px] rounded-[12px] overflow-hidden flex items-center justify-center',
+                          'shrink-0 size-[32px] rounded-[6px] overflow-hidden flex items-center justify-center',
                           isNetworkAuthorized(net.id) ? 'bg-neutral-secondary' : 'bg-[#f1f5f9]',
                         ]"
                       >
                         <p
                           :class="[
-                            'font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px]',
+                            'font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]',
                             isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-[#94a3b8]',
                           ]"
                         >
@@ -2719,7 +2720,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       v-if="net.superPartner"
                       class="shrink-0 inline-flex items-center gap-[4px] pl-[10px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
                     >
-                      <Icon name="bolt-very-fast" variant="solid" :size="16" class="text-[#9234ea]" />
+                      <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[16px] shrink-0" />
                       <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap">
                         Super Partners
                       </span>
