@@ -2304,10 +2304,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
             <div v-if="autorisationsForm.active" class="flex flex-col gap-[16px]">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <article
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[8px]"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[8px]"
               >
                   <!-- Header row: label + toggle -->
                   <div class="flex items-center justify-between">
