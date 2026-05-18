@@ -2663,7 +2663,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <template v-for="(net, i) in visibleNetworks" :key="net.id">
                   <div
                     v-if="i > 0"
-                    class="h-px bg-border-neutral-tertiary"
+                    class="my-[8px] h-px bg-border-neutral-tertiary"
                     aria-hidden="true"
                   />
                   <article
