@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS, NETWORK_PICKER_MODE_OPTIONS, NETWORK_LOGO_MODE_OPTIONS, GROUP_LIST_VARIANT_OPTIONS, type NetworkPickerMode, type NetworkLogoMode, type GroupListVariant } from '~/stores/ui'
+import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS, GROUP_LIST_VARIANT_OPTIONS, type GroupListVariant } from '~/stores/ui'
 
 // Sandbox-only floating control center. A single FAB at the bottom-right
 // opens a small popover that lists every dev / demo toggle (nav V2 vs V1,
@@ -118,31 +118,6 @@ const controls = computed<Control[]>(() => [
           </div>
         </div>
 
-        <!-- Network picker variant — drives which UI opens from the réseau drawer's
-             "Sélectionner des réseaux" button. -->
-        <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-            Picker réseaux
-          </span>
-          <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
-            <button
-              v-for="m in NETWORK_PICKER_MODE_OPTIONS"
-              :key="m"
-              type="button"
-              :class="[
-                'px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] capitalize outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
-                uiStore.networkPickerMode === m
-                  ? 'bg-neutral text-text-neutral shadow-sm'
-                  : 'text-text-neutral-secondary hover:text-text-neutral',
-              ]"
-              :aria-pressed="uiStore.networkPickerMode === m"
-              @click="uiStore.networkPickerMode = m as NetworkPickerMode"
-            >
-              {{ m === 'panel' ? 'Panel' : m === 'modal' ? 'Modal' : m === 'drawer' ? 'Drawer' : m === 'wide' ? 'Wide' : 'Inline' }}
-            </button>
-          </div>
-        </div>
-
         <!-- Groups listing variant — switch the BU groups page between the
              detailed 3-stats cards and the compact Badges + Manager layout. -->
         <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
@@ -168,30 +143,6 @@ const controls = computed<Control[]>(() => [
           </div>
         </div>
 
-        <!-- Network logo variant — swap each card's logo between the real branded
-             PNGs and a single generic globe icon (with active/disabled colors). -->
-        <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-            Logos réseaux
-          </span>
-          <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
-            <button
-              v-for="m in NETWORK_LOGO_MODE_OPTIONS"
-              :key="m"
-              type="button"
-              :class="[
-                'px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] capitalize outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
-                uiStore.networkLogoMode === m
-                  ? 'bg-neutral text-text-neutral shadow-sm'
-                  : 'text-text-neutral-secondary hover:text-text-neutral',
-              ]"
-              :aria-pressed="uiStore.networkLogoMode === m"
-              @click="uiStore.networkLogoMode = m as NetworkLogoMode"
-            >
-              {{ m === 'real' ? 'Réels' : 'Génériques' }}
-            </button>
-          </div>
-        </div>
       </div>
     </Transition>
 
