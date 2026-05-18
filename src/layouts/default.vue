@@ -207,26 +207,7 @@ function onSelectOrga() {
       @back="onBack"
       @select-bu="onSelectBu"
       @select-orga="onSelectOrga"
-    >
-      <template #upsell>
-        <!-- V1 keeps a single "Boostez votre flotte" card — no stacked
-             deck. Orga-scoped only. Dismissing closes it for good. -->
-        <Transition
-          enter-active-class="transition-[opacity,transform] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-          enter-from-class="opacity-0 translate-y-[6px] scale-[0.98]"
-          enter-to-class="opacity-100 translate-y-0 scale-100"
-          leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-          leave-from-class="opacity-100 translate-y-0 scale-100"
-          leave-to-class="opacity-0 -translate-y-[8px] scale-[0.95]"
-        >
-          <SidebarUpsellCardV1
-            v-if="!currentBu && upsellStep === 1"
-            close-label="Fermer la carte Boostez votre flotte"
-            @close="upsellStep = 0"
-          />
-        </Transition>
-      </template>
-    </SidebarV1>
+    />
     <Sidebar
       v-else
       :mode="sidebarMode"
