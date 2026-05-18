@@ -3098,16 +3098,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                 >
                   <div class="flex items-center justify-between w-full">
-                    <div class="shrink-0 size-[37px] rounded-[12px] border border-border-neutral-tertiary overflow-hidden bg-neutral">
-                      <img
-                        :src="logoFor(net, isNetworkAuthorized(net.id))"
-                        :alt="`Logo ${net.name}`"
+                    <div
+                      :class="[
+                        'shrink-0 size-[42px] rounded-[12px] overflow-hidden flex items-center justify-center',
+                        isNetworkAuthorized(net.id) ? 'bg-neutral-secondary' : 'bg-[#f1f5f9]',
+                      ]"
+                    >
+                      <p
                         :class="[
-                          'size-full object-cover transition-[filter,opacity] duration-200 ease-out motion-reduce:transition-none',
-                          uiStore.networkLogoMode === 'real' && !isNetworkAuthorized(net.id) ? 'grayscale opacity-50' : '',
+                          'font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px]',
+                          isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-[#94a3b8]',
                         ]"
-                        loading="lazy"
-                      />
+                      >
+                        {{ initialsFor(net.name) }}
+                      </p>
                     </div>
                     <Toggle
                       :model-value="isNetworkAuthorized(net.id)"
@@ -3122,8 +3126,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       {{ net.name }}
                     </p>
                     <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                      <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
-                      <span class="text-text-neutral">{{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}</span>
+                      <template v-if="isNetworkAuthorized(net.id)">
+                        <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                        <span class="text-text-neutral">autorisées</span>
+                      </template>
+                      <span v-else class="text-text-neutral-secondary">
+                        {{ fmtStations(net.stations) }} stations bloquées
+                      </span>
                     </p>
                   </div>
                 </article>

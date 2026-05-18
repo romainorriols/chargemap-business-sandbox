@@ -166,8 +166,6 @@ const sidebarMode = ref<'orga' | 'bu-selection'>('orga')
 // user doesn't get stranded mid-BU-selection in the wrong sidebar variant.
 watch(() => navStore.isNavV2, () => { sidebarMode.value = 'orga' })
 
-const upsellStep = ref<1 | 2 | 0>(1)
-
 const currentBu = computed(() => busStore.bus.find(b => b.id === busStore.selectedBuId) ?? null)
 const switcherContextLabel = computed(() => currentBu.value?.name ?? '')
 const switcherContextKind = computed<'orga' | 'bu'>(() => (currentBu.value ? 'bu' : 'orga'))
@@ -225,54 +223,7 @@ function onSelectOrga() {
       @back="onBack"
       @select-bu="onSelectBu"
       @select-orga="onSelectOrga"
-    >
-      <template #upsell>
-        <!-- Stacked upsell deck (Figma 4985-65475). Both cards share one grid
-             cell so the supervision card peeks 16px above the briefcase.
-             Closing briefcase peels the front card away while supervision
-             grows from its back pose to the full front pose. Orga-scoped
-             only — hidden inside any BU context. -->
-        <div
-          v-if="!currentBu"
-          class="inline-grid grid-cols-[max-content] grid-rows-[max-content] place-items-start"
-        >
-          <Transition
-            enter-active-class="transition-opacity duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-            leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 scale-100"
-            leave-to-class="opacity-0 scale-[0.97]"
-          >
-            <SidebarUpsellCard
-              v-if="upsellStep >= 1"
-              variant="supervision"
-              :stacked="upsellStep === 1"
-              close-label="Fermer la carte Recharge sur site"
-              class="col-start-1 row-start-1"
-              :class="upsellStep === 1 ? 'ml-[10px]' : 'ml-0'"
-              @close="upsellStep = 0"
-            />
-          </Transition>
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 translate-y-[6px] scale-[0.98]"
-            enter-to-class="opacity-100 translate-y-0 scale-100"
-            leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0 scale-100"
-            leave-to-class="opacity-0 -translate-y-[8px] scale-[0.95]"
-          >
-            <SidebarUpsellCard
-              v-if="upsellStep === 1"
-              variant="briefcase"
-              close-label="Fermer la carte Boostez votre flotte"
-              class="col-start-1 row-start-1 ml-0 mt-[16px]"
-              @close="upsellStep = 2"
-            />
-          </Transition>
-        </div>
-      </template>
-    </Sidebar>
+    />
     <main
       class="flex-1 min-w-0 bg-neutral-secondary overflow-y-auto"
       :class="navStore.isNavV2 ? 'rounded-[24px]' : ''"
