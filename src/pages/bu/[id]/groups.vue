@@ -2672,7 +2672,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :aria-pressed="!isNetworkAuthorized(net.id)"
                     :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
                     :class="[
-                      'cursor-pointer flex items-center justify-between gap-[12px] p-[12px] rounded-[16px] overflow-clip',
+                      'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px] overflow-clip',
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'outline-none focus-visible:shadow-ring-gray',
                       isNetworkAuthorized(net.id)
@@ -2683,23 +2683,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                     @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                   >
-                    <div class="flex items-center gap-[8px] flex-1 min-w-0">
+                    <div class="flex items-center gap-[8px] shrink-0">
                       <div
                         :class="[
-                          'shrink-0 size-[32px] rounded-[6px] overflow-hidden flex items-center justify-center',
-                          isNetworkAuthorized(net.id) ? 'bg-neutral-secondary' : 'bg-[#f1f5f9]',
+                          'shrink-0 size-[38px] rounded-[12px] overflow-hidden flex items-center justify-center border',
+                          isNetworkAuthorized(net.id)
+                            ? 'bg-neutral-secondary border-border-neutral-tertiary'
+                            : 'bg-[#f1f5f9] border-[#f1f5f9]',
                         ]"
                       >
                         <p
                           :class="[
-                            'font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]',
+                            'font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px]',
                             isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-[#94a3b8]',
                           ]"
                         >
                           {{ initialsFor(net.name) }}
                         </p>
                       </div>
-                      <div class="flex-1 min-w-0 flex flex-col">
+                      <div class="w-[250px] flex flex-col">
                         <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
                           {{ net.name }}
                         </p>
