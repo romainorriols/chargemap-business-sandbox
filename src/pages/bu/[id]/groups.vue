@@ -3321,15 +3321,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </p>
                   </div>
                 </div>
-                <div
-                  v-if="net.superPartner"
-                  class="shrink-0 inline-flex items-center gap-[4px] pl-[10px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
-                >
-                  <Icon name="bolt-very-fast" variant="solid" :size="16" class="text-[#9234ea]" />
-                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap">
-                    Super Partners
-                  </span>
-                </div>
                 <Toggle
                   :model-value="isNetworkAuthorized(net.id)"
                   size="sm"
