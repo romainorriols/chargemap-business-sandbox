@@ -2711,14 +2711,24 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="network-picker-modal-title"
         >
           <div class="pointer-events-auto w-full max-w-[800px] h-full max-h-[800px] bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
-            <!-- Header — title + subtitle only (Figma `header`) -->
-            <div class="flex flex-col gap-[2px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
-              <p id="network-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                Gérer les réseaux autorisés
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                Les réseaux désactivés ne seront pas accessibles à vos conducteurs
-              </p>
+            <!-- Header — title + subtitle on the left, X close on the right (Figma `header`) -->
+            <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+              <div class="flex flex-col gap-[2px] min-w-0">
+                <p id="network-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+                  Gérer les réseaux autorisés
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                  Les réseaux désactivés ne seront pas accessibles à vos conducteurs
+                </p>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                aria-label="Fermer"
+                @click="cancelNetworkPicker"
+              >
+                <Icon name="x-mark" variant="outline" :size="20" />
+              </button>
             </div>
 
             <!-- Filters row — Search + Trier on the left, Tout autorisé · Tout bloqué on the right -->
