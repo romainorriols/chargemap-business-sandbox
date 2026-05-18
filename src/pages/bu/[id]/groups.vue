@@ -2216,7 +2216,26 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
-    <!-- ── Autorisations quotidiennes drawer (Figma 5980-29659) ────────── -->
+    <!-- ── Autorisations quotidiennes drawer (Figma 5980-29659) — same
+         Configuration / Section Title pattern as Budget and Seuil
+         d'alerte. Day rules stay as bordered sub-cards below the
+         master toggle. -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="autorisationsDrawerOpen"
+        class="fixed inset-0 z-[39] bg-black/40"
+        aria-hidden="true"
+        @click="closeAutorisationsDrawer"
+      />
+    </Transition>
+
     <Transition
       enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
       enter-from-class="translate-x-full"
@@ -2230,12 +2249,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Autorisations quotidiennes"
+        aria-label="Configuration des autorisations quotidiennes"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Autorisations quotidiennes
+            Configuration
           </p>
           <button
             type="button"
@@ -2247,38 +2266,49 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — matches Figma 5998-38070 design context exactly -->
-        <div class="flex-1 min-h-0 overflow-y-auto p-[16px]">
-          <div class="flex flex-col gap-[16px]">
-            <!-- Master "Activé" card (rounded-16, larger label) -->
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]">
-              <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                {{ autorisationsForm.active ? 'Activé' : 'Désactivé' }}
-              </p>
-              <Toggle
-                v-model="autorisationsForm.active"
-                size="sm"
-                aria-label="Activer les autorisations quotidiennes"
-              />
-            </div>
+        <!-- Body -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Section header — rule title + description -->
+          <div class="flex flex-col gap-[4px]">
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              Autorisations quotidiennes
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges
+            </p>
+          </div>
 
-            <!-- Day cards — body row is always rendered; the "Modifier"
-                 button is disabled (not hidden) when the day toggle is off,
-                 matching the Vendredi state in Figma. -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
-            >
-              <div v-if="autorisationsForm.active" class="flex flex-col gap-[16px]">
-                <article
-                  v-for="day in autorisationsForm.days"
-                  :key="day.id"
-                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[8px]"
-                >
+          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+          <!-- Activé toggle row -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Activé
+            </span>
+            <Toggle
+              v-model="autorisationsForm.active"
+              size="md"
+              aria-label="Activer les autorisations quotidiennes"
+            />
+          </div>
+
+          <!-- Day cards — only when the master toggle is on. Each day card
+               keeps its label/toggle + "Autorisé toute la journée" /
+               time-range row, as in the existing flow. -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <div v-if="autorisationsForm.active" class="flex flex-col gap-[16px]">
+              <article
+                v-for="day in autorisationsForm.days"
+                :key="day.id"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[8px]"
+              >
                   <!-- Header row: label + toggle -->
                   <div class="flex items-center justify-between">
                     <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -2341,7 +2371,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </article>
               </div>
             </Transition>
-          </div>
         </div>
 
         <!-- Footer -->
