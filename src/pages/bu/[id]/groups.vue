@@ -221,27 +221,12 @@ const isCreatingGroup = ref(false)
 const createForm = reactive<{ name: string; manager: string }>({ name: '', manager: '' })
 const createSelected = reactive(new Set<string>())
 const createSearch = ref('')
-const createItineranceFilter = ref<'all' | 'on' | 'off'>('all')
-const createRattachementFilter = ref<'all' | 'full' | 'vehicle' | 'driver' | 'none'>('all')
 const createPage = ref(1)
 const createPerPage = 20
 
 const filteredCreateAvailable = computed(() => {
   const q = createSearch.value.trim().toLowerCase()
-  const it = createItineranceFilter.value
-  const ra = createRattachementFilter.value
-  return availableBadges.value.filter((b) => {
-    if (!searchMatches(b, q)) return false
-    if (it === 'on'  && !b.itinerance) return false
-    if (it === 'off' &&  b.itinerance) return false
-    const hasD = !!b.driver
-    const hasV = !!b.vehicle
-    if (ra === 'full'    && !(hasD && hasV)) return false
-    if (ra === 'vehicle' && !(hasV && !hasD)) return false
-    if (ra === 'driver'  && !(hasD && !hasV)) return false
-    if (ra === 'none'    && !(!hasD && !hasV)) return false
-    return true
-  })
+  return availableBadges.value.filter(b => searchMatches(b, q))
 })
 const createPageCount = computed(() => Math.max(1, Math.ceil(filteredCreateAvailable.value.length / createPerPage)))
 const createPaginated = computed(() => {
@@ -251,8 +236,6 @@ const createPaginated = computed(() => {
 const createRangeStart = computed(() => filteredCreateAvailable.value.length === 0 ? 0 : (createPage.value - 1) * createPerPage + 1)
 const createRangeEnd = computed(() => Math.min(createPage.value * createPerPage, filteredCreateAvailable.value.length))
 watch(createSearch, () => { createPage.value = 1 })
-watch(createItineranceFilter, () => { createPage.value = 1 })
-watch(createRattachementFilter, () => { createPage.value = 1 })
 
 const createVisibleAllSelected = computed(() =>
   createPaginated.value.length > 0 && createPaginated.value.every(b => createSelected.has(b.id)),
@@ -274,8 +257,6 @@ function enterCreateGroup() {
   createForm.manager = ''
   createSelected.clear()
   createSearch.value = ''
-  createItineranceFilter.value = 'all'
-  createRattachementFilter.value = 'all'
   createPage.value = 1
   isCreatingGroup.value = true
 }
@@ -1158,22 +1139,36 @@ function clearUndo() {
   pendingUndo = null
 }
 
-// ── Floating pill (adaptive: Supprimer in view, Ajouter in add) ────────────
-const pillVisible = computed(() =>
-  !!selectedGroup.value && (isAddingBadges.value
-    ? selectedToAdd.size > 0
-    : selectedToRemove.size > 0),
-)
-const pillCount = computed(() =>
-  isAddingBadges.value ? selectedToAdd.size : selectedToRemove.size,
-)
+// ── Floating pill (adaptive: Supprimer in view, Ajouter in add, Créer le
+//    groupe in create) ────────────────────────────────────────────────────
+const pillMode = computed<'remove' | 'add' | 'create' | null>(() => {
+  if (isCreatingGroup.value) return createSelected.size > 0 ? 'create' : null
+  if (!selectedGroup.value) return null
+  if (isAddingBadges.value) return selectedToAdd.size > 0 ? 'add' : null
+  return selectedToRemove.size > 0 ? 'remove' : null
+})
+const pillVisible = computed(() => pillMode.value !== null)
+const pillCount = computed(() => {
+  switch (pillMode.value) {
+    case 'create': return createSelected.size
+    case 'add':    return selectedToAdd.size
+    case 'remove': return selectedToRemove.size
+    default:       return 0
+  }
+})
 function clearPillSelection() {
-  if (isAddingBadges.value) selectedToAdd.clear()
-  else clearRemoveSelection()
+  switch (pillMode.value) {
+    case 'create': createSelected.clear(); break
+    case 'add':    selectedToAdd.clear();   break
+    case 'remove': clearRemoveSelection();  break
+  }
 }
 function runPillAction() {
-  if (isAddingBadges.value) confirmAdd()
-  else bulkRemoveSelected()
+  switch (pillMode.value) {
+    case 'create': saveCreateGroup();    break
+    case 'add':    confirmAdd();         break
+    case 'remove': bulkRemoveSelected(); break
+  }
 }
 
 // ── Toast ──────────────────────────────────────────────────────────────────
@@ -1366,39 +1361,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             Sélectionnez les badges à ajouter à ce groupe
           </p>
         </div>
-        <div class="px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Filter row -->
-          <div class="flex flex-col lg:flex-row lg:items-center gap-[8px]">
-            <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+        <div class="px-[16px] py-[16px] flex flex-col gap-[24px]">
+          <!-- Filter row — Figma 6123-25741: Search left, no other filters. -->
+          <div class="flex items-center">
+            <div class="w-full md:w-[300px]">
               <Input
                 v-model="createSearch"
                 type="leadingIcon"
                 icon="magnifying-glass"
                 placeholder="Recherche"
-              />
-            </div>
-            <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
-              <Dropdown
-                v-model="createItineranceFilter"
-                :items="itineranceItems"
-                input-type="leadingIcon"
-                icon="highway"
-                :searchable="false"
-                :show-label="false"
-                :show-hint="false"
-                :teleport="true"
-              />
-            </div>
-            <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
-              <Dropdown
-                v-model="createRattachementFilter"
-                :items="rattachementItems"
-                input-type="leadingIcon"
-                icon="link"
-                :searchable="false"
-                :show-label="false"
-                :show-hint="false"
-                :teleport="true"
               />
             </div>
           </div>
@@ -1443,11 +1414,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
             >
               <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                {{ createSearch || createItineranceFilter !== 'all' || createRattachementFilter !== 'all' ? 'Aucun badge' : 'Aucun badge disponible' }}
+                {{ createSearch ? 'Aucun badge' : 'Aucun badge disponible' }}
               </p>
               <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                {{ createSearch || createItineranceFilter !== 'all' || createRattachementFilter !== 'all'
-                  ? 'Aucun badge non rattaché ne correspond aux filtres.'
+                {{ createSearch
+                  ? 'Aucun badge non rattaché ne correspond à votre recherche.'
                   : 'Tous les badges sont déjà rattachés à un groupe.' }}
               </p>
             </div>
@@ -3697,9 +3668,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
             @click="runPillAction"
           >
-            <Icon :name="isAddingBadges ? 'plus' : 'trash'" variant="outline" :size="20" />
+            <Icon
+              :name="pillMode === 'create' ? 'check' : pillMode === 'add' ? 'plus' : 'trash'"
+              variant="outline"
+              :size="20"
+            />
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-              {{ isAddingBadges ? 'Ajouter' : 'Supprimer' }}
+              {{ pillMode === 'create' ? 'Créer le groupe' : pillMode === 'add' ? 'Ajouter' : 'Supprimer' }}
             </span>
           </button>
         </div>
