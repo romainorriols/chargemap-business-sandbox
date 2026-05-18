@@ -2666,7 +2666,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div class="shrink-0 flex items-center gap-[8px]">
                 <button
                   type="button"
-                  class="flex items-center justify-center size-[36px] rounded-[8px] border border-border-neutral bg-neutral text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                   aria-label="Modifier la liste de blocage"
                   @click="openNetworkPicker"
                 >
@@ -2674,7 +2674,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </button>
                 <button
                   type="button"
-                  class="flex items-center justify-center size-[36px] rounded-[8px] border border-border-neutral bg-neutral text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger hover:border-border-danger-medium transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                   aria-label="Vider la liste de blocage"
                   @click="clearReseauBlocklist"
                 >
