@@ -3282,22 +3282,22 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         >
           <div
             :class="[
-              'pointer-events-auto w-full h-full max-h-[800px] flex gap-[8px]',
-              uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1208px]' : 'max-w-[800px]',
+              'pointer-events-auto w-full h-full max-h-[800px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip',
+              uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1200px]' : 'max-w-[800px]',
             ]"
           >
             <!-- Decorative Super Partners side panel — single PNG, no inputs.
-                 Figma 6106-14504 places it as a separate 400×800 card with an
-                 8px gap between it and the list, not a merged container. -->
+                 Lives inside the same rounded modal as the list; a single
+                 vertical border separates the two. -->
             <aside
               v-if="uiStore.networkPickerVariant === 'super-partners'"
-              class="hidden lg:block shrink-0 w-[400px] h-full bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden"
+              class="hidden lg:block shrink-0 w-[400px] h-full border-r border-border-neutral-secondary overflow-hidden"
               aria-hidden="true"
             >
               <img :src="superPartnersSide" alt="" class="w-full h-full object-cover" />
             </aside>
 
-          <div class="flex-1 min-w-0 max-h-full bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
+          <div class="flex-1 min-w-0 max-h-full flex flex-col overflow-hidden">
             <!-- Header — title + subtitle on the left, X close on the right (Figma `header`) -->
             <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
               <div class="flex flex-col gap-[2px] min-w-0">
