@@ -4,6 +4,11 @@ const uiStore = useUiStore()
 import { ref, computed, reactive, watch, onUnmounted } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
+import superPartnersDotMask from '@/assets/illustrations/super-partners-dot-mask.svg'
+import superPartnersTileAllego from '@/assets/illustrations/super-partners-tile-allego.png'
+import superPartnersTileAlterna from '@/assets/illustrations/super-partners-tile-alterna.png'
+import superPartnersTilePwdt from '@/assets/illustrations/super-partners-tile-pwdt.png'
+import superPartnersTileIonity from '@/assets/illustrations/super-partners-tile-ionity.png'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -2738,34 +2743,37 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1224px]' : 'max-w-[800px]',
             ]"
           >
-            <!-- Decorative Super Partners side panel (Figma 6106-14504) — only
-                 in the alternative variant. Pure marketing copy, no inputs. -->
+            <!-- Decorative Super Partners side panel (Figma 6106-14504). Pure
+                 marketing copy, no inputs. The dotted purple halo is a
+                 radial-gradient masked by the Figma dot pattern; logo tiles
+                 are absolutely placed at the authored coordinates. -->
             <aside
               v-if="uiStore.networkPickerVariant === 'super-partners'"
-              class="hidden lg:flex shrink-0 w-[400px] bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden relative flex-col"
+              class="hidden lg:block shrink-0 w-[400px] h-full bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden relative"
               aria-hidden="true"
             >
-              <div class="absolute inset-0 bg-gradient-to-br from-[#f8fafc] to-[#eef2f7]" />
-              <div class="relative flex-1 flex items-end justify-center pt-[40px]">
-                <div class="relative w-[305px] h-[420px]">
-                  <div class="absolute left-[78px] top-[0px] size-[60px] rounded-full bg-[#0f3b2a] flex items-center justify-center shadow-[0px_8px_16px_-4px_rgba(15,59,42,0.25)]">
-                    <span class="font-sans font-bold text-[24px] text-white italic">a</span>
-                  </div>
-                  <div class="absolute left-[292px] top-[82px] size-[60px] rounded-full bg-[#b5e7c5] flex items-center justify-center shadow-[0px_8px_16px_-4px_rgba(181,231,197,0.45)]">
-                    <span class="font-sans font-bold text-[22px] text-[#0f3b2a]">✦</span>
-                  </div>
-                  <div class="absolute left-[156px] top-[172px] size-[78px] rounded-full bg-[#9234ea] flex items-center justify-center shadow-[0px_12px_24px_-6px_rgba(146,52,234,0.45)]">
-                    <img :src="superPartnersIcon" alt="" class="size-[40px]" style="filter:brightness(0) invert(1)" />
-                  </div>
-                  <div class="absolute left-[48px] top-[278px] size-[60px] rounded-full bg-neutral border border-border-neutral-tertiary flex items-center justify-center shadow-[0px_4px_10px_-2px_rgba(0,0,0,0.08)]">
-                    <span class="font-sans font-medium text-[12px] text-text-neutral-secondary tracking-[-0.36px]">IONITY</span>
-                  </div>
-                  <div class="absolute left-[272px] top-[340px] size-[60px] rounded-full bg-[#1f2937] flex items-center justify-center shadow-[0px_8px_16px_-4px_rgba(31,41,55,0.35)]">
-                    <span class="font-sans font-semibold text-[12px] text-white tracking-[-0.36px]">pwdt</span>
-                  </div>
-                </div>
+              <div
+                class="absolute inset-0"
+                :style="{
+                  background: 'radial-gradient(circle 265px at 200px 400px, #9234ea 0%, rgba(146,52,234,0) 100%)',
+                  WebkitMaskImage: `url(${superPartnersDotMask})`,
+                  maskImage: `url(${superPartnersDotMask})`,
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskSize: '400px 800px',
+                  maskSize: '400px 800px',
+                }"
+              />
+
+              <img :src="superPartnersTileAllego" alt="" class="absolute left-[77.96px] top-[199px] size-[60.527px] rounded-[24px] border border-border-neutral-secondary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
+              <img :src="superPartnersTileAlterna" alt="" class="absolute left-[292.34px] top-[280.82px] size-[60.527px] rounded-[24px] border border-border-neutral-secondary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
+              <div class="absolute left-[156.38px] top-[371.63px] size-[78.33px] rounded-[32px] bg-[#9234ea] border border-border-neutral-secondary overflow-hidden flex items-center justify-center shadow-[0px_12px_24px_-6px_rgba(146,52,234,0.45)]">
+                <img :src="superPartnersIcon" alt="" class="size-[55px]" style="filter:brightness(0) invert(1)" />
               </div>
-              <div class="relative px-[32px] pb-[32px] pt-[16px] flex flex-col gap-[8px] text-center">
+              <img :src="superPartnersTileIonity" alt="" class="absolute left-[48px] top-[477.72px] size-[60.527px] rounded-[24px] border border-border-neutral-tertiary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
+              <img :src="superPartnersTilePwdt" alt="" class="absolute left-[272.69px] top-[539.47px] size-[60.527px] rounded-[24px] border border-border-neutral-secondary shadow-[0px_7px_4px_0px_rgba(84,84,84,0.04),0px_3px_3px_0px_rgba(84,84,84,0.06),0px_1px_2px_0px_rgba(84,84,84,0.07)] object-cover" />
+
+              <div class="absolute left-[32px] right-[32px] top-[696px] flex flex-col gap-[0px] text-center">
                 <p class="font-sans font-semibold text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
                   Label Super Partners
                 </p>
