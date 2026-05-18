@@ -2,9 +2,10 @@
 // data with an empty list so we can demo / screenshot empty states
 // without juggling routes or feature flags. Persisted to localStorage
 // like the nav version, so the choice survives reloads.
-const EMPTY_STATE_KEY          = 'cm-sandbox-empty-state'
-const MAX_WIDTH_KEY            = 'cm-sandbox-max-width-by-page'
-const GROUP_LIST_VARIANT_KEY   = 'cm-sandbox-group-list-variant'
+const EMPTY_STATE_KEY              = 'cm-sandbox-empty-state'
+const MAX_WIDTH_KEY                = 'cm-sandbox-max-width-by-page'
+const GROUP_LIST_VARIANT_KEY       = 'cm-sandbox-group-list-variant'
+const NETWORK_PICKER_VARIANT_KEY   = 'cm-sandbox-network-picker-variant'
 
 export type SandboxMaxWidth = 2192 | 1600 | 800
 
@@ -12,6 +13,9 @@ export const SANDBOX_MAX_WIDTH_OPTIONS: readonly SandboxMaxWidth[] = [2192, 1600
 
 export type GroupListVariant = 'detailed' | 'compact'
 export const GROUP_LIST_VARIANT_OPTIONS: readonly GroupListVariant[] = ['detailed', 'compact'] as const
+
+export type NetworkPickerVariant = 'default' | 'super-partners'
+export const NETWORK_PICKER_VARIANT_OPTIONS: readonly NetworkPickerVariant[] = ['default', 'super-partners'] as const
 
 // Default max-width per page key. All defaults must be one of the
 // SANDBOX_MAX_WIDTH_OPTIONS so the segmented control always has an
@@ -49,6 +53,7 @@ export const useUiStore = defineStore('ui', () => {
   let initialEmpty = false
   let initialMaxByPage: Partial<Record<string, SandboxMaxWidth>> = {}
   let initialGroupVariant: GroupListVariant = 'detailed'
+  let initialPickerVariant: NetworkPickerVariant = 'default'
   if (import.meta.client) {
     const storedEmpty = localStorage.getItem(EMPTY_STATE_KEY)
     if (storedEmpty !== null) initialEmpty = storedEmpty === 'true'
@@ -65,10 +70,15 @@ export const useUiStore = defineStore('ui', () => {
     if (storedGroupVariant === 'detailed' || storedGroupVariant === 'compact') {
       initialGroupVariant = storedGroupVariant
     }
+    const storedPickerVariant = localStorage.getItem(NETWORK_PICKER_VARIANT_KEY)
+    if (storedPickerVariant === 'default' || storedPickerVariant === 'super-partners') {
+      initialPickerVariant = storedPickerVariant
+    }
   }
-  const showEmptyState     = ref(initialEmpty)
-  const maxWidthByPage     = ref<Partial<Record<string, SandboxMaxWidth>>>(initialMaxByPage)
-  const groupListVariant   = ref<GroupListVariant>(initialGroupVariant)
+  const showEmptyState         = ref(initialEmpty)
+  const maxWidthByPage         = ref<Partial<Record<string, SandboxMaxWidth>>>(initialMaxByPage)
+  const groupListVariant       = ref<GroupListVariant>(initialGroupVariant)
+  const networkPickerVariant   = ref<NetworkPickerVariant>(initialPickerVariant)
 
   /** Read the active max-width for a page key — user override or default. */
   function getMaxWidth(key: string): SandboxMaxWidth {
@@ -80,14 +90,16 @@ export const useUiStore = defineStore('ui', () => {
   }
 
   if (import.meta.client) {
-    watch(showEmptyState,    v => localStorage.setItem(EMPTY_STATE_KEY, String(v)))
-    watch(maxWidthByPage,    v => localStorage.setItem(MAX_WIDTH_KEY, JSON.stringify(v)), { deep: true })
-    watch(groupListVariant,  v => localStorage.setItem(GROUP_LIST_VARIANT_KEY, v))
+    watch(showEmptyState,        v => localStorage.setItem(EMPTY_STATE_KEY, String(v)))
+    watch(maxWidthByPage,        v => localStorage.setItem(MAX_WIDTH_KEY, JSON.stringify(v)), { deep: true })
+    watch(groupListVariant,      v => localStorage.setItem(GROUP_LIST_VARIANT_KEY, v))
+    watch(networkPickerVariant,  v => localStorage.setItem(NETWORK_PICKER_VARIANT_KEY, v))
   }
 
   return {
     showEmptyState, maxWidthByPage,
     groupListVariant,
+    networkPickerVariant,
     getMaxWidth, setMaxWidth,
   }
 })

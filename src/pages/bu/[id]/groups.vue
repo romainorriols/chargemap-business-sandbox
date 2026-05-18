@@ -2732,7 +2732,50 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-modal="true"
           aria-labelledby="network-picker-modal-title"
         >
-          <div class="pointer-events-auto w-full max-w-[800px] h-full max-h-[800px] bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
+          <div
+            :class="[
+              'pointer-events-auto w-full h-full max-h-[800px] flex gap-[8px]',
+              uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1224px]' : 'max-w-[800px]',
+            ]"
+          >
+            <!-- Decorative Super Partners side panel (Figma 6106-14504) — only
+                 in the alternative variant. Pure marketing copy, no inputs. -->
+            <aside
+              v-if="uiStore.networkPickerVariant === 'super-partners'"
+              class="hidden lg:flex shrink-0 w-[400px] bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden relative flex-col"
+              aria-hidden="true"
+            >
+              <div class="absolute inset-0 bg-gradient-to-br from-[#f8fafc] to-[#eef2f7]" />
+              <div class="relative flex-1 flex items-end justify-center pt-[40px]">
+                <div class="relative w-[305px] h-[420px]">
+                  <div class="absolute left-[78px] top-[0px] size-[60px] rounded-full bg-[#0f3b2a] flex items-center justify-center shadow-[0px_8px_16px_-4px_rgba(15,59,42,0.25)]">
+                    <span class="font-sans font-bold text-[24px] text-white italic">a</span>
+                  </div>
+                  <div class="absolute left-[292px] top-[82px] size-[60px] rounded-full bg-[#b5e7c5] flex items-center justify-center shadow-[0px_8px_16px_-4px_rgba(181,231,197,0.45)]">
+                    <span class="font-sans font-bold text-[22px] text-[#0f3b2a]">✦</span>
+                  </div>
+                  <div class="absolute left-[156px] top-[172px] size-[78px] rounded-full bg-[#9234ea] flex items-center justify-center shadow-[0px_12px_24px_-6px_rgba(146,52,234,0.45)]">
+                    <img :src="superPartnersIcon" alt="" class="size-[40px]" style="filter:brightness(0) invert(1)" />
+                  </div>
+                  <div class="absolute left-[48px] top-[278px] size-[60px] rounded-full bg-neutral border border-border-neutral-tertiary flex items-center justify-center shadow-[0px_4px_10px_-2px_rgba(0,0,0,0.08)]">
+                    <span class="font-sans font-medium text-[12px] text-text-neutral-secondary tracking-[-0.36px]">IONITY</span>
+                  </div>
+                  <div class="absolute left-[272px] top-[340px] size-[60px] rounded-full bg-[#1f2937] flex items-center justify-center shadow-[0px_8px_16px_-4px_rgba(31,41,55,0.35)]">
+                    <span class="font-sans font-semibold text-[12px] text-white tracking-[-0.36px]">pwdt</span>
+                  </div>
+                </div>
+              </div>
+              <div class="relative px-[32px] pb-[32px] pt-[16px] flex flex-col gap-[8px] text-center">
+                <p class="font-sans font-semibold text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
+                  Label Super Partners
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Distingue les réseaux de recharge offrant des tarifs négociés et une expérience utilisateur de confiance
+                </p>
+              </div>
+            </aside>
+
+          <div class="pointer-events-auto flex-1 min-w-0 max-h-full bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
             <!-- Header — title + subtitle on the left, X close on the right (Figma `header`) -->
             <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
               <div class="flex flex-col gap-[2px] min-w-0">
@@ -2898,6 +2941,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <Button type="primary" size="md" label="Valider" @click="confirmNetworkPicker" />
               </div>
             </div>
+          </div>
           </div>
         </div>
       </Transition>
