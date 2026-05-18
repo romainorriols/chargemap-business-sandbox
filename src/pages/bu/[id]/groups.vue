@@ -1935,11 +1935,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             :aria-pressed="selectedRuleId === rule.id"
             :style="{ animationDelay: `${40 + i * 30}ms` }"
             :class="[
-              'text-left flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border-[1.5px] outline-none cursor-pointer',
+              'text-left flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer',
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
+              'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
               selectedRuleId === rule.id
                 ? 'bg-neutral-secondary border-border-brand shadow-ring-brand'
-                : 'bg-neutral border-border-neutral-secondary shadow-sm hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+                : 'bg-neutral border-border-neutral-secondary hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
             @click="onRuleClick(rule)"
           >
@@ -1947,18 +1948,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
                 <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
               </div>
-              <span class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary">
-                <svg v-if="rule.statusIcon === 'check'" width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
-                  <circle cx="10.5" cy="10.5" r="10.5" fill="#18B97E" />
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M14.2781 6.98105C14.4426 7.09072 14.487 7.31296 14.3774 7.47745L10.0819 13.9206C10.0224 14.0099 9.92608 14.0677 9.81936 14.0783C9.71264 14.0889 9.60681 14.051 9.53098 13.9752L6.66734 11.1115C6.52755 10.9718 6.52755 10.7451 6.66734 10.6053C6.80713 10.4655 7.03378 10.4655 7.17357 10.6053L9.72846 13.1602L13.7817 7.08033C13.8914 6.91584 14.1136 6.87139 14.2781 6.98105Z" fill="white" />
-                </svg>
-                <svg v-else width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0 block" aria-hidden="true">
-                  <circle cx="10.5" cy="10.5" r="10.5" fill="#94A3B8" />
-                  <path d="M13.1105 7.38618C13.2503 7.24639 13.4769 7.24639 13.6167 7.38618C13.7565 7.52597 13.7565 7.75256 13.6167 7.89235L11.0061 10.5029L13.6167 13.1134L13.6414 13.1405C13.7561 13.2811 13.7477 13.4886 13.6167 13.6196C13.4856 13.7507 13.2781 13.759 13.1376 13.6443L13.1105 13.6196L10.5 11.0091L7.88942 13.6196C7.74963 13.7594 7.52304 13.7594 7.38325 13.6196C7.24346 13.4798 7.24346 13.2532 7.38325 13.1134L9.9938 10.5029L7.38325 7.89235L7.35854 7.86531C7.24385 7.72472 7.25218 7.51724 7.38325 7.38618C7.51431 7.25511 7.72179 7.24678 7.86238 7.36147L7.88942 7.38618L10.5 9.99673L13.1105 7.38618Z" fill="white" />
-                </svg>
-                <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                  {{ rule.statusLabel }}
-                </span>
+              <span
+                :class="[
+                  'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
+                  rule.statusIcon === 'check'
+                    ? 'bg-[#f2fdf9] border-[#bdfae3] text-[#18b97e]'
+                    : 'bg-[#fafafa] border-[#e4e4e7] text-[#48566a]',
+                ]"
+              >
+                {{ rule.statusLabel }}
               </span>
             </div>
             <div class="flex flex-col gap-[4px] w-full">
