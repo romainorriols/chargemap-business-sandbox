@@ -451,7 +451,10 @@ const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
 // ON = network autorisée, OFF = network bloquée (red label, faded bg).
 // Selection is committed only when the user clicks "Valider la selection".
 const reseauDrawerOpen = ref(false)
-const reseauForm = reactive<{ blockedNetworks: string[] }>({ blockedNetworks: [] })
+const reseauForm = reactive<{ active: boolean; blockedNetworks: string[] }>({
+  active: false,
+  blockedNetworks: [],
+})
 
 // Blocage pays — same Configuration drawer shape as the réseau rule, plus an
 // Activé toggle (Figma 6123-15654). The country picker modal (Figma
@@ -795,6 +798,7 @@ function onRuleClick(rule: ChargingRule) {
   }
   if (rule.id === 'reseau') {
     selectedRuleId.value = rule.id
+    reseauForm.active = rule.statusIcon === 'check'
     reseauDrawerOpen.value = true
     return
   }
@@ -855,26 +859,19 @@ function closeReseauDrawer() {
   selectedRuleId.value = null
 }
 
-// Trash button on the "Liste de blocage" summary card — clears the persisted
-// selection AND the in-flight draft so the launcher card returns to its
-// empty state, and flips the rule status back to Désactivé. The réseau
-// drawer stays open so the user can decide what to do next.
+// Trash button on the "Réseaux bloqués" summary row — just clears the
+// selection. The rule's Activé / Désactivé status is now driven by the
+// Toggle, not by whether the list is empty.
 function clearReseauBlocklist() {
   reseauForm.blockedNetworks = []
   networkPicker.draftBlocked.clear()
-  const rule = rules.find(r => r.id === 'reseau')
-  if (rule) {
-    rule.statusIcon = 'x-mark'
-    rule.statusLabel = 'Désactivé'
-  }
 }
 
 function saveReseau() {
   const rule = rules.find(r => r.id === 'reseau')
   if (rule) {
-    const hasBlocked = reseauForm.blockedNetworks.length > 0
-    rule.statusIcon = hasBlocked ? 'check' : 'x-mark'
-    rule.statusLabel = hasBlocked ? 'Activé' : 'Désactivé'
+    rule.statusIcon = reseauForm.active ? 'check' : 'x-mark'
+    rule.statusLabel = reseauForm.active ? 'Activé' : 'Désactivé'
   }
   reseauDrawerOpen.value = false
   networkPickerOpen.value = false
@@ -3050,40 +3047,55 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
           <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Réseaux bloqués (saved state with pencil + trash) or default
-               state with "Bloquer des réseaux" CTA when no network is
-               blocked yet (Figma 6123-13598 / 6123-13732). -->
+          <!-- Activé toggle row -->
           <div class="flex items-center justify-between gap-[16px]">
-            <div class="flex-1 min-w-0 flex flex-col">
-              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                Réseaux bloqués
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                {{ reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
-              </p>
-            </div>
-            <template v-if="reseauForm.blockedNetworks.length > 0">
-              <div class="shrink-0 flex items-center gap-[8px]">
-                <button
-                  type="button"
-                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                  aria-label="Modifier la liste de blocage"
-                  @click="openNetworkPicker"
-                >
-                  <Icon name="pencil" variant="outline" :size="18" />
-                </button>
-                <button
-                  type="button"
-                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                  aria-label="Vider la liste de blocage"
-                  @click="clearReseauBlocklist"
-                >
-                  <Icon name="trash" variant="outline" :size="18" />
-                </button>
-              </div>
-            </template>
-            <Button v-else type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
+            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Activé
+            </span>
+            <Toggle
+              v-model="reseauForm.active"
+              size="md"
+              aria-label="Activer le blocage réseau"
+            />
           </div>
+
+          <!-- Réseaux bloqués section only shows once the rule is on. Mirrors
+               the pays drawer gating pattern. -->
+          <template v-if="reseauForm.active">
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+            <div class="flex items-center justify-between gap-[16px]">
+              <div class="flex-1 min-w-0 flex flex-col">
+                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                  Réseaux bloqués
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                  {{ reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
+                </p>
+              </div>
+              <template v-if="reseauForm.blockedNetworks.length > 0">
+                <div class="shrink-0 flex items-center gap-[8px]">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Modifier la liste de blocage"
+                    @click="openNetworkPicker"
+                  >
+                    <Icon name="pencil" variant="outline" :size="18" />
+                  </button>
+                  <button
+                    type="button"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Vider la liste de blocage"
+                    @click="clearReseauBlocklist"
+                  >
+                    <Icon name="trash" variant="outline" :size="18" />
+                  </button>
+                </div>
+              </template>
+              <Button v-else type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
+            </div>
+          </template>
         </div>
 
         <!-- Footer -->
@@ -3170,39 +3182,44 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </div>
 
-          <!-- Pays bloqués (saved state with pencil + trash) or default state
-               with "Bloquer des pays" CTA when no country is blocked yet. -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <div class="flex-1 min-w-0 flex flex-col">
-              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                Pays bloqués
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                {{ paysForm.blockedCountries.length }}/{{ countries.length }} pays
-              </p>
-            </div>
-            <template v-if="paysForm.blockedCountries.length > 0">
-              <div class="shrink-0 flex items-center gap-[8px]">
-                <button
-                  type="button"
-                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                  aria-label="Modifier la liste de blocage"
-                  @click="openCountryPicker"
-                >
-                  <Icon name="pencil" variant="outline" :size="18" />
-                </button>
-                <button
-                  type="button"
-                  class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                  aria-label="Vider la liste de blocage"
-                  @click="clearPaysBlocklist"
-                >
-                  <Icon name="trash" variant="outline" :size="18" />
-                </button>
+          <!-- Pays bloqués section is only relevant once the rule is on. The
+               separator + section appear / disappear together, mirroring the
+               réseau drawer. -->
+          <template v-if="paysForm.active">
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+            <div class="flex items-center justify-between gap-[16px]">
+              <div class="flex-1 min-w-0 flex flex-col">
+                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                  Pays bloqués
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                  {{ paysForm.blockedCountries.length }}/{{ countries.length }} pays
+                </p>
               </div>
-            </template>
-            <Button v-else type="secondary" size="md" label="Bloquer des pays" @click="openCountryPicker" />
-          </div>
+              <template v-if="paysForm.blockedCountries.length > 0">
+                <div class="shrink-0 flex items-center gap-[8px]">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Modifier la liste de blocage"
+                    @click="openCountryPicker"
+                  >
+                    <Icon name="pencil" variant="outline" :size="18" />
+                  </button>
+                  <button
+                    type="button"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Vider la liste de blocage"
+                    @click="clearPaysBlocklist"
+                  >
+                    <Icon name="trash" variant="outline" :size="18" />
+                  </button>
+                </div>
+              </template>
+              <Button v-else type="secondary" size="md" label="Bloquer des pays" @click="openCountryPicker" />
+            </div>
+          </template>
         </div>
 
         <!-- Footer -->
