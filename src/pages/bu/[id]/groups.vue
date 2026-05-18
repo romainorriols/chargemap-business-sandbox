@@ -2650,17 +2650,39 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
           <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Réseaux autorisés count + CTA -->
+          <!-- Réseaux bloqués (saved state with pencil + trash) or default
+               state with "Bloquer des réseaux" CTA when no network is
+               blocked yet (Figma 6123-13598 / 6123-13732). -->
           <div class="flex items-center justify-between gap-[16px]">
             <div class="flex-1 min-w-0 flex flex-col">
               <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                Réseaux autorisés
+                Réseaux bloqués
               </p>
               <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                {{ networks.length - reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
+                {{ reseauForm.blockedNetworks.length }}/{{ networks.length }} réseaux
               </p>
             </div>
-            <Button type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
+            <template v-if="reseauForm.blockedNetworks.length > 0">
+              <div class="shrink-0 flex items-center gap-[8px]">
+                <button
+                  type="button"
+                  class="flex items-center justify-center size-[36px] rounded-[8px] border border-border-neutral bg-neutral text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Modifier la liste de blocage"
+                  @click="openNetworkPicker"
+                >
+                  <Icon name="pencil" variant="outline" :size="18" />
+                </button>
+                <button
+                  type="button"
+                  class="flex items-center justify-center size-[36px] rounded-[8px] border border-border-neutral bg-neutral text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger hover:border-border-danger-medium transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  aria-label="Vider la liste de blocage"
+                  @click="clearReseauBlocklist"
+                >
+                  <Icon name="trash" variant="outline" :size="18" />
+                </button>
+              </div>
+            </template>
+            <Button v-else type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
           </div>
         </div>
 
