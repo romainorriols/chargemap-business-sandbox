@@ -607,27 +607,18 @@ function initialsFor(name: string): string {
   return name.replace(/[^A-Za-zÀ-ÿ]/g, '').slice(0, 2).toUpperCase()
 }
 
-// Country list backing the Blocage pays rule. Flags are pulled from the
-// circle-flags CDN already used in settings.vue. Names are stored sorted
-// alphabetically so the picker list matches the Figma reading order.
+// Country list backing the Blocage pays rule — limited to the 10 countries
+// authored in Figma 6123-14165, in the same display order. Flags use the
+// circle-flags CDN already wired in settings.vue.
 const countryFlag = (cc: string) =>
   `https://hatscripts.github.io/circle-flags/flags/${cc.toLowerCase()}.svg`
 interface Country { id: string; name: string; flagUrl: string }
 const countries: Country[] = ([
-  ['AL', 'Albanie'], ['DE', 'Allemagne'], ['AD', 'Andorre'], ['AT', 'Autriche'],
-  ['BE', 'Belgique'], ['BA', 'Bosnie-Herzégovine'], ['BG', 'Bulgarie'],
-  ['HR', 'Croatie'], ['CY', 'Chypre'], ['CZ', 'République tchèque'],
-  ['DK', 'Danemark'], ['ES', 'Espagne'], ['EE', 'Estonie'], ['FI', 'Finlande'],
-  ['FR', 'France'], ['GR', 'Grèce'], ['HU', 'Hongrie'], ['IE', 'Irlande'],
-  ['IS', 'Islande'], ['IT', 'Italie'], ['LV', 'Lettonie'], ['LI', 'Liechtenstein'],
-  ['LT', 'Lituanie'], ['LU', 'Luxembourg'], ['MK', 'Macédoine du Nord'],
-  ['MT', 'Malte'], ['MD', 'Moldavie'], ['MC', 'Monaco'], ['ME', 'Monténégro'],
-  ['NO', 'Norvège'], ['NL', 'Pays-Bas'], ['PL', 'Pologne'], ['PT', 'Portugal'],
-  ['RO', 'Roumanie'], ['SM', 'Saint-Marin'], ['RS', 'Serbie'], ['SK', 'Slovaquie'],
-  ['SI', 'Slovénie'], ['SE', 'Suède'], ['CH', 'Suisse'], ['TR', 'Turquie'],
-  ['UA', 'Ukraine'], ['GB', 'Royaume-Uni'], ['VA', 'Vatican'],
+  ['DE', 'Allemagne'], ['AT', 'Autriche'], ['BE', 'Belgique'],
+  ['ES', 'Espagne'], ['FR', 'France'],     ['IT', 'Italie'],
+  ['LU', 'Luxembourg'], ['NL', 'Pays-Bas'], ['CH', 'Suisse'],
+  ['PT', 'Portugal'],
 ] as const).map(([id, name]) => ({ id, name, flagUrl: countryFlag(id) }))
-  .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
 
 const countryPickerOpen = ref(false)
 const countryPicker = reactive<{ search: string; draftBlocked: Set<string> }>({
@@ -1313,7 +1304,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
     <!-- ── NOUVEAU GROUPE (Figma 6123-25902) ───────────────────────────── -->
     <div
       v-else-if="isCreatingGroup"
-      class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
+      class="mx-auto w-full max-w-[1600px] flex flex-col gap-[32px]"
     >
       <!-- Header: Retour back + page title -->
       <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
@@ -3291,20 +3282,22 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         >
           <div
             :class="[
-              'pointer-events-auto w-full h-full max-h-[800px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip',
-              uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1200px]' : 'max-w-[800px]',
+              'pointer-events-auto w-full h-full max-h-[800px] flex gap-[8px]',
+              uiStore.networkPickerVariant === 'super-partners' ? 'max-w-[1208px]' : 'max-w-[800px]',
             ]"
           >
-            <!-- Decorative Super Partners side panel — single PNG, no inputs. -->
+            <!-- Decorative Super Partners side panel — single PNG, no inputs.
+                 Figma 6106-14504 places it as a separate 400×800 card with an
+                 8px gap between it and the list, not a merged container. -->
             <aside
               v-if="uiStore.networkPickerVariant === 'super-partners'"
-              class="hidden lg:block shrink-0 w-[400px] h-full border-r border-border-neutral-secondary overflow-hidden"
+              class="hidden lg:block shrink-0 w-[400px] h-full bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-hidden"
               aria-hidden="true"
             >
               <img :src="superPartnersSide" alt="" class="w-full h-full object-cover" />
             </aside>
 
-          <div class="flex-1 min-w-0 max-h-full flex flex-col overflow-hidden">
+          <div class="flex-1 min-w-0 max-h-full bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
             <!-- Header — title + subtitle on the left, X close on the right (Figma `header`) -->
             <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
               <div class="flex flex-col gap-[2px] min-w-0">
@@ -3616,7 +3609,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           :src="c.flagUrl"
                           alt=""
                           aria-hidden="true"
-                          class="shrink-0 size-[38px] rounded-full object-cover"
+                          class="shrink-0 size-[32px] rounded-full object-cover"
                           loading="lazy"
                         />
                         <div class="w-[250px] flex flex-col">
