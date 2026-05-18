@@ -3150,166 +3150,201 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </Transition>
     </Teleport>
 
-    <!-- ── Network picker inline (Figma 6066-18218) — embedded section, no
-         backdrop. Mirrors the modal layout but renders inside the page main
-         content area (left of the réseau drawer) using single-column rows
-         and Tous / Super Partners tabs instead of speed filters. -->
-    <Transition
-      enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-      enter-from-class="opacity-0 translate-y-[8px]"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-[6px]"
-    >
-      <section
-        v-if="networkPickerOpen && uiStore.networkPickerMode === 'inline'"
-        class="fixed top-[24px] bottom-[24px] left-[24px] right-[448px] z-30 md:left-[312px] flex items-start justify-center pointer-events-none"
-        role="region"
-        aria-label="Sélection des réseaux à bloquer"
+    <!-- ── Network picker inline (Figma 6066-18218) — modal-like overlay
+         with a dark backdrop, centered 800px card built around the
+         network-section spec: single-column rows, Tous / Super Partners
+         tabs, plain-text bulk actions, footer with Annuler + Valider. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
       >
-        <div class="pointer-events-auto w-full max-w-[800px] max-h-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
-          <!-- Header — Recherche + Trier on the left, Tous/Super Partners tabs on the right -->
-          <div class="flex items-center justify-between gap-[16px] px-[24px] py-[24px] border-b border-border-neutral-secondary shrink-0">
-            <div class="flex items-start gap-[8px] min-w-0">
-              <div class="w-[300px] max-w-full">
-                <Input
-                  v-model="networkPicker.search"
-                  type="leadingIcon"
-                  icon="magnifying-glass"
-                  size="md"
-                  placeholder="Recherche"
-                  aria-label="Rechercher un réseau"
-                />
-              </div>
-              <button
-                type="button"
-                class="shrink-0 inline-flex items-center justify-center gap-[8px] h-[44px] px-[16px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.98]"
-              >
-                Trier
-              </button>
-            </div>
-            <div class="shrink-0 inline-flex items-center gap-[4px] p-[4px] rounded-[8px] bg-neutral-secondary">
-              <button
-                v-for="tab in partnerFilterTabs"
-                :key="tab.value"
-                type="button"
-                :class="[
-                  'px-[12px] py-[8px] rounded-[6px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                  networkPicker.filter === tab.value
-                    ? 'bg-neutral text-text-neutral shadow-[0px_1px_1px_0px_rgba(0,0,0,0.05)]'
-                    : 'bg-transparent text-text-neutral-secondary hover:text-text-neutral',
-                ]"
-                @click="networkPicker.filter = tab.value"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
-          </div>
+        <div
+          v-if="networkPickerOpen && uiStore.networkPickerMode === 'inline'"
+          class="fixed inset-0 z-[60] bg-black/40"
+          aria-hidden="true"
+          @click="cancelNetworkPicker"
+        />
+      </Transition>
 
-          <!-- Bulk-actions row — count on the left, Tout autorisé · Tout bloqué on the right -->
-          <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
-            <p class="flex items-baseline gap-[4px] min-w-0 whitespace-nowrap">
-              <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                {{ draftBlockedCount }}/{{ networks.length }}
-              </span>
-              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Réseaux bloqués
-              </span>
-            </p>
-            <div class="flex items-center gap-[8px]">
-              <button
-                type="button"
-                :disabled="allVisibleAuthorized"
-                class="px-[8px] py-[8px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
-                @click="authorizeAllVisible"
-              >
-                Tout autorisé
-              </button>
-              <div class="h-[24px] w-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <button
-                type="button"
-                :disabled="allVisibleBlocked"
-                class="px-[8px] py-[8px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
-                @click="blockAllVisible"
-              >
-                Tout bloqué
-              </button>
-            </div>
-          </div>
-
-          <!-- Scrolling list of network-card-inline rows -->
-          <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[16px] flex flex-col gap-[8px]">
-            <div v-if="visibleNetworks.length === 0" class="flex-1 flex flex-col items-center justify-center gap-[8px] text-center py-[48px]">
-              <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                Aucun réseau trouvé
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Essayez un autre terme de recherche ou ajustez le filtre.
-              </p>
-            </div>
-            <article
-              v-for="net in visibleNetworks"
-              :key="net.id"
-              role="button"
-              tabindex="0"
-              :aria-pressed="!isNetworkAuthorized(net.id)"
-              :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
-              :class="[
-                'cursor-pointer flex items-center justify-between gap-[12px] p-[12px] rounded-[16px]',
-                'transition-[background-color,box-shadow] duration-200 ease-out motion-reduce:transition-none',
-                'outline-none focus-visible:shadow-ring-gray',
-                isNetworkAuthorized(net.id)
-                  ? 'bg-neutral shadow-sm hover:bg-neutral-secondary'
-                  : 'bg-neutral-secondary hover:bg-neutral-tertiary',
-              ]"
-              @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
-              @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
-              @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
-            >
-              <div class="flex items-center gap-[8px] w-[300px] shrink-0 min-w-0">
-                <div class="shrink-0 size-[42px] rounded-[12px] bg-neutral-secondary overflow-hidden flex items-center justify-center">
-                  <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral-secondary">
-                    {{ initialsFor(net.name) }}
-                  </p>
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.96] translate-y-[8px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] translate-y-[6px]"
+      >
+        <div
+          v-if="networkPickerOpen && uiStore.networkPickerMode === 'inline'"
+          class="fixed inset-0 z-[61] flex items-center justify-center p-[24px] pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="network-picker-inline-title"
+        >
+          <div class="pointer-events-auto w-full max-w-[800px] max-h-full bg-neutral border border-border-neutral-secondary rounded-[16px] flex flex-col overflow-clip">
+            <!-- Header — Recherche + Trier on the left, Tous/Super Partners tabs on the right -->
+            <div class="flex items-start justify-between gap-[8px] p-[24px] border-b border-border-neutral-secondary shrink-0">
+              <span id="network-picker-inline-title" class="sr-only">Sélection des réseaux à bloquer</span>
+              <div class="flex items-center gap-[8px] min-w-0">
+                <div class="w-[300px] min-w-[200px] max-w-full">
+                  <Input
+                    v-model="networkPicker.search"
+                    type="leadingIcon"
+                    icon="magnifying-glass"
+                    size="md"
+                    placeholder="Recherche"
+                    aria-label="Rechercher un réseau"
+                  />
                 </div>
-                <div class="flex-1 min-w-0 flex flex-col">
-                  <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                    {{ net.name }}
-                  </p>
-                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                    <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
-                    <span class="text-text-neutral">{{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}</span>
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  class="shrink-0 inline-flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.98]"
+                >
+                  Trier
+                </button>
               </div>
-              <div
-                v-if="net.superPartner"
-                class="shrink-0 inline-flex items-center gap-[4px] pl-[10px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
-              >
-                <Icon name="bolt-very-fast" variant="solid" :size="16" class="text-[#9234ea]" />
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap">
-                  Super Partners
+              <div class="shrink-0 inline-flex items-center gap-[4px] p-[4px] rounded-[8px] bg-neutral-secondary">
+                <button
+                  v-for="tab in partnerFilterTabs"
+                  :key="tab.value"
+                  type="button"
+                  :class="[
+                    'px-[12px] py-[8px] rounded-[6px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                    networkPicker.filter === tab.value
+                      ? 'bg-neutral text-text-neutral shadow-[0px_1px_1px_0px_rgba(0,0,0,0.05)]'
+                      : 'bg-transparent text-text-neutral-secondary hover:text-text-neutral',
+                  ]"
+                  @click="networkPicker.filter = tab.value"
+                >
+                  {{ tab.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Count row + bulk actions — Figma `Frame 6107` -->
+            <div class="flex items-center justify-between gap-[8px] px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+              <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
+                <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ draftBlockedCount }}/{{ networks.length }}
                 </span>
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Réseaux bloqués
+                </span>
+              </p>
+              <div class="flex items-center gap-[8px]">
+                <button
+                  type="button"
+                  :disabled="allVisibleAuthorized"
+                  class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  @click="authorizeAllVisible"
+                >
+                  Tout autorisé
+                </button>
+                <div class="h-[24px] w-px bg-border-neutral-tertiary" aria-hidden="true" />
+                <button
+                  type="button"
+                  :disabled="allVisibleBlocked"
+                  class="inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
+                  @click="blockAllVisible"
+                >
+                  Tout bloqué
+                </button>
               </div>
-              <Toggle
-                :model-value="isNetworkAuthorized(net.id)"
-                size="sm"
-                :aria-label="`Autoriser ${net.name}`"
-                @update:model-value="(v) => setNetworkAuthorized(net.id, v)"
-                @click.stop
-              />
-            </article>
-          </div>
+            </div>
 
-          <!-- Footer — right-aligned Annuler + Valider la selection -->
-          <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px] shrink-0">
-            <Button type="secondary" size="md" label="Annuler" @click="cancelNetworkPicker" />
-            <Button type="primary" size="md" label="Valider la selection" @click="confirmNetworkPicker" />
+            <!-- Scrolling list of network-card-inline rows -->
+            <div class="flex-1 min-h-0 overflow-y-auto px-[24px] py-[16px] flex flex-col gap-[8px]">
+              <div v-if="visibleNetworks.length === 0" class="flex-1 flex flex-col items-center justify-center gap-[8px] text-center py-[48px]">
+                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                  Aucun réseau trouvé
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Essayez un autre terme de recherche ou ajustez le filtre.
+                </p>
+              </div>
+              <article
+                v-for="net in visibleNetworks"
+                :key="net.id"
+                role="button"
+                tabindex="0"
+                :aria-pressed="!isNetworkAuthorized(net.id)"
+                :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
+                :class="[
+                  'cursor-pointer flex items-center justify-between gap-[12px] p-[12px] rounded-[16px] overflow-clip',
+                  'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
+                  'outline-none focus-visible:shadow-ring-gray',
+                  isNetworkAuthorized(net.id)
+                    ? 'bg-neutral hover:bg-neutral-secondary'
+                    : 'bg-neutral-secondary hover:bg-neutral-tertiary',
+                ]"
+                @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
+                @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
+                @keydown.space.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
+              >
+                <div class="flex items-center gap-[8px] w-[300px] shrink-0 min-w-0">
+                  <div
+                    :class="[
+                      'shrink-0 size-[42px] rounded-[12px] overflow-hidden flex items-center justify-center',
+                      isNetworkAuthorized(net.id) ? 'bg-neutral-secondary' : 'bg-[#f1f5f9]',
+                    ]"
+                  >
+                    <p
+                      :class="[
+                        'font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px]',
+                        isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-[#94a3b8]',
+                      ]"
+                    >
+                      {{ initialsFor(net.name) }}
+                    </p>
+                  </div>
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                      {{ net.name }}
+                    </p>
+                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                      <template v-if="isNetworkAuthorized(net.id)">
+                        <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                        <span class="text-text-neutral">autorisées</span>
+                      </template>
+                      <span v-else class="text-text-neutral-secondary">
+                        {{ fmtStations(net.stations) }} stations bloquées
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div
+                  v-if="net.superPartner"
+                  class="shrink-0 inline-flex items-center gap-[4px] pl-[10px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
+                >
+                  <Icon name="bolt-very-fast" variant="solid" :size="16" class="text-[#9234ea]" />
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap">
+                    Super Partners
+                  </span>
+                </div>
+                <Toggle
+                  :model-value="isNetworkAuthorized(net.id)"
+                  size="sm"
+                  :aria-label="`Autoriser ${net.name}`"
+                  @update:model-value="(v) => setNetworkAuthorized(net.id, v)"
+                  @click.stop
+                />
+              </article>
+            </div>
+
+            <!-- Footer — right-aligned Annuler + Valider la selection -->
+            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
+              <Button type="secondary" size="md" label="Annuler" @click="cancelNetworkPicker" />
+              <Button type="primary" size="md" label="Valider la selection" @click="confirmNetworkPicker" />
+            </div>
           </div>
         </div>
-      </section>
-    </Transition>
+      </Transition>
+    </Teleport>
 
     <!-- ── Floating selection pill — adaptive (Supprimer in view, Ajouter in add) -->
     <div class="pointer-events-none fixed left-0 right-0 bottom-[32px] z-40 flex justify-center px-[24px] md:left-[304px] md:px-[32px]">
