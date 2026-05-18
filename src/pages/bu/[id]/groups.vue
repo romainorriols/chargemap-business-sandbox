@@ -2089,7 +2089,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
-    <!-- ── Seuil d'alerte drawer (Figma 5988-37178) ───────────────────── -->
+    <!-- ── Seuil d'alerte drawer (Figma 5980-29501) — Configuration
+         header + Section Title block, then Activé row and the
+         type/amount controls separated by hairlines. -->
+    <Transition
+      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="alerteDrawerOpen"
+        class="fixed inset-0 z-[39] bg-black/40"
+        aria-hidden="true"
+        @click="closeAlerteDrawer"
+      />
+    </Transition>
+
     <Transition
       enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
       enter-from-class="translate-x-full"
@@ -2103,12 +2121,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Seuil d'alerte"
+        aria-label="Configuration du seuil d'alerte"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Seuil d’alerte
+            Configuration
           </p>
           <button
             type="button"
@@ -2121,11 +2139,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <!-- Body -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[8px]">
-          <!-- Toggle row -->
-          <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] rounded-[12px] border border-border-neutral-secondary bg-neutral">
-            <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-              {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+          <!-- Section header — rule title + description -->
+          <div class="flex flex-col gap-[4px]">
+            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              Seuil d’alerte
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Soyez alertez si vos conducteurs dépasse un certain budget par mois
+            </p>
+          </div>
+
+          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+          <!-- Activé toggle row -->
+          <div class="flex items-center justify-between gap-[16px]">
+            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Activé
             </span>
             <Toggle
               v-model="alerteForm.active"
@@ -2134,8 +2164,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </div>
 
-          <!-- Type + amount (visible only when active) — both inputs sit
-               inside a single outer card per Figma 5980-29501. -->
+          <!-- Separator + type/amount controls when active -->
           <Transition
             enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
             enter-from-class="opacity-0 -translate-y-[4px]"
@@ -2144,7 +2173,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
-            <div v-if="alerteForm.active" class="p-[8px] rounded-[12px] border border-border-neutral-secondary bg-neutral flex flex-col gap-[8px]">
+            <div v-if="alerteForm.active" class="flex flex-col gap-[16px]">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <Dropdown
                 v-model="alerteForm.type"
                 :items="alerteTypeItems"
@@ -2153,7 +2183,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 :show-hint="false"
                 :teleport="true"
               />
-
               <div class="relative group/disabled-amount" tabindex="-1">
                 <Input
                   :model-value="isAlerteAmountDisabled ? '' : alerteForm.amount"
