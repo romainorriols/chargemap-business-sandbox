@@ -462,13 +462,13 @@ interface DayRule {
 const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
   active: false,
   days: [
-    { id: 'lundi',    label: 'Lundi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
-    { id: 'mardi',    label: 'Mardi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
-    { id: 'mercredi', label: 'Mercredi', active: true,  customHours: true,  start: '00:00', end: '00:00' },
-    { id: 'jeudi',    label: 'Jeudi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
-    { id: 'vendredi', label: 'Vendredi', active: false, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'samedi',   label: 'Samedi',   active: false, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'dimanche', label: 'Dimanche', active: false, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'lundi',    label: 'Lundi',    active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'mardi',    label: 'Mardi',    active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'mercredi', label: 'Mercredi', active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'jeudi',    label: 'Jeudi',    active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'vendredi', label: 'Vendredi', active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'samedi',   label: 'Samedi',   active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'dimanche', label: 'Dimanche', active: true, customHours: false, start: '00:00', end: '00:00' },
   ],
 })
 
@@ -527,23 +527,62 @@ const networks: ChargingNetwork[] = [
 // in `draftBlocked` until the user clicks Valider, mirroring the
 // snapshot/commit pattern used elsewhere on the page.
 const networkPickerOpen = ref(false)
+type NetworkSort = 'alpha' | 'stations-asc' | 'stations-desc'
 const networkPicker = reactive<{
   search: string
+  sort: NetworkSort
   draftBlocked: Set<string>
 }>({
   search: '',
+  sort: 'alpha',
   draftBlocked: new Set<string>(),
+})
+const networkSortOpen = ref(false)
+const networkSortMenuRef = ref<HTMLElement | null>(null)
+const networkSortItems: { value: NetworkSort; label: string }[] = [
+  { value: 'alpha',          label: 'Ordre alphabétique' },
+  { value: 'stations-asc',   label: 'Nombre de stations croissant' },
+  { value: 'stations-desc',  label: 'Nombre de stations décroissant' },
+]
+// Close the sort menu on outside click. Listener is attached lazily so it
+// only runs while the menu is actually open. The trigger button uses
+// @click.stop, so clicking it never reaches this handler.
+function onNetworkSortOutsideClick(e: MouseEvent) {
+  if (!networkSortMenuRef.value) return
+  if (!networkSortMenuRef.value.contains(e.target as Node)) {
+    networkSortOpen.value = false
+  }
+}
+watch(networkSortOpen, (open) => {
+  if (typeof window === 'undefined') return
+  if (open) {
+    window.addEventListener('mousedown', onNetworkSortOutsideClick)
+  } else {
+    window.removeEventListener('mousedown', onNetworkSortOutsideClick)
+  }
 })
 const visibleNetworks = computed(() => {
   const q = networkPicker.search.trim().toLowerCase()
-  if (!q) return networks
-  return networks.filter(n => n.name.toLowerCase().includes(q))
+  const filtered = q
+    ? networks.filter(n => n.name.toLowerCase().includes(q))
+    : [...networks]
+  switch (networkPicker.sort) {
+    case 'stations-asc':
+      return filtered.sort((a, b) => a.stations - b.stations || a.name.localeCompare(b.name, 'fr'))
+    case 'stations-desc':
+      return filtered.sort((a, b) => b.stations - a.stations || a.name.localeCompare(b.name, 'fr'))
+    case 'alpha':
+    default:
+      return filtered.sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  }
 })
 const draftBlockedCount = computed(() => networkPicker.draftBlocked.size)
 
 function openNetworkPicker() {
   networkPicker.draftBlocked = new Set(reseauForm.blockedNetworks)
   networkPicker.search = ''
+  networkPicker.sort = 'alpha'
+  networkSortOpen.value = false
   networkPickerOpen.value = true
 }
 
@@ -551,12 +590,14 @@ function cancelNetworkPicker() {
   networkPickerOpen.value = false
   networkPicker.draftBlocked.clear()
   networkPicker.search = ''
+  networkSortOpen.value = false
 }
 
 function confirmNetworkPicker() {
   reseauForm.blockedNetworks = [...networkPicker.draftBlocked]
   networkPickerOpen.value = false
   networkPicker.search = ''
+  networkSortOpen.value = false
 }
 
 function setNetworkAuthorized(id: string, authorized: boolean) {
@@ -1274,16 +1315,16 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
     >
 
-      <!-- Header: × Quitter back + page title -->
+      <!-- Header: ← Retour back + page title (matches group detail header) -->
       <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
         <button
           type="button"
           class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
           @click="exitSettings"
         >
-          <Icon name="x-mark" variant="outline" :size="16" />
+          <Icon name="arrow-left" variant="outline" :size="16" />
           <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-            Quitter
+            Retour
           </span>
         </button>
         <h1 class="font-sans font-medium text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral truncate max-w-full">
@@ -1401,19 +1442,21 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </section>
 
-      <!-- Composition card -->
+      <!-- Composition card — Figma 6123-25741 -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 80ms">
-        <div class="px-[16px] py-[12px] border-b border-border-neutral-tertiary">
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+        <!-- Header: 18px SemiBold title + medium-weight subtitle (Figma) -->
+        <div class="p-[16px] border-b border-border-neutral-secondary">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
             Composition
           </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+          <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Sélectionnez les badges à ajouter à ce groupe
           </p>
         </div>
-        <div class="px-[16px] py-[16px] flex flex-col gap-[24px]">
-          <!-- Filter row — Figma 6123-25741: Search left, no other filters. -->
-          <div class="flex items-center">
+
+        <div class="p-[16px] flex flex-col gap-[24px]">
+          <!-- Filter row: search left, "+ Ajouter des badges" CTA right -->
+          <div class="flex items-center justify-between gap-[16px]">
             <div class="w-full md:w-[300px]">
               <Input
                 v-model="createSearch"
@@ -1422,10 +1465,17 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 placeholder="Recherche"
               />
             </div>
+            <Button
+              type="primary"
+              size="md"
+              icon-left="plus"
+              label="Ajouter des badges"
+              @click="saveCreateGroup"
+            />
           </div>
 
-          <!-- Table -->
-          <div>
+          <!-- Table — bordered rounded container per Figma -->
+          <div class="border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden">
             <!-- Header row -->
             <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
               <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
@@ -1446,13 +1496,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <Icon v-else-if="createVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
                 </button>
               </div>
-              <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                 Badge
               </div>
-              <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                 Véhicule
               </div>
-              <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                 Conducteur
               </div>
               <div class="w-[68px] shrink-0" aria-hidden="true" />
@@ -1461,7 +1511,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <!-- Empty -->
             <div
               v-if="createPaginated.length === 0"
-              class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+              class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center border-t border-border-neutral-tertiary"
             >
               <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                 {{ createSearch ? 'Aucun badge' : 'Aucun badge disponible' }}
@@ -1482,7 +1532,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 :aria-pressed="createSelected.has(b.id)"
                 :style="{ animationDelay: `${i * 20}ms` }"
                 :class="[
-                  'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 text-left anim-fade-up',
+                  'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary text-left anim-fade-up',
                   'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
                   createSelected.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
                 ]"
@@ -1536,11 +1586,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </section>
 
-      <!-- Footer actions — equal-width Annuler + Enregistrer -->
-      <div class="grid grid-cols-2 gap-[16px] anim-fade-up" style="animation-delay: 120ms">
-        <Button type="secondary" size="md" label="Annuler" class="w-full" @click="cancelCreateGroup" />
-        <Button type="primary" size="md" label="Enregistrer" class="w-full" :disabled="!createForm.name.trim()" @click="saveCreateGroup" />
-      </div>
     </div>
 
     <!-- ── LISTING ─────────────────────────────────────────────────────── -->
@@ -3372,13 +3417,65 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     aria-label="Rechercher un réseau"
                   />
                 </div>
-                <button
-                  type="button"
-                  class="shrink-0 inline-flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.98]"
-                >
-                  <Icon name="funnel" variant="outline" :size="20" />
-                  Trier
-                </button>
+                <div class="relative shrink-0">
+                  <button
+                    type="button"
+                    :aria-haspopup="true"
+                    :aria-expanded="networkSortOpen"
+                    class="inline-flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.98]"
+                    @click.stop="networkSortOpen = !networkSortOpen"
+                  >
+                    <Icon name="funnel" variant="outline" :size="20" />
+                    Trier
+                  </button>
+                  <!-- Sort dropdown menu (Figma 6138-41805) -->
+                  <Transition
+                    enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                    enter-from-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+                    enter-to-class="opacity-100 scale-100 translate-y-0"
+                    leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+                    leave-from-class="opacity-100 scale-100 translate-y-0"
+                    leave-to-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+                  >
+                    <div
+                      v-if="networkSortOpen"
+                      ref="networkSortMenuRef"
+                      role="menu"
+                      class="absolute left-0 top-[calc(100%+4px)] z-20 min-w-[280px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[12px] flex flex-col gap-[4px] origin-top-left"
+                    >
+                      <div
+                        v-for="opt in networkSortItems"
+                        :key="opt.value"
+                        class="px-[4px] py-[2px]"
+                      >
+                        <button
+                          type="button"
+                          role="menuitemradio"
+                          :aria-checked="networkPicker.sort === opt.value"
+                          :class="[
+                            'w-full flex items-center justify-between gap-[8px] p-[12px] rounded-[8px] text-left',
+                            'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                            networkPicker.sort === opt.value
+                              ? 'bg-neutral-hover'
+                              : 'hover:bg-neutral-secondary',
+                          ]"
+                          @click="networkPicker.sort = opt.value; networkSortOpen = false"
+                        >
+                          <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                            {{ opt.label }}
+                          </span>
+                          <Icon
+                            v-if="networkPicker.sort === opt.value"
+                            name="check"
+                            variant="outline"
+                            :size="20"
+                            class="shrink-0 text-icon-brand"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
               </div>
               <div class="shrink-0 flex items-center gap-[8px]">
                 <button
@@ -3424,7 +3521,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :aria-pressed="!isNetworkAuthorized(net.id)"
                     :aria-label="`${net.name} — ${isNetworkAuthorized(net.id) ? 'autorisé' : 'bloqué'}. ${fmtStations(net.stations)} stations.`"
                     :class="[
-                      'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px] overflow-clip',
+                      'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px]',
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'outline-none focus-visible:shadow-ring-gray',
                       isNetworkAuthorized(net.id)
@@ -3470,11 +3567,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                     <div
                       v-if="net.superPartner"
-                      class="shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
+                      class="relative group/sp shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
+                      tabindex="0"
+                      role="button"
+                      :aria-describedby="`sp-tip-${net.id}`"
+                      @click.stop
+                      @keydown.enter.stop
+                      @keydown.space.stop
                     >
                       <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[12px] shrink-0" />
                       <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#9234ea] whitespace-nowrap">
                         Super Partners
+                      </span>
+                      <!-- Hover/focus tooltip explaining the Super Partners label -->
+                      <span
+                        :id="`sp-tip-${net.id}`"
+                        role="tooltip"
+                        class="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-30 w-[260px] px-[12px] py-[8px] rounded-[8px] bg-[#0f1729] text-white font-sans font-normal text-[13px] leading-[1.45] tracking-[-0.26px] text-left shadow-lg opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/sp:opacity-100 group-hover/sp:translate-y-0 group-focus-visible/sp:opacity-100 group-focus-visible/sp:translate-y-0"
+                      >
+                        Le label Super Partners distingue les réseaux de recharge offrant des tarifs négociés et une expérience utilisateur de confiance.
                       </span>
                     </div>
                     <Toggle
