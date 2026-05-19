@@ -2844,7 +2844,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <div class="flex items-center justify-between gap-[8px] py-[4px]">
                     <template v-if="!day.customHours">
                       <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                        Autorisé toute la journée
+                        {{ day.active ? 'Autorisé toute la journée' : 'Bloqué toute la journée' }}
                       </p>
                       <Button
                         type="secondary"
