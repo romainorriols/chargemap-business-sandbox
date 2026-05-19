@@ -84,23 +84,13 @@ function seedBadges(groupId: string | null, count: number): Badge[] {
 }
 
 const groups = reactive<Group[]>([
-  { id: 'g-1', name: 'Groupe logistique Rhône',          manager: 'Marc Dubois'      },
-  { id: 'g-2', name: 'Flotte commerciale Île-de-France', manager: 'Camille Laurent'  },
-  { id: 'g-3', name: 'Techniciens itinérants Sud',       manager: 'Antoine Robert'   },
-  { id: 'g-4', name: 'Service livraison Lyon Centre',    manager: 'Sophie Moreau'    },
-  { id: 'g-5', name: 'Équipe terrain Aquitaine',         manager: 'Julien Bernard'   },
-  { id: 'g-6', name: 'Pôle dirigeants Paris',            manager: 'Émilie Faure'     },
-  { id: 'g-7', name: 'Maintenance bornes Est',           manager: 'Hugo Lefèvre'     },
+  { id: 'g-1', name: 'Convoyeurs Nord-Picardie', manager: 'Théo Garnier' },
+  { id: 'g-2', name: 'Équipe SAV Méditerranée',  manager: 'Léa Martin'   },
 ])
 
 const allBadges = reactive<Badge[]>([
-  ...seedBadges('g-1', 50),
-  ...seedBadges('g-2', 42),
-  ...seedBadges('g-3', 38),
-  ...seedBadges('g-4', 45),
-  ...seedBadges('g-5', 40),
-  ...seedBadges('g-6', 32),
-  ...seedBadges('g-7', 26),
+  ...seedBadges('g-1', 47),
+  ...seedBadges('g-2', 33),
   ...seedBadges(null, 35),
 ])
 
@@ -219,7 +209,18 @@ function deleteSettingsGroup() {
 // rattaches the selected badges, and drops the user back to the listing.
 const isCreatingGroup = ref(false)
 const createForm = reactive<{ name: string; manager: string }>({ name: '', manager: '' })
+// Per-field error flags toggled by saveCreateGroup. Each cleared as soon as
+// the user fills the corresponding field, so the error state never lingers.
+const createError = reactive<{ name: boolean; manager: boolean }>({ name: false, manager: false })
+// Refs on the field wrappers so we can scrollIntoView the first invalid
+// field after a failed create attempt.
+const createNameFieldRef = ref<HTMLElement | null>(null)
+const createManagerFieldRef = ref<HTMLElement | null>(null)
 const createSelected = reactive(new Set<string>())
+// Group IDs that were created in this session. When the user opens one of
+// these for the first time, charging rules are reset to all-disabled so a
+// freshly created group never inherits another group's edits.
+const newGroupIds = reactive(new Set<string>())
 const createSearch = ref('')
 const createPage = ref(1)
 const createPerPage = 20
@@ -255,6 +256,8 @@ function toggleCreateSelection(id: string) {
 function enterCreateGroup() {
   createForm.name = ''
   createForm.manager = ''
+  createError.name = false
+  createError.manager = false
   createSelected.clear()
   createSearch.value = ''
   createPage.value = 1
@@ -264,13 +267,25 @@ function cancelCreateGroup() {
   isCreatingGroup.value = false
   createForm.name = ''
   createForm.manager = ''
+  createError.name = false
+  createError.manager = false
   createSelected.clear()
 }
 function saveCreateGroup() {
   const name = createForm.name.trim()
-  if (!name) return
+  const manager = createForm.manager
+  createError.name = !name
+  createError.manager = !manager
+  if (createError.name || createError.manager) {
+    // Scroll the first invalid field into view so the user sees the error
+    // without hunting for it (Composition card can be tall).
+    const target = createError.name ? createNameFieldRef.value : createManagerFieldRef.value
+    target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    return
+  }
   const newId = `g-${Date.now()}`
-  groups.push({ id: newId, name, manager: createForm.manager })
+  groups.push({ id: newId, name, manager })
+  newGroupIds.add(newId)
   if (createSelected.size > 0) {
     const ids = new Set(createSelected)
     allBadges.forEach((b) => { if (ids.has(b.id)) b.groupId = newId })
@@ -284,6 +299,11 @@ function saveCreateGroup() {
       : `${count} badges rattachés`
   showSuccessToast('Groupe créé', detail)
 }
+// Clear individual error flags as the user fills each field, so the red
+// state disappears immediately on correction rather than waiting for the
+// next save attempt.
+watch(() => createForm.name, (v) => { if (v.trim()) createError.name = false })
+watch(() => createForm.manager, (v) => { if (v) createError.manager = false })
 
 // Loading skeleton (Figma /billing pattern): 600ms simulated fetch on
 // every detail entry so the table cross-fades in instead of popping.
@@ -292,6 +312,13 @@ let loadingTimer: ReturnType<typeof setTimeout> | null = null
 watch(selectedId, (id) => {
   if (loadingTimer) { clearTimeout(loadingTimer); loadingTimer = null }
   if (id) {
+    // First visit of a freshly created group: reset charging rules so the
+    // group starts with everything désactivé regardless of edits made
+    // elsewhere in the session.
+    if (newGroupIds.has(id)) {
+      resetChargingRulesToDisabled()
+      newGroupIds.delete(id)
+    }
     isLoading.value = true
     loadingTimer = setTimeout(() => {
       isLoading.value = false
@@ -385,7 +412,7 @@ const vacanceForm = reactive<{
   creating: boolean
   draft: { name: string; range: string }
 }>({
-  active: true,
+  active: false,
   periods: [],
   creating: false,
   draft: { name: '', range: '' },
@@ -433,7 +460,7 @@ interface DayRule {
   end: string
 }
 const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
-  active: true,
+  active: false,
   days: [
     { id: 'lundi',    label: 'Lundi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
     { id: 'mardi',    label: 'Mardi',    active: true,  customHours: false, start: '00:00', end: '00:00' },
@@ -692,8 +719,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Fixer un budget limite à vos conducteurs par mois',
     icon: 'money-coins',
     iconVariant: 'outline',
-    statusIcon: 'check',
-    statusLabel: 'Activé',
+    statusIcon: 'x-mark',
+    statusLabel: 'Désactivé',
   },
   {
     id: 'alerte',
@@ -701,8 +728,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Soyez alertez si vos conducteurs dépasse un certain budget par mois',
     icon: 'bell-alert',
     iconVariant: 'outline',
-    statusIcon: 'check',
-    statusLabel: 'Activé',
+    statusIcon: 'x-mark',
+    statusLabel: 'Désactivé',
   },
   {
     id: 'autorisations',
@@ -720,7 +747,7 @@ const rules: ChargingRule[] = reactive([
     icon: 'airport-alt',
     iconVariant: 'outline',
     statusIcon: 'x-mark',
-    statusLabel: 'Activé',
+    statusLabel: 'Désactivé',
   },
   {
     id: 'pays',
@@ -729,7 +756,7 @@ const rules: ChargingRule[] = reactive([
     icon: 'flag',
     iconVariant: 'outline',
     statusIcon: 'x-mark',
-    statusLabel: 'Activé',
+    statusLabel: 'Désactivé',
   },
   {
     id: 'reseau',
@@ -738,9 +765,31 @@ const rules: ChargingRule[] = reactive([
     icon: 'globe-alt',
     iconVariant: 'outline',
     statusIcon: 'x-mark',
-    statusLabel: 'Activé',
+    statusLabel: 'Désactivé',
   },
 ])
+
+// Reset every charging rule card and its drawer form state to the disabled
+// default. Called the first time the user opens a newly created group so the
+// group never inherits another group's edits.
+function resetChargingRulesToDisabled() {
+  rules.forEach((rule) => {
+    rule.statusIcon = 'x-mark'
+    rule.statusLabel = 'Désactivé'
+  })
+  budgetForm.active = false
+  alerteForm.active = false
+  autorisationsForm.active = false
+  vacanceForm.active = false
+  vacanceForm.periods.splice(0, vacanceForm.periods.length)
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
+  reseauForm.active = false
+  reseauForm.blockedNetworks.splice(0, reseauForm.blockedNetworks.length)
+  paysForm.active = false
+  paysForm.blockedCountries.splice(0, paysForm.blockedCountries.length)
+}
 
 function onRuleClick(rule: ChargingRule) {
   // Re-clicking the already-active card toggles the drawer off and clears the
@@ -1326,14 +1375,16 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </p>
         </div>
         <div class="px-[16px] py-[16px] flex flex-col md:flex-row gap-[16px]">
-          <div class="flex-1 min-w-0">
+          <div ref="createNameFieldRef" class="flex-1 min-w-0 scroll-mt-[120px]">
             <Input
               v-model="createForm.name"
               label="Nom du groupe"
               placeholder="Ex. Groupe logistique Rhône"
+              :destructive="createError.name"
+              :hint="createError.name ? 'Veuillez renseigner un nom de groupe' : ''"
             />
           </div>
-          <div class="flex-1 min-w-0">
+          <div ref="createManagerFieldRef" class="flex-1 min-w-0 scroll-mt-[120px]">
             <Dropdown
               v-model="createForm.manager"
               :items="managerItems"
@@ -1341,7 +1392,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               placeholder="Sélectionnez un manager"
               :searchable="true"
               search-placeholder="Rechercher un manager"
-              :show-hint="false"
+              :show-hint="createError.manager"
+              :hint="createError.manager ? 'Veuillez sélectionner un manager' : ''"
+              :destructive="createError.manager"
               :teleport="true"
             />
           </div>
