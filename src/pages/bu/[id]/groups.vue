@@ -500,26 +500,26 @@ interface ChargingNetwork {
   superPartner?: boolean
 }
 const networks: ChargingNetwork[] = [
-  { id: 'allego',      name: 'Allego',              stations: 1879 },
-  { id: 'alterna',     name: 'Alterna énergie',     stations: 1879, superPartner: true },
-  { id: 'atlante',     name: 'Atlante',             stations: 1879, superPartner: true },
-  { id: 'avia',        name: 'Avia',                stations: 1879 },
-  { id: 'avia-plus',   name: 'Avia Plus',           stations: 1879 },
-  { id: 'avia-volt',   name: 'Avia Volt',           stations: 1879 },
-  { id: 'borne-elec',  name: 'Borne-elec',          stations: 1879 },
-  { id: 'bp-pulse',    name: 'BP Pulse',            stations: 1879, superPartner: true },
-  { id: 'driveco',     name: 'Driveco',             stations: 1879, superPartner: true },
-  { id: 'e-totem',     name: 'E-totem',             stations: 1879 },
-  { id: 'e-vadea',     name: 'E-Vadea',             stations: 1879 },
-  { id: 'easy-charge', name: 'Easy charge service', stations: 1879 },
-  { id: 'easy-go',     name: 'Easy GO',             stations: 1879 },
-  { id: 'eborne',      name: 'Eborne',              stations: 1879 },
-  { id: 'effia',       name: 'Effia',               stations: 1879, superPartner: true },
-  { id: 'electra',     name: 'Electra',             stations: 1879, superPartner: true },
-  { id: 'engie',       name: 'Engie',               stations: 1879, superPartner: true },
-  { id: 'eoliberty',   name: 'Eoliberty',           stations: 1879 },
-  { id: 'fastned',     name: 'Fastned',             stations: 1879, superPartner: true },
-  { id: 'greenspot',   name: 'Greenspot',           stations: 1879 },
+  { id: 'allego',      name: 'Allego',              stations: 2147 },
+  { id: 'alterna',     name: 'Alterna énergie',     stations: 412,  superPartner: true },
+  { id: 'atlante',     name: 'Atlante',             stations: 879,  superPartner: true },
+  { id: 'avia',        name: 'Avia',                stations: 256 },
+  { id: 'avia-plus',   name: 'Avia Plus',           stations: 1532 },
+  { id: 'avia-volt',   name: 'Avia Volt',           stations: 718 },
+  { id: 'borne-elec',  name: 'Borne-elec',          stations: 94 },
+  { id: 'bp-pulse',    name: 'BP Pulse',            stations: 3128 },
+  { id: 'driveco',     name: 'Driveco',             stations: 1865, superPartner: true },
+  { id: 'e-totem',     name: 'E-totem',             stations: 327 },
+  { id: 'e-vadea',     name: 'E-Vadea',             stations: 168 },
+  { id: 'easy-charge', name: 'Easy charge service', stations: 1043 },
+  { id: 'easy-go',     name: 'Easy GO',             stations: 582 },
+  { id: 'eborne',      name: 'Eborne',              stations: 1471 },
+  { id: 'effia',       name: 'Effia',               stations: 2398 },
+  { id: 'electra',     name: 'Electra',             stations: 2914 },
+  { id: 'engie',       name: 'Engie',               stations: 1207 },
+  { id: 'eoliberty',   name: 'Eoliberty',           stations: 63 },
+  { id: 'fastned',     name: 'Fastned',             stations: 2516 },
+  { id: 'greenspot',   name: 'Greenspot',           stations: 731 },
 ]
 
 // Network picker modal state (Figma 6106-13915). Opened from the réseau
@@ -1145,17 +1145,47 @@ const addRangeStart = computed(() => filteredAvailable.value.length === 0 ? 0 : 
 const addRangeEnd = computed(() => Math.min(addPage.value * addPerPage, filteredAvailable.value.length))
 watch(addSearch, () => { addPage.value = 1 })
 
+// Modal vs swap entry point — the sandbox toggle (uiStore.addBadgesVariant)
+// chooses which surface the "Ajouter des badges" CTA opens. State is shared:
+// selectedToAdd / addSearch / addPage drive both UIs.
+const addBadgesModalOpen = ref(false)
 function enterAddMode() {
   selectedToAdd.clear()
   selectedToRemove.clear()
   addSearch.value = ''
   addPage.value = 1
-  isAddingBadges.value = true
   clearUndo()
+  if (uiStore.addBadgesVariant === 'modal') {
+    addBadgesModalOpen.value = true
+  } else {
+    isAddingBadges.value = true
+  }
 }
 function cancelAddMode() {
   isAddingBadges.value = false
   selectedToAdd.clear()
+}
+function cancelAddBadgesModal() {
+  addBadgesModalOpen.value = false
+  selectedToAdd.clear()
+}
+function confirmAddBadgesModal() {
+  if (!selectedGroup.value || selectedToAdd.size === 0) return
+  confirmAdd()
+  addBadgesModalOpen.value = false
+}
+// Escape closes the add-badges modal — listener bound only while it is open.
+function onAddBadgesModalKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && addBadgesModalOpen.value) {
+    e.stopPropagation()
+    cancelAddBadgesModal()
+  }
+}
+if (import.meta.client) {
+  watch(addBadgesModalOpen, (open) => {
+    if (open) window.addEventListener('keydown', onAddBadgesModalKeydown)
+    else window.removeEventListener('keydown', onAddBadgesModalKeydown)
+  })
 }
 function toggleAddSelection(id: string) {
   if (selectedToAdd.has(id)) selectedToAdd.delete(id)
@@ -1455,8 +1485,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <div class="p-[16px] flex flex-col gap-[24px]">
-          <!-- Filter row: search left, "+ Ajouter des badges" CTA right -->
-          <div class="flex items-center justify-between gap-[16px]">
+          <!-- Filter row: search only — the floating pill confirms the create -->
+          <div class="flex items-center">
             <div class="w-full md:w-[300px]">
               <Input
                 v-model="createSearch"
@@ -1465,13 +1495,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 placeholder="Recherche"
               />
             </div>
-            <Button
-              type="primary"
-              size="md"
-              icon-left="plus"
-              label="Ajouter des badges"
-              @click="saveCreateGroup"
-            />
           </div>
 
           <!-- Table — bordered rounded container per Figma -->
@@ -2306,8 +2329,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                   </div>
 
-                  <!-- Table directly in drawer body (Figma 5931-23791 — no inner card) -->
-                  <div>
+                  <!-- Table — bordered rounded container, same style as the create flow -->
+                  <div class="border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden">
                     <!-- Header row -->
                     <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
                       <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
@@ -2328,13 +2351,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           <Icon v-else-if="addVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
                         </button>
                       </div>
-                      <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Badge
                       </div>
-                      <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Véhicule
                       </div>
-                      <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Conducteur
                       </div>
                       <div class="w-[68px] shrink-0" aria-hidden="true" />
@@ -2343,7 +2366,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <!-- Empty -->
                     <div
                       v-if="addPaginated.length === 0"
-                      class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+                      class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center border-t border-border-neutral-tertiary"
                     >
                       <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                         {{ addSearch || itineranceFilter !== 'all' || rattachementFilter !== 'all' ? 'Aucun badge' : 'Aucun badge disponible' }}
@@ -2364,7 +2387,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         :aria-pressed="selectedToAdd.has(b.id)"
                         :style="{ animationDelay: `${i * 20}ms` }"
                         :class="[
-                          'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 text-left anim-fade-up',
+                          'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary text-left anim-fade-up',
                           'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
                           selectedToAdd.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
                         ]"
@@ -3567,10 +3590,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                     <div
                       v-if="net.superPartner"
-                      class="relative group/sp shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
-                      tabindex="0"
-                      role="button"
-                      :aria-describedby="`sp-tip-${net.id}`"
+                      :class="[
+                        'shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]',
+                        uiStore.networkPickerVariant === 'super-partners'
+                          ? ''
+                          : 'relative group/sp cursor-default',
+                      ]"
+                      :tabindex="uiStore.networkPickerVariant === 'super-partners' ? -1 : 0"
+                      :role="uiStore.networkPickerVariant === 'super-partners' ? undefined : 'button'"
+                      :aria-describedby="uiStore.networkPickerVariant === 'super-partners' ? undefined : `sp-tip-${net.id}`"
                       @click.stop
                       @keydown.enter.stop
                       @keydown.space.stop
@@ -3579,8 +3607,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#9234ea] whitespace-nowrap">
                         Super Partners
                       </span>
-                      <!-- Hover/focus tooltip explaining the Super Partners label -->
+                      <!-- Hover/focus tooltip — hidden in the super-partners variant
+                           since the left card already explains the label. -->
                       <span
+                        v-if="uiStore.networkPickerVariant !== 'super-partners'"
                         :id="`sp-tip-${net.id}`"
                         role="tooltip"
                         class="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-30 w-[260px] px-[12px] py-[8px] rounded-[8px] bg-[#0f1729] text-white font-sans font-normal text-[13px] leading-[1.45] tracking-[-0.26px] text-left shadow-lg opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/sp:opacity-100 group-hover/sp:translate-y-0 group-focus-visible/sp:opacity-100 group-focus-visible/sp:translate-y-0"
@@ -3805,6 +3835,202 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <Button type="secondary" size="md" label="Annuler" @click="cancelCountryPicker" />
                   <Button type="primary" size="md" label="Valider" @click="confirmCountryPicker" />
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ── Ajouter des badges modal (Figma 6131-33437) — centered popup
+         alternative to the in-page table swap. Selected via the sandbox
+         "Ajout badges" toggle. Search + checkbox-table + footer count
+         with Annuler / Valider. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="addBadgesModalOpen"
+          class="fixed inset-0 z-[60] bg-black/40"
+          aria-hidden="true"
+          @click="cancelAddBadgesModal"
+        />
+      </Transition>
+
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.96] translate-y-[8px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] translate-y-[6px]"
+      >
+        <div
+          v-if="addBadgesModalOpen"
+          class="fixed inset-0 z-[61] flex items-center justify-center p-[24px] pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-badges-modal-title"
+        >
+          <div class="pointer-events-auto w-full max-w-[860px] h-full max-h-[800px] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
+            <!-- Header — title + close X -->
+            <div class="flex items-center justify-between gap-[32px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+              <p id="add-badges-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+                Ajouter des badges
+              </p>
+              <button
+                type="button"
+                class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                aria-label="Fermer"
+                @click="cancelAddBadgesModal"
+              >
+                <Icon name="x-mark" variant="outline" :size="20" />
+              </button>
+            </div>
+
+            <!-- Filters — search only (Figma) -->
+            <div class="flex items-center gap-[8px] px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+              <div class="w-[300px] min-w-[200px] max-w-full">
+                <Input
+                  v-model="addSearch"
+                  type="leadingIcon"
+                  icon="magnifying-glass"
+                  size="md"
+                  placeholder="Recherche"
+                  aria-label="Rechercher un badge"
+                />
+              </div>
+            </div>
+
+            <!-- Body — bordered table that fills remaining space and scrolls -->
+            <div class="flex-1 min-h-0 px-[24px] py-[16px] overflow-y-auto">
+              <div class="border border-border-neutral-secondary rounded-[16px] overflow-hidden">
+                <!-- Header row -->
+                <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
+                  <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
+                    <button
+                      type="button"
+                      role="checkbox"
+                      :aria-checked="addVisibleSomeSelected ? 'mixed' : (addVisibleAllSelected ? 'true' : 'false')"
+                      :aria-label="addVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
+                      :class="[
+                        'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
+                        (addVisibleAllSelected || addVisibleSomeSelected)
+                          ? 'bg-brand border-brand'
+                          : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
+                      ]"
+                      @click="toggleSelectAllVisibleForAdd"
+                    >
+                      <Icon v-if="addVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
+                      <Icon v-else-if="addVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
+                    </button>
+                  </div>
+                  <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Badge
+                  </div>
+                  <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Véhicule
+                  </div>
+                  <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Conducteur
+                  </div>
+                </div>
+
+                <!-- Empty -->
+                <div
+                  v-if="addPaginated.length === 0"
+                  class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center border-t border-border-neutral-tertiary"
+                >
+                  <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                    {{ addSearch ? 'Aucun badge' : 'Aucun badge disponible' }}
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    {{ addSearch
+                      ? 'Aucun badge non rattaché ne correspond à votre recherche.'
+                      : 'Tous les badges sont déjà rattachés à un groupe.' }}
+                  </p>
+                </div>
+
+                <!-- Rows -->
+                <div v-else>
+                  <button
+                    v-for="(b, i) in addPaginated"
+                    :key="b.id"
+                    type="button"
+                    :aria-pressed="selectedToAdd.has(b.id)"
+                    :style="{ animationDelay: `${i * 20}ms` }"
+                    :class="[
+                      'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary text-left anim-fade-up',
+                      'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
+                      selectedToAdd.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
+                    ]"
+                    @click="toggleAddSelection(b.id)"
+                  >
+                    <div class="w-full md:w-[48px] shrink-0 px-[24px] md:px-[16px] pt-[16px] md:pt-[12px] md:py-[12px] flex md:items-center">
+                      <span
+                        role="checkbox"
+                        :aria-checked="selectedToAdd.has(b.id)"
+                        :class="[
+                          'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
+                          selectedToAdd.has(b.id)
+                            ? 'bg-brand border-brand'
+                            : 'bg-neutral border-border-neutral-secondary group-hover/row:border-border-neutral',
+                        ]"
+                      >
+                        <Icon v-if="selectedToAdd.has(b.id)" name="check" variant="solid" :size="12" class="text-white" />
+                      </span>
+                    </div>
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        {{ b.identifier }}
+                      </p>
+                    </div>
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
+                        <span v-else>--</span>
+                      </p>
+                    </div>
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.driver">{{ b.driver.name }}</template>
+                        <span v-else>--</span>
+                      </p>
+                    </div>
+                  </button>
+                </div>
+
+                <TableFooter
+                  v-if="filteredAvailable.length > 0"
+                  :page="addPage"
+                  :page-count="addPageCount"
+                  :range-start="addRangeStart"
+                  :range-end="addRangeEnd"
+                  :total="filteredAvailable.length"
+                  @update:page="(n) => (addPage = n)"
+                />
+              </div>
+            </div>
+
+            <!-- Footer — count on the left, Annuler + Valider on the right -->
+            <div class="flex items-center justify-between gap-[8px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
+              <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
+                <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ selectedToAdd.size }}
+                </span>
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  {{ selectedToAdd.size === 1 ? 'Badge sélectionné' : 'Badges sélectionnés' }}
+                </span>
+              </p>
+              <div class="shrink-0 flex items-center gap-[12px]">
+                <Button type="secondary" size="md" label="Annuler" @click="cancelAddBadgesModal" />
+                <Button type="primary" size="md" label="Valider" :disabled="selectedToAdd.size === 0" @click="confirmAddBadgesModal" />
               </div>
             </div>
           </div>

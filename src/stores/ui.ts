@@ -6,6 +6,7 @@ const EMPTY_STATE_KEY              = 'cm-sandbox-empty-state'
 const MAX_WIDTH_KEY                = 'cm-sandbox-max-width-by-page'
 const GROUP_LIST_VARIANT_KEY       = 'cm-sandbox-group-list-variant'
 const NETWORK_PICKER_VARIANT_KEY   = 'cm-sandbox-network-picker-variant'
+const ADD_BADGES_VARIANT_KEY       = 'cm-sandbox-add-badges-variant'
 
 export type SandboxMaxWidth = 2192 | 1600 | 800
 
@@ -16,6 +17,12 @@ export const GROUP_LIST_VARIANT_OPTIONS: readonly GroupListVariant[] = ['detaile
 
 export type NetworkPickerVariant = 'default' | 'super-partners'
 export const NETWORK_PICKER_VARIANT_OPTIONS: readonly NetworkPickerVariant[] = ['default', 'super-partners'] as const
+
+// "Ajouter des badges" entry from the group detail view either swaps the
+// in-page table for the add-mode table (default) or pops a modal layered
+// on top of the detail view (Figma 6131-33437).
+export type AddBadgesVariant = 'swap' | 'modal'
+export const ADD_BADGES_VARIANT_OPTIONS: readonly AddBadgesVariant[] = ['swap', 'modal'] as const
 
 // Default max-width per page key. All defaults must be one of the
 // SANDBOX_MAX_WIDTH_OPTIONS so the segmented control always has an
@@ -54,6 +61,7 @@ export const useUiStore = defineStore('ui', () => {
   let initialMaxByPage: Partial<Record<string, SandboxMaxWidth>> = {}
   let initialGroupVariant: GroupListVariant = 'detailed'
   let initialPickerVariant: NetworkPickerVariant = 'default'
+  let initialAddBadgesVariant: AddBadgesVariant = 'swap'
   if (import.meta.client) {
     const storedEmpty = localStorage.getItem(EMPTY_STATE_KEY)
     if (storedEmpty !== null) initialEmpty = storedEmpty === 'true'
@@ -74,11 +82,16 @@ export const useUiStore = defineStore('ui', () => {
     if (storedPickerVariant === 'default' || storedPickerVariant === 'super-partners') {
       initialPickerVariant = storedPickerVariant
     }
+    const storedAddBadgesVariant = localStorage.getItem(ADD_BADGES_VARIANT_KEY)
+    if (storedAddBadgesVariant === 'swap' || storedAddBadgesVariant === 'modal') {
+      initialAddBadgesVariant = storedAddBadgesVariant
+    }
   }
   const showEmptyState         = ref(initialEmpty)
   const maxWidthByPage         = ref<Partial<Record<string, SandboxMaxWidth>>>(initialMaxByPage)
   const groupListVariant       = ref<GroupListVariant>(initialGroupVariant)
   const networkPickerVariant   = ref<NetworkPickerVariant>(initialPickerVariant)
+  const addBadgesVariant       = ref<AddBadgesVariant>(initialAddBadgesVariant)
 
   /** Read the active max-width for a page key — user override or default. */
   function getMaxWidth(key: string): SandboxMaxWidth {
@@ -94,12 +107,14 @@ export const useUiStore = defineStore('ui', () => {
     watch(maxWidthByPage,        v => localStorage.setItem(MAX_WIDTH_KEY, JSON.stringify(v)), { deep: true })
     watch(groupListVariant,      v => localStorage.setItem(GROUP_LIST_VARIANT_KEY, v))
     watch(networkPickerVariant,  v => localStorage.setItem(NETWORK_PICKER_VARIANT_KEY, v))
+    watch(addBadgesVariant,      v => localStorage.setItem(ADD_BADGES_VARIANT_KEY, v))
   }
 
   return {
     showEmptyState, maxWidthByPage,
     groupListVariant,
     networkPickerVariant,
+    addBadgesVariant,
     getMaxWidth, setMaxWidth,
   }
 })
