@@ -3908,44 +3908,45 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
 
-            <!-- Body — bordered table that fills remaining space and scrolls -->
-            <div class="flex-1 min-h-0 px-[24px] py-[16px] overflow-y-auto">
-              <div class="border border-border-neutral-secondary rounded-[16px] overflow-hidden">
-                <!-- Header row -->
-                <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
-                  <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
-                    <button
-                      type="button"
-                      role="checkbox"
-                      :aria-checked="addVisibleSomeSelected ? 'mixed' : (addVisibleAllSelected ? 'true' : 'false')"
-                      :aria-label="addVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
-                      :class="[
-                        'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
-                        (addVisibleAllSelected || addVisibleSomeSelected)
-                          ? 'bg-brand border-brand'
-                          : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
-                      ]"
-                      @click="toggleSelectAllVisibleForAdd"
-                    >
-                      <Icon v-if="addVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
-                      <Icon v-else-if="addVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
-                    </button>
-                  </div>
-                  <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                    Badge
-                  </div>
-                  <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                    Véhicule
-                  </div>
-                  <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                    Conducteur
-                  </div>
+            <!-- Body — full-width table, sticky header, scrollable rows -->
+            <div class="flex-1 min-h-0 flex flex-col">
+              <!-- Header row — full width, sits flush with the modal walls -->
+              <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px] shrink-0">
+                <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    :aria-checked="addVisibleSomeSelected ? 'mixed' : (addVisibleAllSelected ? 'true' : 'false')"
+                    :aria-label="addVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
+                    :class="[
+                      'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
+                      (addVisibleAllSelected || addVisibleSomeSelected)
+                        ? 'bg-brand border-brand'
+                        : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
+                    ]"
+                    @click="toggleSelectAllVisibleForAdd"
+                  >
+                    <Icon v-if="addVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
+                    <Icon v-else-if="addVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
+                  </button>
                 </div>
+                <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Badge
+                </div>
+                <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Véhicule
+                </div>
+                <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Conducteur
+                </div>
+              </div>
 
+              <!-- Scrollable row area -->
+              <div class="flex-1 min-h-0 overflow-y-auto">
                 <!-- Empty -->
                 <div
                   v-if="addPaginated.length === 0"
-                  class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center border-t border-border-neutral-tertiary"
+                  class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
                 >
                   <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                     {{ addSearch ? 'Aucun badge' : 'Aucun badge disponible' }}
@@ -3966,7 +3967,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :aria-pressed="selectedToAdd.has(b.id)"
                     :style="{ animationDelay: `${i * 20}ms` }"
                     :class="[
-                      'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary text-left anim-fade-up',
+                      'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-b border-border-neutral-tertiary text-left anim-fade-up',
                       'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
                       selectedToAdd.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
                     ]"
@@ -4005,17 +4006,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                   </button>
                 </div>
-
-                <TableFooter
-                  v-if="filteredAvailable.length > 0"
-                  :page="addPage"
-                  :page-count="addPageCount"
-                  :range-start="addRangeStart"
-                  :range-end="addRangeEnd"
-                  :total="filteredAvailable.length"
-                  @update:page="(n) => (addPage = n)"
-                />
               </div>
+
+              <!-- Pagination sits between scrollable rows and the modal footer -->
+              <TableFooter
+                v-if="filteredAvailable.length > 0"
+                :page="addPage"
+                :page-count="addPageCount"
+                :range-start="addRangeStart"
+                :range-end="addRangeEnd"
+                :total="filteredAvailable.length"
+                class="shrink-0"
+                @update:page="(n) => (addPage = n)"
+              />
             </div>
 
             <!-- Footer — count on the left, Annuler + Valider on the right -->
