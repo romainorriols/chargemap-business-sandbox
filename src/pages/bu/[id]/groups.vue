@@ -1993,9 +1993,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           >
             <!-- VIEW MODE -->
             <div v-if="!isAddingBadges" key="view" class="flex flex-col gap-[16px]">
-              <!-- Filter row (no card — sits directly between KPIs and table) -->
+              <!-- Filter row — Figma 5931-23391: search + Ajouter, no extra filters -->
               <div class="flex flex-col lg:flex-row lg:items-center gap-[8px] anim-fade-up" style="animation-delay: 80ms">
-                <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
+                <div class="w-full lg:w-[300px]">
                   <Input
                     v-model="badgeSearch"
                     type="leadingIcon"
@@ -2003,31 +2003,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     placeholder="Recherche"
                   />
                 </div>
-                <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
-                  <Dropdown
-                    v-model="itineranceFilter"
-                    :items="itineranceItems"
-                    input-type="leadingIcon"
-                    icon="highway"
-                    :searchable="false"
-                    :show-label="false"
-                    :show-hint="false"
-                    :teleport="true"
-                  />
-                </div>
-                <div class="w-full lg:flex-1 lg:min-w-0 lg:basis-0">
-                  <Dropdown
-                    v-model="rattachementFilter"
-                    :items="rattachementItems"
-                    input-type="leadingIcon"
-                    icon="link"
-                    :searchable="false"
-                    :show-label="false"
-                    :show-hint="false"
-                    :teleport="true"
-                  />
-                </div>
-                <div class="shrink-0">
+                <div class="lg:ml-auto shrink-0">
                   <Button
                     type="primary"
                     size="md"
@@ -2122,12 +2098,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
                 >
                   <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                    {{ badgeSearch || itineranceFilter !== 'all' || rattachementFilter !== 'all'
-                      ? 'Aucun badge' : 'Aucun badge dans ce groupe' }}
+                    {{ badgeSearch ? 'Aucun badge' : 'Aucun badge dans ce groupe' }}
                   </p>
                   <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                    {{ badgeSearch || itineranceFilter !== 'all' || rattachementFilter !== 'all'
-                      ? 'Aucun badge ne correspond aux filtres.'
+                    {{ badgeSearch
+                      ? 'Aucun badge ne correspond à votre recherche.'
                       : 'Ajoutez un badge pour commencer.' }}
                   </p>
                 </div>

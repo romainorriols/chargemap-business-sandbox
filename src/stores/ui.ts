@@ -59,7 +59,7 @@ export function pageKeyForPath(path: string): string {
 export const useUiStore = defineStore('ui', () => {
   let initialEmpty = false
   let initialMaxByPage: Partial<Record<string, SandboxMaxWidth>> = {}
-  let initialGroupVariant: GroupListVariant = 'detailed'
+  let initialGroupVariant: GroupListVariant = 'compact'
   let initialPickerVariant: NetworkPickerVariant = 'default'
   let initialAddBadgesVariant: AddBadgesVariant = 'swap'
   if (import.meta.client) {

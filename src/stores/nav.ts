@@ -4,7 +4,7 @@
 const NAV_VERSION_KEY = 'cm-sandbox-nav-version'
 
 export const useNavStore = defineStore('nav', () => {
-  let initial = true
+  let initial = false
   if (import.meta.client) {
     const stored = localStorage.getItem(NAV_VERSION_KEY)
     if (stored !== null) initial = stored === 'true'
