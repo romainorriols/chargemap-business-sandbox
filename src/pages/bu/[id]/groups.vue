@@ -3820,7 +3820,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-modal="true"
           aria-labelledby="add-badges-modal-title"
         >
-          <div class="pointer-events-auto w-full max-w-[860px] h-full max-h-[800px] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
+          <div class="pointer-events-auto w-full max-w-[800px] h-full max-h-[800px] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
             <!-- Header — title + close X -->
             <div class="flex items-center justify-between gap-[32px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
               <p id="add-badges-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
@@ -3975,19 +3975,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
 
-            <!-- Footer — count on the left, Annuler + Valider on the right -->
+            <!-- Footer — count on the left, Annuler + Ajouter les badges on the right -->
             <div class="flex items-center justify-between gap-[8px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
-              <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
+              <p class="flex items-baseline gap-[2px] min-w-0 whitespace-nowrap">
                 <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                  {{ selectedToAdd.size }}
+                  {{ selectedToAdd.size }} {{ selectedToAdd.size === 1 ? 'badge' : 'badges' }}
                 </span>
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                  {{ selectedToAdd.size === 1 ? 'Badge sélectionné' : 'Badges sélectionnés' }}
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  {{ selectedToAdd.size === 1 ? 'Sélectionné' : 'Sélectionnés' }}
                 </span>
               </p>
               <div class="shrink-0 flex items-center gap-[12px]">
                 <Button type="secondary" size="md" label="Annuler" @click="cancelAddBadgesModal" />
-                <Button type="primary" size="md" label="Valider" :disabled="addBadgesModalMode === 'detail' && selectedToAdd.size === 0" @click="confirmAddBadgesModal" />
+                <Button type="primary" size="md" label="Ajouter les badges" :disabled="addBadgesModalMode === 'detail' && selectedToAdd.size === 0" @click="confirmAddBadgesModal" />
               </div>
             </div>
           </div>
