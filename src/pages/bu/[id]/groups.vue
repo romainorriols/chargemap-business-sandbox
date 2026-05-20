@@ -3088,12 +3088,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
             <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
               <div class="flex-1 min-w-0 flex flex-col">
-                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                  {{ reseauForm.blockedNetworks.length === 0
-                    ? 'Aucun Réseau bloqué'
-                    : reseauForm.blockedNetworks.length === 1
-                      ? '1 réseau bloqué'
-                      : `${reseauForm.blockedNetworks.length} réseaux bloqués` }}
+                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
+                  {{ reseauForm.blockedNetworks.length }}
+                  {{ reseauForm.blockedNetworks.length <= 1 ? 'réseau bloqué' : 'réseaux bloqués' }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
                   Sur {{ networks.length }} compatibles
@@ -3103,7 +3100,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <div class="shrink-0 flex items-center gap-[8px]">
                   <button
                     type="button"
-                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    class="flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                     aria-label="Modifier la liste de blocage"
                     @click="openNetworkPicker"
                   >
@@ -3111,7 +3108,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                   <button
                     type="button"
-                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    class="flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                     aria-label="Vider la liste de blocage"
                     @click="clearReseauBlocklist"
                   >
@@ -3119,7 +3116,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
               </template>
-              <Button v-else type="secondary" size="sm" label="Bloquer des réseaux" @click="openNetworkPicker" />
+              <Button v-else type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
             </div>
           </template>
         </div>
