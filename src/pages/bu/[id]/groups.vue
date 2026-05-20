@@ -359,6 +359,21 @@ const selectedRuleId = ref<string | null>(null)
 const budgetDrawerOpen = ref(false)
 const budgetForm = reactive({ active: false, amount: '230,00' })
 
+// Zero-amount guard for the Budget section (Figma 5980-29334). When the user
+// turns the section on but leaves the amount at 0/empty, Enregistrer is
+// rejected with a compact danger Alert at the top of the drawer body and a
+// destructive ring on the input. The error clears as soon as the amount
+// becomes a positive number or the section is turned off.
+const budgetError = ref(false)
+const isBudgetAmountInvalid = computed(() => {
+  const v = budgetForm.amount.trim().replace(',', '.')
+  if (!v) return true
+  const n = parseFloat(v)
+  return !isFinite(n) || n <= 0
+})
+watch(() => budgetForm.amount, () => { if (budgetError.value && !isBudgetAmountInvalid.value) budgetError.value = false })
+watch(() => budgetForm.active, (active) => { if (!active) budgetError.value = false })
+
 // Drawer state for the Blocage vacance rule (Figma 5980-30694 / 5980-31045).
 // Master toggle gates the whole feature; periods are added inline via the
 // creation form. The "+ Nouvelle période" CTA stays at the bottom regardless
@@ -855,10 +870,17 @@ function onRuleClick(rule: ChargingRule) {
 
 function closeBudgetDrawer() {
   budgetDrawerOpen.value = false
+  budgetError.value = false
   selectedRuleId.value = null
 }
 
 function saveBudget() {
+  // A live Budget toggle requires a positive amount — block save and surface
+  // the inline danger Alert so the user sees what's wrong without hunting.
+  if (budgetForm.active && isBudgetAmountInvalid.value) {
+    budgetError.value = true
+    return
+  }
   const rule = rules.find(r => r.id === 'budget')
   if (rule) {
     const active = budgetForm.active || alerteForm.active
@@ -866,6 +888,7 @@ function saveBudget() {
     rule.statusLabel = active ? 'Activé' : 'Désactivé'
   }
   budgetDrawerOpen.value = false
+  budgetError.value = false
   selectedRuleId.value = null
   showSuccessToast('Budget et alertes mis à jour', '')
 }
@@ -2443,6 +2466,28 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Body — two stacked sections (Budget + Alerte) per Figma 5980-29598 -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[24px]">
 
+          <!-- Zero-budget error Alert (Figma 5980-29334) — compact danger
+               banner at the top of the body. Animated in/out so it doesn't
+               pop on save attempts. -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[6px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <Alert
+              v-if="budgetError"
+              type="danger"
+              :leading-text-only="true"
+              :dismissable="false"
+              title="veuillez définir un budget supérieur à 0.00 €"
+              :primary-action-label="''"
+              :secondary-action-label="''"
+            />
+          </Transition>
+
           <!-- ── Section 1: Budget ───────────────────────────────────── -->
           <div class="flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
@@ -2495,6 +2540,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       :addon-trailing-text="'Eur'"
                       :show-currency-icon="false"
                       :trailing-separator="false"
+                      :destructive="budgetError"
                       placeholder="0,00"
                     />
                   </div>
