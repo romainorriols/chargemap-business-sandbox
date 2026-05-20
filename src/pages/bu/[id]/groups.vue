@@ -262,6 +262,10 @@ function saveCreateGroup() {
   }
   const count = createSelected.size
   cancelCreateGroup()
+  // Jump straight into the freshly created group instead of dropping back
+  // to the listing — the user almost always wants to keep configuring it
+  // (charging rules, settings, etc.).
+  selectedId.value = newId
   const detail = count === 0
     ? ''
     : count === 1
