@@ -319,7 +319,6 @@ function resetDetailState() {
   activeTab.value = 'informations'
   selectedRuleId.value = null
   budgetDrawerOpen.value = false
-  alerteDrawerOpen.value = false
   autorisationsDrawerOpen.value = false
   vacanceDrawerOpen.value = false
   vacanceForm.creating = false
@@ -699,9 +698,11 @@ if (import.meta.client) {
   })
 }
 
-// Drawer state for the Seuil d'alerte rule (Figma 5988-37178). Threshold type
-// is either a percentage of the recharge budget or a monthly cap in euros.
-const alerteDrawerOpen = ref(false)
+// Alerte sub-section state lives alongside Budget inside the combined
+// "Budget et alertes" drawer (Figma 5980-29598). Threshold type is either a
+// percentage of the recharge budget or a monthly cap in euros. The percentage
+// option needs Budget to be active in the same drawer session, otherwise the
+// amount field is disabled with a tooltip explaining the constraint.
 type AlerteType = 'percentage' | 'monthly'
 const alerteForm = reactive<{ active: boolean; type: AlerteType; amount: string }>({
   active: false,
@@ -715,8 +716,7 @@ const alerteTypeItems = [
 const alerteSuffix = computed(() => (alerteForm.type === 'percentage' ? '%' : 'Eur'))
 const isAlerteAmountDisabled = computed(() => {
   if (alerteForm.type !== 'percentage') return false
-  const budgetRule = rules.find(r => r.id === 'budget')
-  return !budgetRule || budgetRule.statusIcon !== 'check'
+  return !budgetForm.active
 })
 
 const rules: ChargingRule[] = reactive([
@@ -794,7 +794,6 @@ function onRuleClick(rule: ChargingRule) {
   // active state — same affordance as clicking the header X.
   if (selectedRuleId.value === rule.id) {
     budgetDrawerOpen.value = false
-    alerteDrawerOpen.value = false
     autorisationsDrawerOpen.value = false
     vacanceDrawerOpen.value = false
     reseauDrawerOpen.value = false
@@ -813,22 +812,18 @@ function onRuleClick(rule: ChargingRule) {
   // parallel; the entering drawer renders on top so the leaving one slides
   // away beneath it without visible overlap.
   budgetDrawerOpen.value = false
-  alerteDrawerOpen.value = false
   autorisationsDrawerOpen.value = false
   vacanceDrawerOpen.value = false
   reseauDrawerOpen.value = false
   paysDrawerOpen.value = false
 
   if (rule.id === 'budget') {
+    // The "Budget et alertes" card opens one drawer with both sub-toggles.
+    // We don't reseed budgetForm/alerteForm from the rule status — the form
+    // state is the source of truth between saves, since one rule status now
+    // represents two independent toggles.
     selectedRuleId.value = rule.id
-    budgetForm.active = rule.statusIcon === 'check'
     budgetDrawerOpen.value = true
-    return
-  }
-  if (rule.id === 'alerte') {
-    selectedRuleId.value = rule.id
-    alerteForm.active = rule.statusIcon === 'check'
-    alerteDrawerOpen.value = true
     return
   }
   if (rule.id === 'autorisations') {
@@ -866,12 +861,13 @@ function closeBudgetDrawer() {
 function saveBudget() {
   const rule = rules.find(r => r.id === 'budget')
   if (rule) {
-    rule.statusIcon = budgetForm.active ? 'check' : 'x-mark'
-    rule.statusLabel = budgetForm.active ? 'Activé' : 'Désactivé'
+    const active = budgetForm.active || alerteForm.active
+    rule.statusIcon = active ? 'check' : 'x-mark'
+    rule.statusLabel = active ? 'Activé' : 'Désactivé'
   }
   budgetDrawerOpen.value = false
   selectedRuleId.value = null
-  showSuccessToast('Budget de recharge mis à jour', '')
+  showSuccessToast('Budget et alertes mis à jour', '')
 }
 
 function closeAutorisationsDrawer() {
@@ -967,21 +963,6 @@ function saveVacance() {
   showSuccessToast('Blocage vacance mis à jour', '')
 }
 
-function closeAlerteDrawer() {
-  alerteDrawerOpen.value = false
-  selectedRuleId.value = null
-}
-
-function saveAlerte() {
-  const rule = rules.find(r => r.id === 'alerte')
-  if (rule) {
-    rule.statusIcon = alerteForm.active ? 'check' : 'x-mark'
-    rule.statusLabel = alerteForm.active ? 'Activé' : 'Désactivé'
-  }
-  alerteDrawerOpen.value = false
-  selectedRuleId.value = null
-  showSuccessToast('Seuil d’alerte mis à jour', '')
-}
 
 // Filters scoped to the selected group's badges.
 type ItineranceFilter = 'all' | 'on' | 'off'
@@ -2459,60 +2440,143 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header — rule title + description -->
-          <div class="flex flex-col gap-[4px]">
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Budget de recharge
-            </p>
-            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Fixer un budget limite à vos conducteurs par mois, une fois la limite atteinte les conducteurs peuvent activé un relais via CB
-            </p>
-          </div>
+        <!-- Body — two stacked sections (Budget + Alerte) per Figma 5980-29598 -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[24px]">
 
-          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+          <!-- ── Section 1: Budget ───────────────────────────────────── -->
+          <div class="flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Budget
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Définissez un budget mensuel de recharge. Une fois le plafond atteint, les conducteurs peuvent prendre le relais avec leur carte bancaire.
+              </p>
+            </div>
 
-          <!-- Activé toggle row -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-              Activé
-            </span>
-            <Toggle
-              v-model="budgetForm.active"
-              size="md"
-              aria-label="Activer le budget de recharge"
-            />
-          </div>
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Separator + Budget mensuel row only when active -->
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 -translate-y-[4px]"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-[4px]"
-          >
-            <div v-if="budgetForm.active" class="flex flex-col gap-[16px]">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  Budget mensuel
-                </span>
-                <div class="shrink-0 w-[150px]">
-                  <Input
-                    v-model="budgetForm.amount"
-                    type="trailingText"
-                    :addon-trailing-text="'Eur'"
-                    :show-currency-icon="false"
-                    :trailing-separator="false"
-                    placeholder="0,00"
-                  />
+            <!-- Désactivé / Activé toggle row -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span
+                :class="[
+                  'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
+                  budgetForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
+                ]"
+              >
+                {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
+              </span>
+              <Toggle
+                v-model="budgetForm.active"
+                size="md"
+                aria-label="Activer le budget de recharge"
+              />
+            </div>
+
+            <!-- Separator + Budget mensuel row only when active -->
+            <Transition
+              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 -translate-y-[4px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-[4px]"
+            >
+              <div v-if="budgetForm.active" class="flex flex-col gap-[16px]">
+                <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+                <div class="flex items-center justify-between gap-[16px]">
+                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                    Budget mensuel
+                  </span>
+                  <div class="shrink-0 w-[150px]">
+                    <Input
+                      v-model="budgetForm.amount"
+                      type="trailingText"
+                      :addon-trailing-text="'Eur'"
+                      :show-currency-icon="false"
+                      :trailing-separator="false"
+                      placeholder="0,00"
+                    />
+                  </div>
                 </div>
               </div>
+            </Transition>
+          </div>
+
+          <!-- ── Section 2: Alerte ───────────────────────────────────── -->
+          <div class="flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Alerte
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Soyez alerté par e-mail dès qu'un conducteur dépasse un seuil de budget défini.
+              </p>
             </div>
-          </Transition>
+
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+            <!-- Désactivé / Activé toggle row -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span
+                :class="[
+                  'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
+                  alerteForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
+                ]"
+              >
+                {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
+              </span>
+              <Toggle
+                v-model="alerteForm.active"
+                size="md"
+                aria-label="Activer le seuil d'alerte"
+              />
+            </div>
+
+            <!-- Separator + type/amount controls when active. The amount is
+                 disabled when type is "percentage" with no budget set — the
+                 same tooltip-explained constraint as the standalone drawer. -->
+            <Transition
+              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 -translate-y-[4px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-[4px]"
+            >
+              <div v-if="alerteForm.active" class="flex flex-col gap-[16px]">
+                <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+                <Dropdown
+                  v-model="alerteForm.type"
+                  :items="alerteTypeItems"
+                  :searchable="false"
+                  :show-label="false"
+                  :show-hint="false"
+                  :teleport="true"
+                />
+                <div class="relative group/disabled-amount" tabindex="-1">
+                  <Input
+                    :model-value="isAlerteAmountDisabled ? '' : alerteForm.amount"
+                    type="trailingText"
+                    :addon-trailing-text="alerteSuffix"
+                    :show-currency-icon="false"
+                    :trailing-separator="false"
+                    :disabled="isAlerteAmountDisabled"
+                    placeholder="0"
+                    @update:model-value="(v) => (alerteForm.amount = v)"
+                  />
+                  <div
+                    v-if="isAlerteAmountDisabled"
+                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
+                    role="tooltip"
+                  >
+                    Activez le budget de recharge pour utiliser cette option.
+                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
+                  </div>
+                </div>
+              </div>
+            </Transition>
+          </div>
         </div>
 
         <!-- Footer -->
@@ -2523,137 +2587,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </aside>
     </Transition>
 
-    <!-- ── Seuil d'alerte drawer (Figma 5980-29501) — Configuration
-         header + Section Title block, then Activé row and the
-         type/amount controls separated by hairlines. -->
-    <Transition
-      enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="alerteDrawerOpen"
-        class="fixed inset-0 z-[39] bg-black/40"
-        aria-hidden="true"
-        @click="closeAlerteDrawer"
-      />
-    </Transition>
-
-    <Transition
-      enter-active-class="transition-transform duration-[320ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-      enter-from-class="translate-x-full"
-      enter-to-class="translate-x-0"
-      leave-active-class="transition-transform duration-[240ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-      leave-from-class="translate-x-0"
-      leave-to-class="translate-x-full"
-    >
-      <aside
-        v-if="alerteDrawerOpen"
-        class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Configuration du seuil d'alerte"
-      >
-        <!-- Header -->
-        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Configuration
-          </p>
-          <button
-            type="button"
-            class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-            aria-label="Fermer"
-            @click="closeAlerteDrawer"
-          >
-            <Icon name="x-mark" variant="outline" :size="20" />
-          </button>
-        </div>
-
-        <!-- Body -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header — rule title + description -->
-          <div class="flex flex-col gap-[4px]">
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Seuil d’alerte
-            </p>
-            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Soyez alertez si vos conducteurs dépasse un certain budget par mois
-            </p>
-          </div>
-
-          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-          <!-- Activé toggle row -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-              Activé
-            </span>
-            <Toggle
-              v-model="alerteForm.active"
-              size="md"
-              aria-label="Activer le seuil d'alerte"
-            />
-          </div>
-
-          <!-- Separator + type/amount controls when active -->
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 -translate-y-[4px]"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-[4px]"
-          >
-            <div v-if="alerteForm.active" class="flex flex-col gap-[16px]">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <Dropdown
-                v-model="alerteForm.type"
-                :items="alerteTypeItems"
-                :searchable="false"
-                :show-label="false"
-                :show-hint="false"
-                :teleport="true"
-              />
-              <div class="relative group/disabled-amount" tabindex="-1">
-                <Input
-                  :model-value="isAlerteAmountDisabled ? '' : alerteForm.amount"
-                  type="trailingText"
-                  :addon-trailing-text="alerteSuffix"
-                  :show-currency-icon="false"
-                  :trailing-separator="false"
-                  :disabled="isAlerteAmountDisabled"
-                  placeholder="0"
-                  @update:model-value="(v) => (alerteForm.amount = v)"
-                />
-                <!-- Tooltip — hover/focus-within over the disabled input only. -->
-                <div
-                  v-if="isAlerteAmountDisabled"
-                  class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
-                  role="tooltip"
-                >
-                  Définissez un budget de recharge pour utiliser cette option.
-                  <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
-                </div>
-              </div>
-            </div>
-          </Transition>
-        </div>
-
-        <!-- Footer -->
-        <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
-          <Button type="secondary" size="md" label="Annuler" @click="closeAlerteDrawer" />
-          <Button type="primary" size="md" label="Enregistrer" @click="saveAlerte" />
-        </div>
-      </aside>
-    </Transition>
-
     <!-- ── Autorisations quotidiennes drawer (Figma 5980-29659) — same
-         Configuration / Section Title pattern as Budget and Seuil
-         d'alerte. Day rules stay as bordered sub-cards below the
-         master toggle. -->
+         Configuration / Section Title pattern as the Budget et alertes
+         drawer. Day rules stay as bordered sub-cards below the master
+         toggle. -->
     <Transition
       enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
       enter-from-class="opacity-0"
