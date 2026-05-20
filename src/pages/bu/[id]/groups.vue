@@ -3660,10 +3660,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
                 <div class="flex flex-col gap-[2px] min-w-0">
                   <p id="country-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                    Gérer les pays autorisés
+                    Bloquer des pays
                   </p>
                   <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                    Les pays désactivés ne seront pas accessibles à vos conducteurs
+                    Désactivez les pays sur lesquels la recharge ne doit pas être autorisée.
                   </p>
                 </div>
                 <button
@@ -3766,12 +3766,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           </p>
                           <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
                             <template v-if="isCountryAuthorized(c.id)">
-                              <span class="text-text-neutral-secondary">Pays </span>
-                              <span class="text-text-neutral">autorisé</span>
+                              <span class="text-text-neutral-secondary">Pays autorisé</span>
                             </template>
-                            <span v-else class="text-text-neutral-secondary">
-                              Pays bloqué
-                            </span>
+                            <template v-else>
+                              <span class="text-text-neutral-secondary">Pays </span>
+                              <span class="text-[#e21d48]">bloqué</span>
+                            </template>
                           </p>
                         </div>
                       </div>
