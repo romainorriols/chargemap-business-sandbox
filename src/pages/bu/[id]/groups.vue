@@ -478,6 +478,12 @@ const paysForm = reactive<{ active: boolean; blockedCountries: string[] }>({
   active: false,
   blockedCountries: [],
 })
+// Mirror of blockedNetworksListExpanded for the country drawer (Figma
+// 6123-15711). Defaults to expanded.
+const blockedCountriesListExpanded = ref(true)
+const blockedCountryDetails = computed(() =>
+  countries.filter(c => paysForm.blockedCountries.includes(c.id)),
+)
 
 interface ChargingNetwork {
   id: string
@@ -3269,23 +3275,24 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </div>
 
-          <!-- Pays bloqués section is only relevant once the rule is on. The
-               separator + section appear / disappear together, mirroring the
-               réseau drawer. -->
+          <!-- Pays bloqués card + collapsible list — appears once the rule
+               is on. Mirrors the réseau drawer (Figma 6123-13732 / 6173-13372)
+               applied to pays (Figma 6123-15711). -->
           <template v-if="paysForm.active">
             <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-            <div class="flex items-center justify-between gap-[16px]">
+            <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
               <div class="flex-1 min-w-0 flex flex-col">
-                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                  Pays bloqués
+                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
+                  {{ paysForm.blockedCountries.length }}
+                  {{ paysForm.blockedCountries.length <= 1 ? 'pays bloqué' : 'pays bloqués' }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                  {{ paysForm.blockedCountries.length }}/{{ countries.length }} pays
+                  Sur {{ countries.length }} pays compatibles
                 </p>
               </div>
               <template v-if="paysForm.blockedCountries.length > 0">
-                <div class="shrink-0 flex items-center gap-[8px]">
+                <div class="shrink-0 flex items-center gap-[16px]">
                   <button
                     type="button"
                     class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
@@ -3305,6 +3312,64 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </div>
               </template>
               <Button v-else type="secondary" size="md" label="Bloquer des pays" @click="openCountryPicker" />
+            </div>
+
+            <!-- Collapsible "Voir la liste des N pays bloqués" card -->
+            <div
+              v-if="paysForm.blockedCountries.length > 0"
+              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
+            >
+              <div class="flex items-center justify-between gap-[16px]">
+                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                  Voir la liste des {{ paysForm.blockedCountries.length }} {{ paysForm.blockedCountries.length <= 1 ? 'pays bloqué' : 'pays bloqués' }}
+                </p>
+                <button
+                  type="button"
+                  :aria-expanded="blockedCountriesListExpanded"
+                  aria-label="Afficher ou masquer la liste"
+                  class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  @click="blockedCountriesListExpanded = !blockedCountriesListExpanded"
+                >
+                  <Icon
+                    :name="blockedCountriesListExpanded ? 'chevron-up' : 'chevron-down'"
+                    variant="outline"
+                    :size="18"
+                  />
+                </button>
+              </div>
+
+              <Transition
+                enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                enter-from-class="opacity-0 -translate-y-[4px]"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-[4px]"
+              >
+                <div v-if="blockedCountriesListExpanded" class="flex flex-col gap-[8px]">
+                  <div
+                    v-for="c in blockedCountryDetails"
+                    :key="c.id"
+                    class="flex items-center gap-[12px] p-[12px] rounded-[12px] bg-neutral-secondary"
+                  >
+                    <img
+                      :src="c.flagUrl"
+                      :alt="`Drapeau ${c.name}`"
+                      class="shrink-0 size-[32px] rounded-full object-cover"
+                      loading="lazy"
+                    />
+                    <div class="min-w-0 flex flex-col">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                        {{ c.name }}
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <span class="text-text-neutral-secondary">Pays </span>
+                        <span class="text-[#e21d48]">bloqué</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </template>
         </div>
