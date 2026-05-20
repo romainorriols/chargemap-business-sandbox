@@ -722,18 +722,9 @@ const isAlerteAmountDisabled = computed(() => {
 const rules: ChargingRule[] = reactive([
   {
     id: 'budget',
-    title: 'Budget de recharge',
-    description: 'Fixer un budget limite à vos conducteurs par mois',
+    title: 'Budget et alertes',
+    description: "Fixer un budget mensuel de recharge ainsi que des alertes en cas de dépassement d'un certain seuil",
     icon: 'money-coins',
-    iconVariant: 'outline',
-    statusIcon: 'x-mark',
-    statusLabel: 'Désactivé',
-  },
-  {
-    id: 'alerte',
-    title: 'Seuil d’alerte',
-    description: 'Soyez alertez si vos conducteurs dépasse un certain budget par mois',
-    icon: 'bell-alert',
     iconVariant: 'outline',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
@@ -758,8 +749,8 @@ const rules: ChargingRule[] = reactive([
   },
   {
     id: 'pays',
-    title: 'Blocage pays',
-    description: 'Grâce à la restriction géographique, vous pouvez définir les pays dans lesquels la recharge est autorisée ou non.',
+    title: 'Bloqué des pays',
+    description: 'Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite',
     icon: 'flag',
     iconVariant: 'outline',
     statusIcon: 'x-mark',
@@ -767,8 +758,8 @@ const rules: ChargingRule[] = reactive([
   },
   {
     id: 'reseau',
-    title: 'Blocage réseau',
-    description: 'Permet de définir sur quels réseaux la recharge est autorisée ou bloquée, afin de mieux contrôler vos usages',
+    title: 'Bloqué des réseaux',
+    description: 'Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite',
     icon: 'globe-alt',
     iconVariant: 'outline',
     statusIcon: 'x-mark',
