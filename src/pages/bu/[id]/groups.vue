@@ -221,37 +221,9 @@ const createSelected = reactive(new Set<string>())
 // these for the first time, charging rules are reset to all-disabled so a
 // freshly created group never inherits another group's edits.
 const newGroupIds = reactive(new Set<string>())
-const createSearch = ref('')
-const createPage = ref(1)
-const createPerPage = 20
 
-const filteredCreateAvailable = computed(() => {
-  const q = createSearch.value.trim().toLowerCase()
-  return availableBadges.value.filter(b => searchMatches(b, q))
-})
-const createPageCount = computed(() => Math.max(1, Math.ceil(filteredCreateAvailable.value.length / createPerPage)))
-const createPaginated = computed(() => {
-  const start = (createPage.value - 1) * createPerPage
-  return filteredCreateAvailable.value.slice(start, start + createPerPage)
-})
-const createRangeStart = computed(() => filteredCreateAvailable.value.length === 0 ? 0 : (createPage.value - 1) * createPerPage + 1)
-const createRangeEnd = computed(() => Math.min(createPage.value * createPerPage, filteredCreateAvailable.value.length))
-watch(createSearch, () => { createPage.value = 1 })
-
-const createVisibleAllSelected = computed(() =>
-  createPaginated.value.length > 0 && createPaginated.value.every(b => createSelected.has(b.id)),
-)
-const createVisibleSomeSelected = computed(() =>
-  createPaginated.value.some(b => createSelected.has(b.id)) && !createVisibleAllSelected.value,
-)
-function toggleCreateSelectAll() {
-  if (createVisibleAllSelected.value) createPaginated.value.forEach(b => createSelected.delete(b.id))
-  else createPaginated.value.forEach(b => createSelected.add(b.id))
-}
-function toggleCreateSelection(id: string) {
-  if (createSelected.has(id)) createSelected.delete(id)
-  else createSelected.add(id)
-}
+// The "Créer le groupe" CTA is gated on name + manager being set.
+const canCreateGroup = computed(() => createForm.name.trim().length > 0 && !!createForm.manager)
 
 function enterCreateGroup() {
   createForm.name = ''
@@ -259,8 +231,6 @@ function enterCreateGroup() {
   createError.name = false
   createError.manager = false
   createSelected.clear()
-  createSearch.value = ''
-  createPage.value = 1
   isCreatingGroup.value = true
 }
 function cancelCreateGroup() {
@@ -278,7 +248,7 @@ function saveCreateGroup() {
   createError.manager = !manager
   if (createError.name || createError.manager) {
     // Scroll the first invalid field into view so the user sees the error
-    // without hunting for it (Composition card can be tall).
+    // without hunting for it.
     const target = createError.name ? createNameFieldRef.value : createManagerFieldRef.value
     target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     return
@@ -1148,7 +1118,12 @@ watch(addSearch, () => { addPage.value = 1 })
 // Modal vs swap entry point — the sandbox toggle (uiStore.addBadgesVariant)
 // chooses which surface the "Ajouter des badges" CTA opens. State is shared:
 // selectedToAdd / addSearch / addPage drive both UIs.
+//
+// addBadgesModalMode disambiguates the two entry points that both open the
+// modal: 'detail' adds badges to an existing group, 'create' stages badges
+// for the new-group flow (selection ends up in createSelected on confirm).
 const addBadgesModalOpen = ref(false)
+const addBadgesModalMode = ref<'detail' | 'create'>('detail')
 function enterAddMode() {
   selectedToAdd.clear()
   selectedToRemove.clear()
@@ -1156,10 +1131,21 @@ function enterAddMode() {
   addPage.value = 1
   clearUndo()
   if (uiStore.addBadgesVariant === 'modal') {
+    addBadgesModalMode.value = 'detail'
     addBadgesModalOpen.value = true
   } else {
     isAddingBadges.value = true
   }
+}
+function openCreateBadgesModal() {
+  // Seed the modal's staging set with whatever the user has already added
+  // so reopening shows their prior selection pre-checked.
+  selectedToAdd.clear()
+  createSelected.forEach(id => selectedToAdd.add(id))
+  addSearch.value = ''
+  addPage.value = 1
+  addBadgesModalMode.value = 'create'
+  addBadgesModalOpen.value = true
 }
 function cancelAddMode() {
   isAddingBadges.value = false
@@ -1170,6 +1156,13 @@ function cancelAddBadgesModal() {
   selectedToAdd.clear()
 }
 function confirmAddBadgesModal() {
+  if (addBadgesModalMode.value === 'create') {
+    createSelected.clear()
+    selectedToAdd.forEach(id => createSelected.add(id))
+    addBadgesModalOpen.value = false
+    selectedToAdd.clear()
+    return
+  }
   if (!selectedGroup.value || selectedToAdd.size === 0) return
   confirmAdd()
   addBadgesModalOpen.value = false
@@ -1256,10 +1249,12 @@ function clearUndo() {
   pendingUndo = null
 }
 
-// ── Floating pill (adaptive: Supprimer in view, Ajouter in add, Créer le
-//    groupe in create) ────────────────────────────────────────────────────
-const pillMode = computed<'remove' | 'add' | 'create' | null>(() => {
-  if (isCreatingGroup.value) return createSelected.size > 0 ? 'create' : null
+// ── Floating pill (adaptive: Supprimer in view, Ajouter in add) ───────────
+// The create flow uses inline Annuler / Créer le groupe CTAs at the bottom
+// of the page (Figma 6156-15123), so the pill is intentionally not shown
+// while creating a new group.
+const pillMode = computed<'remove' | 'add' | null>(() => {
+  if (isCreatingGroup.value) return null
   if (!selectedGroup.value) return null
   if (isAddingBadges.value) return selectedToAdd.size > 0 ? 'add' : null
   return selectedToRemove.size > 0 ? 'remove' : null
@@ -1267,7 +1262,6 @@ const pillMode = computed<'remove' | 'add' | 'create' | null>(() => {
 const pillVisible = computed(() => pillMode.value !== null)
 const pillCount = computed(() => {
   switch (pillMode.value) {
-    case 'create': return createSelected.size
     case 'add':    return selectedToAdd.size
     case 'remove': return selectedToRemove.size
     default:       return 0
@@ -1275,14 +1269,12 @@ const pillCount = computed(() => {
 })
 function clearPillSelection() {
   switch (pillMode.value) {
-    case 'create': createSelected.clear(); break
     case 'add':    selectedToAdd.clear();   break
     case 'remove': clearRemoveSelection();  break
   }
 }
 function runPillAction() {
   switch (pillMode.value) {
-    case 'create': saveCreateGroup();    break
     case 'add':    confirmAdd();         break
     case 'remove': bulkRemoveSelected(); break
   }
@@ -1413,10 +1405,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </div>
     </div>
 
-    <!-- ── NOUVEAU GROUPE (Figma 6123-25902) ───────────────────────────── -->
+    <!-- ── NOUVEAU GROUPE (Figma 6156-15123) ───────────────────────────── -->
     <div
       v-else-if="isCreatingGroup"
-      class="mx-auto w-full max-w-[1600px] flex flex-col gap-[32px]"
+      class="mx-auto w-full max-w-[800px] flex flex-col gap-[16px]"
     >
       <!-- Header: Retour back + page title -->
       <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
@@ -1437,34 +1429,33 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
       <!-- Informations card -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 40ms">
-        <div class="px-[16px] py-[12px] border-b border-border-neutral-tertiary">
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+        <div class="px-[16px] pt-[16px] pb-[12px]">
+          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
             Informations
           </p>
           <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Le manager du groupe recevra toutes les notifications qui y sont liés
+            Le responsable du groupe recevra toutes les notifications liées à ce groupe.
           </p>
         </div>
-        <div class="px-[16px] py-[16px] flex flex-col md:flex-row gap-[16px]">
-          <div ref="createNameFieldRef" class="flex-1 min-w-0 scroll-mt-[120px]">
+        <div class="px-[16px] pb-[16px] flex flex-col gap-[16px]">
+          <div ref="createNameFieldRef" class="scroll-mt-[120px]">
             <Input
               v-model="createForm.name"
-              label="Nom du groupe"
-              placeholder="Ex. Groupe logistique Rhône"
+              placeholder="Nom de votre groupe"
               :destructive="createError.name"
               :hint="createError.name ? 'Veuillez renseigner un nom de groupe' : ''"
             />
           </div>
-          <div ref="createManagerFieldRef" class="flex-1 min-w-0 scroll-mt-[120px]">
+          <div ref="createManagerFieldRef" class="scroll-mt-[120px]">
             <Dropdown
               v-model="createForm.manager"
               :items="managerItems"
-              label="Manager du groupe"
-              placeholder="Sélectionnez un manager"
+              :show-label="false"
+              placeholder="Sélectionnez un responsable"
               :searchable="true"
-              search-placeholder="Rechercher un manager"
+              search-placeholder="Rechercher un responsable"
               :show-hint="createError.manager"
-              :hint="createError.manager ? 'Veuillez sélectionner un manager' : ''"
+              :hint="createError.manager ? 'Veuillez sélectionner un responsable' : ''"
               :destructive="createError.manager"
               :teleport="true"
             />
@@ -1472,142 +1463,54 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </section>
 
-      <!-- Composition card — Figma 6123-25741 -->
+      <!-- Composition card — Figma 6156-15134 -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 80ms">
-        <!-- Header: 18px SemiBold title + medium-weight subtitle (Figma) -->
-        <div class="p-[16px] border-b border-border-neutral-secondary">
+        <div class="px-[16px] pt-[16px] pb-[12px]">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
             Composition
           </p>
-          <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Sélectionnez les badges à ajouter à ce groupe
+          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            Ajoutez les badges à associer à ce groupe
           </p>
         </div>
-
-        <div class="p-[16px] flex flex-col gap-[24px]">
-          <!-- Filter row: search only — the floating pill confirms the create -->
-          <div class="flex items-center">
-            <div class="w-full md:w-[300px]">
-              <Input
-                v-model="createSearch"
-                type="leadingIcon"
-                icon="magnifying-glass"
-                placeholder="Recherche"
-              />
-            </div>
-          </div>
-
-          <!-- Table — bordered rounded container per Figma -->
-          <div class="border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden">
-            <!-- Header row -->
-            <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
-              <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
-                <button
-                  type="button"
-                  role="checkbox"
-                  :aria-checked="createVisibleSomeSelected ? 'mixed' : (createVisibleAllSelected ? 'true' : 'false')"
-                  :aria-label="createVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
-                  :class="[
-                    'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
-                    (createVisibleAllSelected || createVisibleSomeSelected)
-                      ? 'bg-brand border-brand'
-                      : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
-                  ]"
-                  @click="toggleCreateSelectAll"
-                >
-                  <Icon v-if="createVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
-                  <Icon v-else-if="createVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
-                </button>
-              </div>
-              <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Badge
-              </div>
-              <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Véhicule
-              </div>
-              <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Conducteur
-              </div>
-              <div class="w-[68px] shrink-0" aria-hidden="true" />
-            </div>
-
-            <!-- Empty -->
-            <div
-              v-if="createPaginated.length === 0"
-              class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center border-t border-border-neutral-tertiary"
-            >
-              <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                {{ createSearch ? 'Aucun badge' : 'Aucun badge disponible' }}
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                {{ createSearch
-                  ? 'Aucun badge non rattaché ne correspond à votre recherche.'
-                  : 'Tous les badges sont déjà rattachés à un groupe.' }}
-              </p>
-            </div>
-
-            <!-- Rows -->
-            <div v-else>
-              <button
-                v-for="(b, i) in createPaginated"
-                :key="b.id"
-                type="button"
-                :aria-pressed="createSelected.has(b.id)"
-                :style="{ animationDelay: `${i * 20}ms` }"
-                :class="[
-                  'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-t border-border-neutral-tertiary text-left anim-fade-up',
-                  'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
-                  createSelected.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
-                ]"
-                @click="toggleCreateSelection(b.id)"
-              >
-                <div class="w-full md:w-[48px] shrink-0 px-[24px] md:px-[16px] pt-[16px] md:pt-[12px] md:py-[12px] flex md:items-center">
-                  <span
-                    role="checkbox"
-                    :aria-checked="createSelected.has(b.id)"
-                    :class="[
-                      'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
-                      createSelected.has(b.id)
-                        ? 'bg-brand border-brand'
-                        : 'bg-neutral border-border-neutral-secondary group-hover/row:border-border-neutral',
-                    ]"
-                  >
-                    <Icon v-if="createSelected.has(b.id)" name="check" variant="solid" :size="12" class="text-white" />
-                  </span>
-                </div>
-                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                  <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                    {{ b.identifier }}
-                  </p>
-                </div>
-                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                  <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                    <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
-                    <span v-else>--</span>
-                  </p>
-                </div>
-                <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
-                  <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                    <template v-if="b.driver">{{ b.driver.name }}</template>
-                    <span v-else>--</span>
-                  </p>
-                </div>
-                <div class="w-full md:w-[68px] shrink-0" aria-hidden="true" />
-              </button>
-            </div>
-
-            <TableFooter
-              v-if="filteredCreateAvailable.length > 0"
-              :page="createPage"
-              :page-count="createPageCount"
-              :range-start="createRangeStart"
-              :range-end="createRangeEnd"
-              :total="filteredCreateAvailable.length"
-              @update:page="(n) => (createPage = n)"
-            />
-          </div>
+        <div class="px-[16px] pb-[16px] flex items-center justify-between gap-[16px]">
+          <p class="min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px]">
+            <template v-if="createSelected.size === 0">
+              <span class="font-medium text-text-neutral">Aucun badge</span>
+              <span class="text-text-neutral-secondary"> ajouté</span>
+            </template>
+            <template v-else>
+              <span class="font-semibold text-text-neutral tabular-nums">{{ createSelected.size }}</span>
+              <span class="text-text-neutral-secondary"> {{ createSelected.size === 1 ? 'badge ajouté' : 'badges ajoutés' }}</span>
+            </template>
+          </p>
+          <Button
+            type="secondary"
+            size="md"
+            :label="createSelected.size === 0 ? 'Ajouter des badges' : 'Modifier la sélection'"
+            @click="openCreateBadgesModal"
+          />
         </div>
       </section>
+
+      <!-- Bottom CTAs — equal-width Annuler / Créer le groupe per Figma -->
+      <div class="flex items-center gap-[16px] anim-fade-up" style="animation-delay: 120ms">
+        <Button
+          class="flex-1"
+          type="secondary"
+          size="md"
+          label="Annuler"
+          @click="cancelCreateGroup"
+        />
+        <Button
+          class="flex-1"
+          type="primary"
+          size="md"
+          label="Créer le groupe"
+          :disabled="!canCreateGroup"
+          @click="saveCreateGroup"
+        />
+      </div>
 
     </div>
 
@@ -4008,7 +3911,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </p>
               <div class="shrink-0 flex items-center gap-[12px]">
                 <Button type="secondary" size="md" label="Annuler" @click="cancelAddBadgesModal" />
-                <Button type="primary" size="md" label="Valider" :disabled="selectedToAdd.size === 0" @click="confirmAddBadgesModal" />
+                <Button type="primary" size="md" label="Valider" :disabled="addBadgesModalMode === 'detail' && selectedToAdd.size === 0" @click="confirmAddBadgesModal" />
               </div>
             </div>
           </div>
@@ -4054,12 +3957,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             @click="runPillAction"
           >
             <Icon
-              :name="pillMode === 'create' ? 'check' : pillMode === 'add' ? 'plus' : 'trash'"
+              :name="pillMode === 'add' ? 'plus' : 'trash'"
               variant="outline"
               :size="20"
             />
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-              {{ pillMode === 'create' ? 'Créer le groupe' : pillMode === 'add' ? 'Ajouter' : 'Supprimer' }}
+              {{ pillMode === 'add' ? 'Ajouter' : 'Supprimer' }}
             </span>
           </button>
         </div>
