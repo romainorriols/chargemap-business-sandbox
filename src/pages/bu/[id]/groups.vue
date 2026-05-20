@@ -1115,6 +1115,53 @@ const addRangeStart = computed(() => filteredAvailable.value.length === 0 ? 0 : 
 const addRangeEnd = computed(() => Math.min(addPage.value * addPerPage, filteredAvailable.value.length))
 watch(addSearch, () => { addPage.value = 1 })
 
+// ── Modal infinite scroll ─────────────────────────────────────────────────
+// The "Ajouter des badges" modal replaces TableFooter pagination with lazy
+// chunk loading: each scroll near the bottom appends the next chunk after a
+// short simulated delay, with skeleton rows shown during the wait. The
+// inline swap variant keeps its own pagination (addPage / addPaginated).
+const addModalChunk = 20
+const addModalLoaded = ref(addModalChunk)
+const addModalLoading = ref(false)
+let addModalLoadTimer: ReturnType<typeof setTimeout> | null = null
+
+const addModalVisible = computed(() => filteredAvailable.value.slice(0, addModalLoaded.value))
+const addModalHasMore = computed(() => addModalLoaded.value < filteredAvailable.value.length)
+const addModalAllSelected = computed(() =>
+  addModalVisible.value.length > 0 && addModalVisible.value.every(b => selectedToAdd.has(b.id)),
+)
+const addModalSomeSelected = computed(() =>
+  addModalVisible.value.some(b => selectedToAdd.has(b.id)) && !addModalAllSelected.value,
+)
+function toggleSelectAllVisibleForModal() {
+  if (addModalAllSelected.value) addModalVisible.value.forEach(b => selectedToAdd.delete(b.id))
+  else addModalVisible.value.forEach(b => selectedToAdd.add(b.id))
+}
+function resetAddModalScroll() {
+  if (addModalLoadTimer) { clearTimeout(addModalLoadTimer); addModalLoadTimer = null }
+  addModalLoading.value = false
+  addModalLoaded.value = addModalChunk
+}
+function loadMoreAddModal() {
+  if (addModalLoading.value || !addModalHasMore.value) return
+  addModalLoading.value = true
+  if (addModalLoadTimer) clearTimeout(addModalLoadTimer)
+  addModalLoadTimer = setTimeout(() => {
+    addModalLoaded.value = Math.min(addModalLoaded.value + addModalChunk, filteredAvailable.value.length)
+    addModalLoading.value = false
+    addModalLoadTimer = null
+  }, 450)
+}
+function onAddModalScroll(e: Event) {
+  const el = e.currentTarget as HTMLElement
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) loadMoreAddModal()
+}
+// Resetting the loaded count when the search query changes keeps the user
+// from seeing stale chunks from a previous query while typing.
+watch(addSearch, () => { if (addBadgesModalOpen.value) resetAddModalScroll() })
+const addModalSkeletonRows = Array.from({ length: 6 }, (_, i) => i)
+onUnmounted(() => { if (addModalLoadTimer) clearTimeout(addModalLoadTimer) })
+
 // Modal vs swap entry point — the sandbox toggle (uiStore.addBadgesVariant)
 // chooses which surface the "Ajouter des badges" CTA opens. State is shared:
 // selectedToAdd / addSearch / addPage drive both UIs.
@@ -1131,6 +1178,7 @@ function enterAddMode() {
   addPage.value = 1
   clearUndo()
   if (uiStore.addBadgesVariant === 'modal') {
+    resetAddModalScroll()
     addBadgesModalMode.value = 'detail'
     addBadgesModalOpen.value = true
   } else {
@@ -1144,6 +1192,7 @@ function openCreateBadgesModal() {
   createSelected.forEach(id => selectedToAdd.add(id))
   addSearch.value = ''
   addPage.value = 1
+  resetAddModalScroll()
   addBadgesModalMode.value = 'create'
   addBadgesModalOpen.value = true
 }
@@ -1406,9 +1455,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
     </div>
 
     <!-- ── NOUVEAU GROUPE (Figma 6156-15123) ───────────────────────────── -->
+    <!-- Spacing per Figma: 32px between sections; cards 16px padding;
+         4px between title and subtitle inside card headers. -->
     <div
       v-else-if="isCreatingGroup"
-      class="mx-auto w-full max-w-[800px] flex flex-col gap-[16px]"
+      class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
     >
       <!-- Header: Retour back + page title -->
       <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
@@ -1429,15 +1480,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
       <!-- Informations card -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 40ms">
-        <div class="px-[16px] pt-[16px] pb-[12px]">
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+        <div class="p-[16px] flex flex-col gap-[4px]">
+          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
             Informations
           </p>
           <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Le responsable du groupe recevra toutes les notifications liées à ce groupe.
           </p>
         </div>
-        <div class="px-[16px] pb-[16px] flex flex-col gap-[16px]">
+        <div class="px-[16px] pt-[16px] pb-[16px] flex flex-col gap-[16px]">
           <div ref="createNameFieldRef" class="scroll-mt-[120px]">
             <Input
               v-model="createForm.name"
@@ -1465,15 +1516,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
       <!-- Composition card — Figma 6156-15134 -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 80ms">
-        <div class="px-[16px] pt-[16px] pb-[12px]">
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+        <div class="p-[16px] flex flex-col gap-[4px]">
+          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
             Composition
           </p>
           <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Ajoutez les badges à associer à ce groupe
           </p>
         </div>
-        <div class="px-[16px] pb-[16px] flex items-center justify-between gap-[16px]">
+        <div class="px-[16px] pt-[16px] pb-[16px] flex items-center justify-between gap-[16px]">
           <p class="min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px]">
             <template v-if="createSelected.size === 0">
               <span class="font-medium text-text-neutral">Aucun badge</span>
@@ -3786,7 +3837,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
 
-            <!-- Body — full-width table, sticky header, scrollable rows -->
+            <!-- Body — full-width table, sticky header, infinite scroll -->
             <div class="flex-1 min-h-0 flex flex-col">
               <!-- Header row — full width, sits flush with the modal walls -->
               <div class="hidden md:flex items-stretch w-full bg-neutral-tertiary min-h-[40px] shrink-0">
@@ -3794,18 +3845,18 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <button
                     type="button"
                     role="checkbox"
-                    :aria-checked="addVisibleSomeSelected ? 'mixed' : (addVisibleAllSelected ? 'true' : 'false')"
-                    :aria-label="addVisibleAllSelected ? 'Tout désélectionner' : 'Tout sélectionner sur cette page'"
+                    :aria-checked="addModalSomeSelected ? 'mixed' : (addModalAllSelected ? 'true' : 'false')"
+                    :aria-label="addModalAllSelected ? 'Tout désélectionner' : 'Tout sélectionner'"
                     :class="[
                       'size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand',
-                      (addVisibleAllSelected || addVisibleSomeSelected)
+                      (addModalAllSelected || addModalSomeSelected)
                         ? 'bg-brand border-brand'
                         : 'bg-neutral border-border-neutral-secondary hover:border-border-neutral',
                     ]"
-                    @click="toggleSelectAllVisibleForAdd"
+                    @click="toggleSelectAllVisibleForModal"
                   >
-                    <Icon v-if="addVisibleAllSelected" name="check" variant="solid" :size="12" class="text-white" />
-                    <Icon v-else-if="addVisibleSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
+                    <Icon v-if="addModalAllSelected" name="check" variant="solid" :size="12" class="text-white" />
+                    <Icon v-else-if="addModalSomeSelected" name="minus" variant="solid" :size="12" class="text-white" />
                   </button>
                 </div>
                 <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -3819,11 +3870,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </div>
               </div>
 
-              <!-- Scrollable row area -->
-              <div class="flex-1 min-h-0 overflow-y-auto">
+              <!-- Scrollable row area (infinite scroll, see loadMoreAddModal) -->
+              <div class="flex-1 min-h-0 overflow-y-auto" @scroll.passive="onAddModalScroll">
                 <!-- Empty -->
                 <div
-                  v-if="addPaginated.length === 0"
+                  v-if="addModalVisible.length === 0 && !addModalLoading"
                   class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
                 >
                   <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -3839,11 +3890,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <!-- Rows -->
                 <div v-else>
                   <button
-                    v-for="(b, i) in addPaginated"
+                    v-for="(b, i) in addModalVisible"
                     :key="b.id"
                     type="button"
                     :aria-pressed="selectedToAdd.has(b.id)"
-                    :style="{ animationDelay: `${i * 20}ms` }"
+                    :style="{ animationDelay: `${(i % addModalChunk) * 20}ms` }"
                     :class="[
                       'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-b border-border-neutral-tertiary text-left anim-fade-up',
                       'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
@@ -3884,19 +3935,31 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                   </button>
                 </div>
-              </div>
 
-              <!-- Pagination sits between scrollable rows and the modal footer -->
-              <TableFooter
-                v-if="filteredAvailable.length > 0"
-                :page="addPage"
-                :page-count="addPageCount"
-                :range-start="addRangeStart"
-                :range-end="addRangeEnd"
-                :total="filteredAvailable.length"
-                class="shrink-0"
-                @update:page="(n) => (addPage = n)"
-              />
+                <!-- Lazy-load skeleton rows — shown while the next chunk is
+                     simulated as fetching. Same column proportions as the
+                     real rows so the layout doesn't shift on swap. -->
+                <div v-if="addModalLoading">
+                  <div
+                    v-for="i in addModalSkeletonRows"
+                    :key="`add-skel-${i}`"
+                    class="w-full hidden md:flex items-stretch min-h-[64px] border-b border-border-neutral-tertiary"
+                  >
+                    <div class="w-[48px] shrink-0 px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="16px" height="16px" rounded="4px" />
+                    </div>
+                    <div class="flex-[300] min-w-[160px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="140px" height="14px" rounded="4px" />
+                    </div>
+                    <div class="flex-[300] min-w-[160px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="110px" height="14px" rounded="4px" />
+                    </div>
+                    <div class="flex-[300] min-w-[160px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="160px" height="14px" rounded="4px" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Footer — count on the left, Annuler + Valider on the right -->
