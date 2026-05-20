@@ -462,6 +462,12 @@ const reseauForm = reactive<{ active: boolean; blockedNetworks: string[] }>({
   active: false,
   blockedNetworks: [],
 })
+// Expanded state of the "Voir la liste des N réseaux bloqués" card (Figma
+// 6173-13372). Defaults to expanded since the screenshot ships in that state.
+const blockedNetworksListExpanded = ref(true)
+const blockedNetworkDetails = computed(() =>
+  networks.filter(n => reseauForm.blockedNetworks.includes(n.id)),
+)
 
 // Blocage pays — same Configuration drawer shape as the réseau rule, plus an
 // Activé toggle (Figma 6123-15654). The country picker modal (Figma
@@ -3097,10 +3103,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </p>
               </div>
               <template v-if="reseauForm.blockedNetworks.length > 0">
-                <div class="shrink-0 flex items-center gap-[8px]">
+                <div class="shrink-0 flex items-center gap-[16px]">
                   <button
                     type="button"
-                    class="flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                     aria-label="Modifier la liste de blocage"
                     @click="openNetworkPicker"
                   >
@@ -3108,7 +3114,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                   <button
                     type="button"
-                    class="flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                     aria-label="Vider la liste de blocage"
                     @click="clearReseauBlocklist"
                   >
@@ -3117,6 +3123,64 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </div>
               </template>
               <Button v-else type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
+            </div>
+
+            <!-- Collapsible "Voir la liste des N réseaux bloqués" card —
+                 appears once at least one network is blocked. Figma 6173-13372. -->
+            <div
+              v-if="reseauForm.blockedNetworks.length > 0"
+              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
+            >
+              <div class="flex items-center justify-between gap-[16px]">
+                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                  Voir la liste des {{ reseauForm.blockedNetworks.length }} {{ reseauForm.blockedNetworks.length <= 1 ? 'réseau bloqué' : 'réseaux bloqués' }}
+                </p>
+                <button
+                  type="button"
+                  :aria-expanded="blockedNetworksListExpanded"
+                  aria-label="Afficher ou masquer la liste"
+                  class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  @click="blockedNetworksListExpanded = !blockedNetworksListExpanded"
+                >
+                  <Icon
+                    :name="blockedNetworksListExpanded ? 'chevron-up' : 'chevron-down'"
+                    variant="outline"
+                    :size="18"
+                  />
+                </button>
+              </div>
+
+              <Transition
+                enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                enter-from-class="opacity-0 -translate-y-[4px]"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-[4px]"
+              >
+                <div v-if="blockedNetworksListExpanded" class="flex flex-col gap-[8px]">
+                  <div
+                    v-for="net in blockedNetworkDetails"
+                    :key="net.id"
+                    class="flex items-center gap-[12px] p-[12px] rounded-[12px] bg-neutral-secondary"
+                  >
+                    <div class="shrink-0 size-[38px] rounded-[12px] bg-[#f1f5f9] border border-[#f1f5f9] flex items-center justify-center">
+                      <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-[#94a3b8]">
+                        {{ initialsFor(net.name) }}
+                      </p>
+                    </div>
+                    <div class="min-w-0 flex flex-col">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                        {{ net.name }}
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                        <span class="text-[#e21d48]">bloquées</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </template>
         </div>
@@ -3481,12 +3545,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         </p>
                         <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
                           <template v-if="isNetworkAuthorized(net.id)">
-                            <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
-                            <span class="text-text-neutral">autorisées</span>
+                            <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations autorisées</span>
                           </template>
-                          <span v-else class="text-text-neutral-secondary">
-                            {{ fmtStations(net.stations) }} stations bloquées
-                          </span>
+                          <template v-else>
+                            <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                            <span class="text-[#e21d48]">bloquées</span>
+                          </template>
                         </p>
                       </div>
                     </div>
