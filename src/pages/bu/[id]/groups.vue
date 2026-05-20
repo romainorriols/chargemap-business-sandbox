@@ -3088,7 +3088,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
             <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
               <div class="flex-1 min-w-0 flex flex-col">
-                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
                   {{ reseauForm.blockedNetworks.length === 0
                     ? 'Aucun Réseau bloqué'
                     : reseauForm.blockedNetworks.length === 1
