@@ -317,7 +317,6 @@ function resetDetailState() {
   itineranceFilter.value = 'all'
   rattachementFilter.value = 'all'
   activeTab.value = 'informations'
-  chargingRulesBannerVisible.value = true
   selectedRuleId.value = null
   budgetDrawerOpen.value = false
   alerteDrawerOpen.value = false
@@ -336,13 +335,10 @@ function resetDetailState() {
 
 // Tabs (Figma 5959-58388)
 const detailTabs: HorizontalTab[] = [
-  { id: 'informations',   label: 'Informations' },
+  { id: 'informations',   label: 'Infos et composition' },
   { id: 'charging-rules', label: 'Règles de recharge' },
 ]
 const activeTab = ref<string>('informations')
-
-// "Ajoutez des règles de recharge" banner on the Informations tab
-const chargingRulesBannerVisible = ref(true)
 
 // Charging-rules tab — 3×2 grid of 6 rule cards (Figma 5959-38687).
 type StatusIcon = 'check' | 'x-mark'
@@ -1891,28 +1887,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </div>
 
-      <!-- KPI row — Manager / Badges / Véhicules / Conducteurs (Figma 6106-38930). -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 40ms">
-        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Manager</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">{{ selectedGroup.manager }}</p>
-        </div>
-        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Badges</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
-        </div>
-        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Véhicules</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withVehicle }}</p>
-        </div>
-        <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-          <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Conducteurs</p>
-          <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withDriver }}</p>
-        </div>
-      </div>
-
       <!-- Tabs -->
-      <div class="anim-fade-up" style="animation-delay: 60ms">
+      <div class="anim-fade-up" style="animation-delay: 40ms">
         <HorizontalTabs
           v-model="activeTab"
           :tabs="detailTabs"
@@ -1930,22 +1906,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-[4px]"
       >
-        <!-- ── Tab: Informations ──────────────────────────────────── -->
+        <!-- ── Tab: Infos et composition ──────────────────────────── -->
         <div v-if="activeTab === 'informations'" key="informations" class="flex flex-col gap-[32px]">
 
-          <!-- Charging-rules banner (brand Alert) -->
-          <Alert
-            v-if="chargingRulesBannerVisible"
-            v-model="chargingRulesBannerVisible"
-            type="brand"
-            title="Ajoutez des règles de recharge !"
-            description="Définissez des règles de recharge pour mieux contrôler les usages et vos coûts"
-            primary-action-label="Définir des règles"
-            secondary-action-label="Fermer"
-            :dismissable="true"
-            @primary-action="activeTab = 'charging-rules'; chargingRulesBannerVisible = false"
-            @secondary-action="chargingRulesBannerVisible = false"
-          />
+          <!-- KPI strip — Responsable / Nombre de badges / Nombre de véhicules /
+               Nombre de conducteurs (Figma 6106-38930). 4 equal-width cards. -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 60ms">
+            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Responsable</p>
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">{{ selectedGroup.manager }}</p>
+            </div>
+            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
+            </div>
+            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de véhicules</p>
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withVehicle }}</p>
+            </div>
+            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
+              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de conducteurs</p>
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withDriver }}</p>
+            </div>
+          </div>
 
           <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
                peek to suggest layering, matching the Figma Frame 6070 mock. -->
