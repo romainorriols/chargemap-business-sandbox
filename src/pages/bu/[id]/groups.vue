@@ -890,13 +890,27 @@ function closeBudgetDrawer() {
   selectedRuleId.value = null
 }
 
+// Apply-rule confirmation modal. Saving a group-level rule overwrites every
+// badge's inherited (BU) or custom rule, so each drawer's Enregistrer routes
+// through this single confirmation before committing. Validation (Budget) runs
+// first so the user can't reach the dialog with an invalid amount.
+type PendingRuleId = 'budget' | 'autorisations' | 'vacance' | 'reseau' | 'pays'
+const confirmRuleOpen = ref(false)
+const pendingRuleId = ref<PendingRuleId | null>(null)
+const pendingRule = computed(() =>
+  pendingRuleId.value ? rules.find(r => r.id === pendingRuleId.value) ?? null : null,
+)
+
 function saveBudget() {
-  // A live Budget toggle requires a positive amount — block save and surface
-  // the inline danger Alert so the user sees what's wrong without hunting.
   if (budgetForm.active && isBudgetAmountInvalid.value) {
     budgetError.value = true
     return
   }
+  pendingRuleId.value = 'budget'
+  confirmRuleOpen.value = true
+}
+
+function commitBudget() {
   const rule = rules.find(r => r.id === 'budget')
   if (rule) {
     const active = budgetForm.active || alerteForm.active
@@ -915,6 +929,11 @@ function closeAutorisationsDrawer() {
 }
 
 function saveAutorisations() {
+  pendingRuleId.value = 'autorisations'
+  confirmRuleOpen.value = true
+}
+
+function commitAutorisations() {
   const rule = rules.find(r => r.id === 'autorisations')
   if (rule) {
     rule.statusIcon = autorisationsForm.active ? 'check' : 'x-mark'
@@ -950,6 +969,11 @@ function clearReseauBlocklist() {
 }
 
 function saveReseau() {
+  pendingRuleId.value = 'reseau'
+  confirmRuleOpen.value = true
+}
+
+function commitReseau() {
   const rule = rules.find(r => r.id === 'reseau')
   if (rule) {
     rule.statusIcon = reseauForm.active ? 'check' : 'x-mark'
@@ -976,6 +1000,11 @@ function clearPaysBlocklist() {
 }
 
 function savePays() {
+  pendingRuleId.value = 'pays'
+  confirmRuleOpen.value = true
+}
+
+function commitPays() {
   const rule = rules.find(r => r.id === 'pays')
   if (rule) {
     rule.statusIcon = paysForm.active ? 'check' : 'x-mark'
@@ -989,6 +1018,11 @@ function savePays() {
 }
 
 function saveVacance() {
+  pendingRuleId.value = 'vacance'
+  confirmRuleOpen.value = true
+}
+
+function commitVacance() {
   const rule = rules.find(r => r.id === 'vacance')
   if (rule) {
     rule.statusIcon = vacanceForm.active ? 'check' : 'x-mark'
@@ -1000,6 +1034,36 @@ function saveVacance() {
   vacanceForm.draft.range = ''
   selectedRuleId.value = null
   showSuccessToast('Blocage vacance mis à jour', '')
+}
+
+function cancelConfirmRule() {
+  confirmRuleOpen.value = false
+  pendingRuleId.value = null
+}
+
+function applyConfirmRule() {
+  switch (pendingRuleId.value) {
+    case 'budget':        commitBudget(); break
+    case 'autorisations': commitAutorisations(); break
+    case 'vacance':       commitVacance(); break
+    case 'reseau':        commitReseau(); break
+    case 'pays':          commitPays(); break
+  }
+  confirmRuleOpen.value = false
+  pendingRuleId.value = null
+}
+
+function onConfirmRuleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && confirmRuleOpen.value) {
+    e.stopPropagation()
+    cancelConfirmRule()
+  }
+}
+if (import.meta.client) {
+  watch(confirmRuleOpen, (open) => {
+    if (open) window.addEventListener('keydown', onConfirmRuleKeydown)
+    else window.removeEventListener('keydown', onConfirmRuleKeydown)
+  })
 }
 
 
@@ -4082,6 +4146,85 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <Button type="secondary" size="md" label="Annuler" @click="cancelAddBadgesModal" />
                 <Button type="primary" size="md" label="Ajouter les badges" :disabled="addBadgesModalMode === 'detail' && selectedToAdd.size === 0" @click="confirmAddBadgesModal" />
               </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ── Apply-rule confirmation modal ─────────────────────────────────
+         Compact decision dialog (~440px) that fronts every group-level rule
+         save. The drawer stays mounted underneath so the user retains
+         context. Backdrop / ESC = Annuler (safe default). Confirm commits
+         the rule + toast. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="confirmRuleOpen"
+          class="fixed inset-0 z-[70] bg-black/40"
+          aria-hidden="true"
+          @click="cancelConfirmRule"
+        />
+      </Transition>
+
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.96] translate-y-[8px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] translate-y-[6px]"
+      >
+        <div
+          v-if="confirmRuleOpen"
+          class="fixed inset-0 z-[71] flex items-center justify-center p-[24px] pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-rule-title"
+          aria-describedby="confirm-rule-desc"
+        >
+          <div class="pointer-events-auto w-full max-w-[440px] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_24px_48px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-clip">
+            <!-- Header — rule icon disc + title; mirrors the rule card icon
+                 treatment so the user sees the same affordance they clicked. -->
+            <div class="flex flex-col gap-[16px] px-[24px] pt-[24px] pb-[16px]">
+              <div class="flex items-center justify-center shrink-0 size-[44px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
+                <Icon
+                  v-if="pendingRule"
+                  :name="pendingRule.icon"
+                  :variant="pendingRule.iconVariant"
+                  :size="24"
+                  class="text-icon-neutral-secondary"
+                />
+              </div>
+              <div class="flex flex-col gap-[6px]">
+                <p id="confirm-rule-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                  Appliquer cette règle à tous les badges ?
+                </p>
+                <p id="confirm-rule-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  <template v-if="selectedGroup">
+                    Les <span class="font-medium text-text-neutral tabular-nums">{{ badgesInGroup.length }} badge{{ badgesInGroup.length > 1 ? 's' : '' }}</span> de
+                    «&nbsp;<span class="font-medium text-text-neutral">{{ selectedGroup.name }}</span>&nbsp;» suivront désormais la règle du groupe.
+                    Toute règle personnalisée ou héritée de la BU sera remplacée.
+                  </template>
+                  <template v-else>
+                    Les badges du groupe suivront désormais cette règle. Toute règle personnalisée ou héritée de la BU sera remplacée.
+                  </template>
+                </p>
+              </div>
+            </div>
+
+            <!-- Footer — Annuler / Appliquer. Subtle top hairline separates
+                 decision actions from the explanatory header above. -->
+            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px] border-t border-border-neutral-tertiary bg-neutral-secondary/40">
+              <Button type="secondary" size="md" label="Annuler" @click="cancelConfirmRule" />
+              <Button type="primary" size="md" label="Appliquer" @click="applyConfirmRule" />
             </div>
           </div>
         </div>
