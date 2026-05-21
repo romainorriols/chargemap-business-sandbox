@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
 const uiStore = useUiStore()
-import { ref, computed, reactive, watch, onUnmounted } from 'vue'
+import { ref, computed, reactive, watch, onUnmounted, nextTick } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
 import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
@@ -1400,6 +1400,60 @@ function runPillAction() {
   }
 }
 
+// ── Pill positioning ────────────────────────────────────────────────────────
+// Default = 32px from viewport bottom. When the table ends short of the
+// viewport (e.g. only 3 rows), anchor the pill 32px below the table instead
+// so it doesn't float in empty space. Recomputed on scroll / resize / table
+// height changes (ResizeObserver).
+const tableBlockRef = ref<HTMLElement | null>(null)
+const pillBottomPx = ref(32)
+const PILL_HEIGHT = 61
+const PILL_GAP = 32
+
+function updatePillBottom() {
+  const el = tableBlockRef.value
+  if (!el) {
+    pillBottomPx.value = PILL_GAP
+    return
+  }
+  const rect = el.getBoundingClientRect()
+  const viewportH = window.innerHeight
+  // Distance from viewport bottom if we anchor the pill 32px below the table.
+  // Negative when the table extends past the viewport — in that case we keep
+  // the default 32px so the pill stays pinned to the viewport.
+  const proposed = viewportH - rect.bottom - PILL_GAP - PILL_HEIGHT
+  pillBottomPx.value = Math.max(PILL_GAP, proposed)
+}
+
+let pillResizeObserver: ResizeObserver | null = null
+if (import.meta.client) {
+  watch(
+    [pillVisible, tableBlockRef],
+    async ([visible, el]) => {
+      if (visible && el) {
+        await nextTick()
+        updatePillBottom()
+        window.addEventListener('scroll', updatePillBottom, { passive: true })
+        window.addEventListener('resize', updatePillBottom)
+        pillResizeObserver?.disconnect()
+        pillResizeObserver = new ResizeObserver(updatePillBottom)
+        pillResizeObserver.observe(el)
+      } else {
+        window.removeEventListener('scroll', updatePillBottom)
+        window.removeEventListener('resize', updatePillBottom)
+        pillResizeObserver?.disconnect()
+        pillResizeObserver = null
+      }
+    },
+    { immediate: true },
+  )
+  onUnmounted(() => {
+    window.removeEventListener('scroll', updatePillBottom)
+    window.removeEventListener('resize', updatePillBottom)
+    pillResizeObserver?.disconnect()
+  })
+}
+
 // ── Toast ──────────────────────────────────────────────────────────────────
 type ToastKind = 'success' | 'neutral'
 const toast = reactive<{
@@ -2040,7 +2094,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
 
               <!-- Table card -->
-              <section class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 100ms">
+              <section ref="tableBlockRef" class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 100ms">
                 <Transition mode="out-in" name="tab-fade">
 
                 <!-- SKELETON (initial load — 600ms simulated) -->
@@ -2276,6 +2330,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                  peek that was in the earlier 5931-24777 mock). -->
             <div v-else key="add">
               <section
+                ref="tableBlockRef"
                 class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-lg flex flex-col"
               >
                 <!-- Drawer header: title + Annuler -->
@@ -4192,14 +4247,14 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-describedby="confirm-rule-desc"
         >
           <div class="pointer-events-auto w-full max-w-[480px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
-            <!-- Header — title + X close on the same row -->
-            <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px]">
-              <p id="confirm-rule-title" class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+            <!-- Header — title + X close on the same row, hairline below -->
+            <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
+              <p id="confirm-rule-title" class="flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                 Appliquer cette règle à tous les badges ?
               </p>
               <button
                 type="button"
-                class="shrink-0 flex items-center justify-center size-[28px] rounded-[6px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                class="shrink-0 flex items-center justify-center size-[24px] text-icon-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray rounded-[4px]"
                 aria-label="Fermer"
                 @click="cancelConfirmRule"
               >
@@ -4207,14 +4262,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </button>
             </div>
 
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <!-- Body — paragraph with emphasised count + group name -->
-            <div class="px-[24px] py-[16px]">
+            <!-- Body — paragraph with group name in Medium (47 stays regular,
+                 per Figma 6211-29867). 16px padding on all sides. -->
+            <div class="p-[16px] border-b border-border-neutral-secondary">
               <p id="confirm-rule-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                 <template v-if="selectedGroup">
-                  Les <span class="font-medium text-text-neutral tabular-nums">{{ badgesInGroup.length }}</span> badges de
-                  <span class="font-medium text-text-neutral">{{ selectedGroup.name }}</span> suivront désormais la règle du groupe.
+                  Les {{ badgesInGroup.length }} badges de
+                  <span class="font-medium text-text-neutral-secondary">{{ selectedGroup.name }}</span> suivront désormais la règle du groupe.
                   Toute règle personnalisée ou héritée de la BU sera remplacée.
                 </template>
                 <template v-else>
@@ -4224,17 +4278,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </div>
 
             <!-- Footer — Annuler / Appliquer aligned right -->
-            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px]">
-              <Button type="secondary" size="md" label="Annuler" @click="cancelConfirmRule" />
-              <Button type="primary" size="md" label="Appliquer" @click="applyConfirmRule" />
+            <div class="flex items-center justify-end gap-[8px] px-[24px] py-[16px]">
+              <Button type="secondary" size="sm" label="Annuler" @click="cancelConfirmRule" />
+              <Button type="primary" size="sm" label="Appliquer" @click="applyConfirmRule" />
             </div>
           </div>
         </div>
       </Transition>
     </Teleport>
 
-    <!-- ── Floating selection pill — adaptive (Supprimer in view, Ajouter in add) -->
-    <div class="pointer-events-none fixed left-0 right-0 bottom-[32px] z-40 flex justify-center px-[24px] md:left-[304px] md:px-[32px]">
+    <!-- ── Floating selection pill — adaptive (Supprimer in view, Ajouter in add).
+         Anchored 32px from viewport bottom by default; if the table ends
+         short of the viewport, the pill rides up to sit 32px below the
+         table so it doesn't float in empty space. -->
+    <div
+      class="pointer-events-none fixed left-0 right-0 z-40 flex justify-center px-[24px] md:left-[304px] md:px-[32px] transition-[bottom] duration-200 ease-out motion-reduce:transition-none"
+      :style="{ bottom: pillBottomPx + 'px' }"
+    >
       <Transition
         enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
         enter-from-class="opacity-0 translate-y-[16px]"
