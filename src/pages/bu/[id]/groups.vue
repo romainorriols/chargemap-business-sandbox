@@ -4152,11 +4152,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </Transition>
     </Teleport>
 
-    <!-- ── Apply-rule confirmation modal ─────────────────────────────────
-         Compact decision dialog (~440px) that fronts every group-level rule
-         save. The drawer stays mounted underneath so the user retains
-         context. Backdrop / ESC = Annuler (safe default). Confirm commits
-         the rule + toast. -->
+    <!-- ── Apply-rule confirmation modal (Figma 6211-29867) ──────────────
+         Compact decision dialog fronting every group-level rule save:
+         title + close X in the header, hairline, paragraph body with the
+         badge count + group name in medium, footer with Annuler /
+         Appliquer aligned right. Drawer stays mounted underneath so the
+         user keeps context. Backdrop / ESC = Annuler. -->
     <Teleport to="body">
       <Transition
         enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
@@ -4190,39 +4191,40 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="confirm-rule-title"
           aria-describedby="confirm-rule-desc"
         >
-          <div class="pointer-events-auto w-full max-w-[440px] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_24px_48px_-12px_rgba(0,0,0,0.25)] flex flex-col overflow-clip">
-            <!-- Header — rule icon disc + title; mirrors the rule card icon
-                 treatment so the user sees the same affordance they clicked. -->
-            <div class="flex flex-col gap-[16px] px-[24px] pt-[24px] pb-[16px]">
-              <div class="flex items-center justify-center shrink-0 size-[44px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
-                <Icon
-                  v-if="pendingRule"
-                  :name="pendingRule.icon"
-                  :variant="pendingRule.iconVariant"
-                  :size="24"
-                  class="text-icon-neutral-secondary"
-                />
-              </div>
-              <div class="flex flex-col gap-[6px]">
-                <p id="confirm-rule-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                  Appliquer cette règle à tous les badges ?
-                </p>
-                <p id="confirm-rule-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                  <template v-if="selectedGroup">
-                    Les <span class="font-medium text-text-neutral tabular-nums">{{ badgesInGroup.length }} badge{{ badgesInGroup.length > 1 ? 's' : '' }}</span> de
-                    «&nbsp;<span class="font-medium text-text-neutral">{{ selectedGroup.name }}</span>&nbsp;» suivront désormais la règle du groupe.
-                    Toute règle personnalisée ou héritée de la BU sera remplacée.
-                  </template>
-                  <template v-else>
-                    Les badges du groupe suivront désormais cette règle. Toute règle personnalisée ou héritée de la BU sera remplacée.
-                  </template>
-                </p>
-              </div>
+          <div class="pointer-events-auto w-full max-w-[480px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
+            <!-- Header — title + X close on the same row -->
+            <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px]">
+              <p id="confirm-rule-title" class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Appliquer cette règle à tous les badges ?
+              </p>
+              <button
+                type="button"
+                class="shrink-0 flex items-center justify-center size-[28px] rounded-[6px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                aria-label="Fermer"
+                @click="cancelConfirmRule"
+              >
+                <Icon name="x-mark" variant="outline" :size="20" />
+              </button>
             </div>
 
-            <!-- Footer — Annuler / Appliquer. Subtle top hairline separates
-                 decision actions from the explanatory header above. -->
-            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px] border-t border-border-neutral-tertiary bg-neutral-secondary/40">
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+            <!-- Body — paragraph with emphasised count + group name -->
+            <div class="px-[24px] py-[16px]">
+              <p id="confirm-rule-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                <template v-if="selectedGroup">
+                  Les <span class="font-medium text-text-neutral tabular-nums">{{ badgesInGroup.length }}</span> badges de
+                  <span class="font-medium text-text-neutral">{{ selectedGroup.name }}</span> suivront désormais la règle du groupe.
+                  Toute règle personnalisée ou héritée de la BU sera remplacée.
+                </template>
+                <template v-else>
+                  Les badges du groupe suivront désormais cette règle. Toute règle personnalisée ou héritée de la BU sera remplacée.
+                </template>
+              </p>
+            </div>
+
+            <!-- Footer — Annuler / Appliquer aligned right -->
+            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px]">
               <Button type="secondary" size="md" label="Annuler" @click="cancelConfirmRule" />
               <Button type="primary" size="md" label="Appliquer" @click="applyConfirmRule" />
             </div>
