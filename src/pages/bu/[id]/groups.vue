@@ -406,29 +406,40 @@ function openVacanceCreate() {
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
   vacanceForm.creating = true
+  vacanceRangeStart.value = null
+  vacanceRangeEnd.value = null
+  calendarMonth.value = new Date()
+  calendarOpen.value = false
 }
 function cancelVacanceCreate() {
   vacanceForm.creating = false
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
+  vacanceRangeStart.value = null
+  vacanceRangeEnd.value = null
+  calendarOpen.value = false
 }
 function addVacancePeriod() {
   const rawName = vacanceForm.draft.name.trim()
   if (!rawName) return
-  // Default placeholder dates so a freshly created period card looks like the
-  // Figma mock even without a real date picker wired up. If the user typed
-  // something into "Sélectionnez une période" we'd parse it here.
+  // Use the picked range when present; otherwise fall back to the Figma
+  // demo dates so a freshly added card still looks populated.
+  const start = vacanceRangeStart.value ? fmtDMY(vacanceRangeStart.value) : '20/12/2025'
+  const end = vacanceRangeEnd.value ? fmtDMY(vacanceRangeEnd.value) : '31/12/2025'
   const period: VacancePeriod = {
     id: `vp-${++vacancePeriodSeq}`,
     name: /\d{4}$/.test(rawName) ? rawName : `${rawName} 2026`,
     active: false,
-    start: '20/12/2025',
-    end: '31/12/2025',
+    start,
+    end,
   }
   vacanceForm.periods.push(period)
   vacanceForm.creating = false
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
+  vacanceRangeStart.value = null
+  vacanceRangeEnd.value = null
+  calendarOpen.value = false
 }
 
 // Per-period ellipsis menu (Figma 6201-11498) — Modifier / Supprimer.
@@ -441,6 +452,11 @@ function editVacancePeriod(id: string) {
   if (!target) return
   vacanceForm.draft.name = target.name
   vacanceForm.draft.range = `${target.start} - ${target.end}`
+  vacanceRangeStart.value = parseDMY(target.start)
+  vacanceRangeEnd.value = parseDMY(target.end)
+  calendarMonth.value = vacanceRangeStart.value
+    ? new Date(vacanceRangeStart.value.getFullYear(), vacanceRangeStart.value.getMonth(), 1)
+    : new Date()
   vacanceForm.creating = true
   openVacancePeriodMenuId.value = null
 }
@@ -450,9 +466,108 @@ function deleteVacancePeriod(id: string) {
   openVacancePeriodMenuId.value = null
 }
 
+// Inline date range picker for the vacance creation form (Figma 5980-31045).
+// Monday-first weekly grid, 6-row month view with leading/trailing greyed days.
+const calendarOpen = ref(false)
+const calendarMonth = ref(new Date())
+const vacanceRangeStart = ref<Date | null>(null)
+const vacanceRangeEnd = ref<Date | null>(null)
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear()
+    && a.getMonth() === b.getMonth()
+    && a.getDate() === b.getDate()
+}
+function fmtDMY(d: Date): string {
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
+}
+function parseDMY(s: string): Date | null {
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (!m) return null
+  const d = new Date(parseInt(m[3]!, 10), parseInt(m[2]!, 10) - 1, parseInt(m[1]!, 10))
+  return isNaN(d.getTime()) ? null : d
+}
+interface CalendarCell { date: Date; day: number; inMonth: boolean }
+const calendarCells = computed<CalendarCell[]>(() => {
+  const year = calendarMonth.value.getFullYear()
+  const month = calendarMonth.value.getMonth()
+  const first = new Date(year, month, 1)
+  const firstWeekday = (first.getDay() + 6) % 7 // 0 = Monday
+  const start = new Date(year, month, 1 - firstWeekday)
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+    return { date: d, day: d.getDate(), inMonth: d.getMonth() === month }
+  })
+})
+const monthLabel = computed(() => {
+  const s = calendarMonth.value.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  return s.charAt(0).toUpperCase() + s.slice(1)
+})
+function isCellStart(c: CalendarCell) { return vacanceRangeStart.value ? isSameDay(c.date, vacanceRangeStart.value) : false }
+function isCellEnd(c: CalendarCell)   { return vacanceRangeEnd.value   ? isSameDay(c.date, vacanceRangeEnd.value)   : false }
+function isCellInRange(c: CalendarCell) {
+  if (!vacanceRangeStart.value || !vacanceRangeEnd.value) return false
+  return c.date > vacanceRangeStart.value && c.date < vacanceRangeEnd.value
+}
+function prevMonth() {
+  calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() - 1, 1)
+}
+function nextMonth() {
+  calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() + 1, 1)
+}
+function selectCalendarDate(d: Date) {
+  if (!vacanceRangeStart.value || (vacanceRangeStart.value && vacanceRangeEnd.value)) {
+    vacanceRangeStart.value = d
+    vacanceRangeEnd.value = null
+    return
+  }
+  if (d < vacanceRangeStart.value) {
+    vacanceRangeEnd.value = vacanceRangeStart.value
+    vacanceRangeStart.value = d
+  } else if (isSameDay(d, vacanceRangeStart.value)) {
+    return
+  } else {
+    vacanceRangeEnd.value = d
+  }
+  if (vacanceRangeStart.value && vacanceRangeEnd.value) {
+    vacanceForm.draft.range = `${fmtDMY(vacanceRangeStart.value)} - ${fmtDMY(vacanceRangeEnd.value)}`
+    calendarOpen.value = false
+  }
+}
+function resetVacanceCalendar() {
+  vacanceRangeStart.value = null
+  vacanceRangeEnd.value = null
+  calendarOpen.value = false
+  calendarMonth.value = new Date()
+}
+
 // Drawer state for the Autorisations quotidiennes rule (Figma 5980-29659).
 // Master toggle gates the whole feature; each day carries its own toggle
 // and either an "all day" allowance or a custom HH:MM range.
+
+// Strips non-digits, caps at 4 chars, inserts the colon once 3+ digits are
+// in. Lets the user type "0930" and see "09:30" without fighting a strict
+// regex.
+function maskTimeInput(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 4)
+  if (digits.length <= 2) return digits
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`
+}
+// Clamps to a real HH:MM on blur — hours 0–23, minutes 0–59, zero-padded.
+function clampTime(value: string): string {
+  if (!value) return ''
+  const m = value.match(/^(\d{1,2}):?(\d{0,2})$/)
+  if (!m) return ''
+  const h = Math.min(Math.max(parseInt(m[1] || '0', 10), 0), 23)
+  const min = Math.min(Math.max(parseInt(m[2] || '0', 10), 0), 59)
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`
+}
+function onDayTimeInput(day: DayRule, key: 'start' | 'end', e: Event) {
+  day[key] = maskTimeInput((e.target as HTMLInputElement).value)
+}
+function onDayTimeBlur(day: DayRule, key: 'start' | 'end') {
+  day[key] = clampTime(day[key])
+}
+
 const autorisationsDrawerOpen = ref(false)
 interface DayRule {
   id: string
@@ -969,6 +1084,7 @@ function closeVacanceDrawer() {
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
   openVacancePeriodMenuId.value = null
+  resetVacanceCalendar()
   selectedRuleId.value = null
 }
 
@@ -2902,22 +3018,28 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
                           <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
                           <input
-                            v-model="day.start"
+                            :value="day.start"
                             inputmode="numeric"
                             placeholder="00:00"
+                            maxlength="5"
                             :aria-label="`Heure de début ${day.label}`"
                             class="flex-1 min-w-0 outline-none bg-transparent font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary placeholder:text-text-neutral-secondary"
+                            @input="onDayTimeInput(day, 'start', $event)"
+                            @blur="onDayTimeBlur(day, 'start')"
                           >
                         </div>
                         <span class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">à</span>
                         <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
                           <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
                           <input
-                            v-model="day.end"
+                            :value="day.end"
                             inputmode="numeric"
                             placeholder="00:00"
+                            maxlength="5"
                             :aria-label="`Heure de fin ${day.label}`"
                             class="flex-1 min-w-0 outline-none bg-transparent font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary placeholder:text-text-neutral-secondary"
+                            @input="onDayTimeInput(day, 'end', $event)"
+                            @blur="onDayTimeBlur(day, 'end')"
                           >
                         </div>
                       </div>
@@ -3139,14 +3261,101 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       aria-label="Nom de la période"
                       @keydown.enter="addVacancePeriod"
                     />
-                    <Input
-                      v-model="vacanceForm.draft.range"
-                      type="leadingIcon"
-                      icon="calendar-days"
-                      size="md"
-                      placeholder="Sélectionnez une période"
-                      aria-label="Sélectionnez une période"
-                    />
+                    <div class="flex flex-col gap-[8px]">
+                      <button
+                        type="button"
+                        :class="[
+                          'flex items-center gap-[8px] w-full px-[12px] py-[8px] rounded-[8px] border bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none outline-none',
+                          calendarOpen ? 'border-brand shadow-ring-brand' : 'border-border-neutral-secondary hover:border-border-neutral focus-visible:border-brand focus-visible:shadow-ring-brand',
+                        ]"
+                        :aria-expanded="calendarOpen"
+                        aria-haspopup="dialog"
+                        aria-label="Sélectionnez une période"
+                        @click="calendarOpen = !calendarOpen"
+                      >
+                        <Icon name="calendar-days" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
+                        <span
+                          :class="[
+                            'flex-1 min-w-0 text-left font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate',
+                            vacanceForm.draft.range ? 'text-text-neutral' : 'text-text-neutral-secondary',
+                          ]"
+                        >
+                          {{ vacanceForm.draft.range || 'Sélectionnez une période' }}
+                        </span>
+                      </button>
+
+                      <Transition
+                        enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                        enter-from-class="opacity-0 -translate-y-[4px]"
+                        enter-to-class="opacity-100 translate-y-0"
+                        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+                        leave-from-class="opacity-100 translate-y-0"
+                        leave-to-class="opacity-0 -translate-y-[4px]"
+                      >
+                        <div
+                          v-if="calendarOpen"
+                          class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-lg p-[12px] flex flex-col gap-[8px]"
+                          role="dialog"
+                          aria-label="Sélecteur de date"
+                        >
+                          <!-- Month navigation -->
+                          <div class="flex items-center justify-between gap-[8px]">
+                            <button
+                              type="button"
+                              class="flex items-center justify-center size-[28px] rounded-[6px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                              aria-label="Mois précédent"
+                              @click="prevMonth"
+                            >
+                              <Icon name="chevron-left" variant="solid" :size="16" />
+                            </button>
+                            <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral capitalize tabular-nums">
+                              {{ monthLabel }}
+                            </p>
+                            <button
+                              type="button"
+                              class="flex items-center justify-center size-[28px] rounded-[6px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                              aria-label="Mois suivant"
+                              @click="nextMonth"
+                            >
+                              <Icon name="chevron-right" variant="solid" :size="16" />
+                            </button>
+                          </div>
+
+                          <!-- Weekday labels -->
+                          <div class="grid grid-cols-7 gap-[2px]">
+                            <div
+                              v-for="d in ['lu','ma','me','je','ve','sa','di']"
+                              :key="d"
+                              class="size-[36px] flex items-center justify-center font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary"
+                            >
+                              {{ d }}
+                            </div>
+                          </div>
+
+                          <!-- Day grid -->
+                          <div class="grid grid-cols-7 gap-[2px]">
+                            <button
+                              v-for="(cell, i) in calendarCells"
+                              :key="i"
+                              type="button"
+                              :class="[
+                                'size-[36px] flex items-center justify-center rounded-[6px] font-sans text-[14px] leading-[1.5] tracking-[-0.42px] tabular-nums transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                                isCellStart(cell) || isCellEnd(cell)
+                                  ? 'bg-brand text-white font-medium'
+                                  : isCellInRange(cell)
+                                  ? 'bg-brand-surface text-text-brand-deep font-medium'
+                                  : cell.inMonth
+                                  ? 'text-text-neutral font-normal hover:bg-neutral-secondary'
+                                  : 'text-text-neutral-secondary/60 font-normal hover:bg-neutral-secondary',
+                              ]"
+                              @click="selectCalendarDate(cell.date)"
+                            >
+                              {{ cell.day }}
+                            </button>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
                     <div class="flex items-center gap-[8px]">
                       <button
                         type="button"
