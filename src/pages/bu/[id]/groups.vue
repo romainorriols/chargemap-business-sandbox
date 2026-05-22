@@ -2284,24 +2284,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                                 type="button"
                                 role="menuitem"
                                 class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                                @click="closeMenus"
-                              >
-                                <Icon name="pencil-square" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
-                                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
-                                  Modifier le badge
-                                </span>
-                              </button>
-                            </div>
-                            <div class="px-[4px] py-[2px]">
-                              <button
-                                type="button"
-                                role="menuitem"
-                                class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
                                 @click="removeBadge(b)"
                               >
                                 <Icon name="trash" variant="outline" :size="20" class="shrink-0 text-icon-danger" />
                                 <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-danger-medium whitespace-nowrap">
-                                  Retirer du groupe
+                                  Supprimer du groupe
                                 </span>
                               </button>
                             </div>
@@ -4336,7 +4323,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               :size="20"
             />
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-              {{ pillMode === 'add' ? 'Ajouter' : 'Supprimer' }}
+              {{ pillMode === 'add' ? 'Ajouter' : 'Supprimer du groupe' }}
             </span>
           </button>
         </div>
