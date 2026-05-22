@@ -431,6 +431,25 @@ function addVacancePeriod() {
   vacanceForm.draft.range = ''
 }
 
+// Per-period ellipsis menu (Figma 6201-11498) — Modifier / Supprimer.
+const openVacancePeriodMenuId = ref<string | null>(null)
+function toggleVacancePeriodMenu(id: string) {
+  openVacancePeriodMenuId.value = openVacancePeriodMenuId.value === id ? null : id
+}
+function editVacancePeriod(id: string) {
+  const target = vacanceForm.periods.find(p => p.id === id)
+  if (!target) return
+  vacanceForm.draft.name = target.name
+  vacanceForm.draft.range = `${target.start} - ${target.end}`
+  vacanceForm.creating = true
+  openVacancePeriodMenuId.value = null
+}
+function deleteVacancePeriod(id: string) {
+  const idx = vacanceForm.periods.findIndex(p => p.id === id)
+  if (idx >= 0) vacanceForm.periods.splice(idx, 1)
+  openVacancePeriodMenuId.value = null
+}
+
 // Drawer state for the Autorisations quotidiennes rule (Figma 5980-29659).
 // Master toggle gates the whole feature; each day carries its own toggle
 // and either an "all day" allowance or a custom HH:MM range.
@@ -949,6 +968,7 @@ function closeVacanceDrawer() {
   vacanceForm.creating = false
   vacanceForm.draft.name = ''
   vacanceForm.draft.range = ''
+  openVacancePeriodMenuId.value = null
   selectedRuleId.value = null
 }
 
@@ -3007,8 +3027,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
             <div v-if="vacanceForm.active" class="flex flex-col gap-[16px]">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
                 <!-- Saved period cards -->
                 <TransitionGroup
                   tag="div"
@@ -3031,20 +3049,72 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       :aria-label="`Activer ${period.name}`"
                     />
                     <div class="flex-1 min-w-0 flex flex-col">
-                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
                         {{ period.name }}
                       </p>
                       <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
                         {{ period.start }} - {{ period.end }}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                      :aria-label="`Options pour ${period.name}`"
-                    >
-                      <Icon name="ellipsis-horizontal" variant="outline" :size="20" />
-                    </button>
+                    <div class="relative shrink-0">
+                      <button
+                        type="button"
+                        :class="[
+                          'flex items-center justify-center size-[36px] rounded-[8px] transition-[background-color,color,transform] duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray',
+                          openVacancePeriodMenuId === period.id
+                            ? 'bg-neutral-tertiary text-icon-neutral-primary'
+                            : 'text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary',
+                        ]"
+                        :aria-label="`Options pour ${period.name}`"
+                        :aria-expanded="openVacancePeriodMenuId === period.id"
+                        aria-haspopup="menu"
+                        @click.stop="toggleVacancePeriodMenu(period.id)"
+                      >
+                        <Icon name="ellipsis-horizontal" variant="outline" :size="20" />
+                      </button>
+                      <Transition
+                        enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
+                        enter-from-class="opacity-0 scale-[0.96] -translate-y-[4px]"
+                        enter-to-class="opacity-100 scale-100 translate-y-0"
+                        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
+                        leave-from-class="opacity-100 scale-100 translate-y-0"
+                        leave-to-class="opacity-0 scale-[0.96] -translate-y-[4px]"
+                      >
+                        <div
+                          v-if="openVacancePeriodMenuId === period.id"
+                          class="absolute top-[calc(100%+4px)] right-0 z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[12px] flex flex-col gap-[4px] min-w-[200px]"
+                          role="menu"
+                          @click.stop
+                        >
+                          <div class="px-[4px] py-[2px]">
+                            <button
+                              type="button"
+                              role="menuitem"
+                              class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                              @click="editVacancePeriod(period.id)"
+                            >
+                              <Icon name="pencil-square" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
+                              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                                Modifier
+                              </span>
+                            </button>
+                          </div>
+                          <div class="px-[4px] py-[2px]">
+                            <button
+                              type="button"
+                              role="menuitem"
+                              class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                              @click="deleteVacancePeriod(period.id)"
+                            >
+                              <Icon name="trash" variant="outline" :size="20" class="shrink-0 text-icon-danger" />
+                              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-danger-medium whitespace-nowrap">
+                                Supprimer
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+                      </Transition>
+                    </div>
                   </div>
                 </TransitionGroup>
 
