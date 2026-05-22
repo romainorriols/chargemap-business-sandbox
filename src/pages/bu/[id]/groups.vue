@@ -2846,10 +2846,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <article
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[8px]"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip"
               >
                   <!-- Header row: label + toggle -->
-                  <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between px-[16px] py-[12px]">
                     <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                       {{ day.label }}
                     </p>
@@ -2860,8 +2860,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     />
                   </div>
 
+                  <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
                   <!-- Body row (always shown; gated by day.active for button) -->
-                  <div class="flex items-center justify-between gap-[8px] py-[4px]">
+                  <div class="flex items-center justify-between gap-[8px] px-[16px] py-[12px]">
                     <template v-if="!day.customHours">
                       <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         {{ day.active ? 'Autorisé toute la journée' : 'Bloqué toute la journée' }}
