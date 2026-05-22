@@ -3265,7 +3265,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       <button
                         type="button"
                         :class="[
-                          'flex items-center gap-[8px] w-full px-[12px] py-[8px] rounded-[8px] border bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none outline-none',
+                          'flex items-center gap-[8px] w-full h-[44px] px-[12px] rounded-[8px] border bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none outline-none',
                           calendarOpen ? 'border-brand shadow-ring-brand' : 'border-border-neutral-secondary hover:border-border-neutral focus-visible:border-brand focus-visible:shadow-ring-brand',
                         ]"
                         :aria-expanded="calendarOpen"
@@ -3276,7 +3276,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         <Icon name="calendar-days" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
                         <span
                           :class="[
-                            'flex-1 min-w-0 text-left font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate',
+                            'flex-1 min-w-0 text-left font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] truncate',
                             vacanceForm.draft.range ? 'text-text-neutral' : 'text-text-neutral-secondary',
                           ]"
                         >
