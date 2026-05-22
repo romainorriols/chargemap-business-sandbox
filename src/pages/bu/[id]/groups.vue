@@ -580,13 +580,13 @@ interface DayRule {
 const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
   active: false,
   days: [
-    { id: 'lundi',    label: 'Lundi',    active: true, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'mardi',    label: 'Mardi',    active: true, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'mercredi', label: 'Mercredi', active: true, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'jeudi',    label: 'Jeudi',    active: true, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'vendredi', label: 'Vendredi', active: true, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'samedi',   label: 'Samedi',   active: true, customHours: false, start: '00:00', end: '00:00' },
-    { id: 'dimanche', label: 'Dimanche', active: true, customHours: false, start: '00:00', end: '00:00' },
+    { id: 'lundi',    label: 'Lundi',    active: true, customHours: false, start: '', end: '' },
+    { id: 'mardi',    label: 'Mardi',    active: true, customHours: false, start: '', end: '' },
+    { id: 'mercredi', label: 'Mercredi', active: true, customHours: false, start: '', end: '' },
+    { id: 'jeudi',    label: 'Jeudi',    active: true, customHours: false, start: '', end: '' },
+    { id: 'vendredi', label: 'Vendredi', active: true, customHours: false, start: '', end: '' },
+    { id: 'samedi',   label: 'Samedi',   active: true, customHours: false, start: '', end: '' },
+    { id: 'dimanche', label: 'Dimanche', active: true, customHours: false, start: '', end: '' },
   ],
 })
 
