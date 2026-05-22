@@ -1818,10 +1818,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 >
                   <div
                     v-if="openMenuId === g.id"
-                    class="absolute top-[calc(100%+4px)] right-0 z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[12px] flex flex-col gap-[4px] min-w-[180px]"
+                    class="absolute top-[calc(100%+4px)] right-0 z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[12px] flex flex-col gap-[4px] min-w-[220px]"
                     role="menu"
                     @click.stop
                   >
+                    <div class="px-[4px] py-[2px]">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                        @click="openGroup(g.id)"
+                      >
+                        <Icon name="list-bullet" variant="solid" :size="20" class="shrink-0 text-icon-neutral-secondary" />
+                        <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                          Détails
+                        </span>
+                      </button>
+                    </div>
                     <div class="px-[4px] py-[2px]">
                       <button
                         type="button"
@@ -1832,19 +1845,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         <Icon name="cog-6-tooth" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
                         <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
                           Paramètres
-                        </span>
-                      </button>
-                    </div>
-                    <div class="px-[4px] py-[2px]">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                        @click="openGroup(g.id)"
-                      >
-                        <Icon name="pencil-square" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
-                        <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
-                          Modifier
                         </span>
                       </button>
                     </div>
@@ -4123,7 +4123,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :class="[
                       'group/row w-full flex flex-col md:flex-row md:items-stretch md:min-h-[64px] border-b border-border-neutral-tertiary text-left anim-fade-up',
                       'transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:bg-neutral-secondary',
-                      selectedToAdd.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
+                      'hover:bg-neutral-secondary',
                     ]"
                     @click="toggleAddSelection(b.id)"
                   >
