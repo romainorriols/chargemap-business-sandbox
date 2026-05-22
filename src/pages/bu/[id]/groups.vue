@@ -2724,21 +2724,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 />
                 <div class="relative group/disabled-amount" tabindex="-1">
                   <Input
-                    :model-value="isAlerteAmountDisabled ? '' : alerteForm.amount"
+                    v-model="alerteForm.amount"
                     type="trailingText"
                     :addon-trailing-text="alerteSuffix"
                     :show-currency-icon="false"
                     :trailing-separator="false"
                     :disabled="isAlerteAmountDisabled"
                     placeholder="0"
-                    @update:model-value="(v) => (alerteForm.amount = v)"
                   />
                   <div
                     v-if="isAlerteAmountDisabled"
                     class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
                     role="tooltip"
                   >
-                    Activez le budget de recharge pour utiliser cette option.
+                    Définissez un budget de recharge pour utiliser cette option.
                     <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
                   </div>
                 </div>
