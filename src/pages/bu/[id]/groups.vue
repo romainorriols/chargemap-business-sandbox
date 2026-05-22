@@ -2200,7 +2200,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :class="[
                       'group/row relative flex flex-col md:flex-row md:items-stretch w-full md:min-h-[64px] border-t border-border-neutral-tertiary first:border-t-0 cursor-pointer outline-none anim-fade-up',
                       'transition-colors duration-150 ease-out motion-reduce:transition-none focus-visible:bg-neutral-secondary',
-                      selectedToRemove.has(b.id) ? 'bg-brand-surface hover:bg-brand-surface' : 'hover:bg-neutral-secondary',
+                      'hover:bg-neutral-secondary',
                     ]"
                     @click="toggleRemoveSelection(b.id)"
                     @keydown.enter="toggleRemoveSelection(b.id)"

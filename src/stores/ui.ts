@@ -61,7 +61,7 @@ export const useUiStore = defineStore('ui', () => {
   let initialMaxByPage: Partial<Record<string, SandboxMaxWidth>> = {}
   let initialGroupVariant: GroupListVariant = 'compact'
   let initialPickerVariant: NetworkPickerVariant = 'default'
-  let initialAddBadgesVariant: AddBadgesVariant = 'swap'
+  let initialAddBadgesVariant: AddBadgesVariant = 'modal'
   if (import.meta.client) {
     const storedEmpty = localStorage.getItem(EMPTY_STATE_KEY)
     if (storedEmpty !== null) initialEmpty = storedEmpty === 'true'
