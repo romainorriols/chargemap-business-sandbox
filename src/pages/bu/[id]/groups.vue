@@ -3261,7 +3261,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       aria-label="Nom de la période"
                       @keydown.enter="addVacancePeriod"
                     />
-                    <div class="flex flex-col gap-[8px]">
+                    <div class="relative">
                       <button
                         type="button"
                         :class="[
@@ -3294,7 +3294,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       >
                         <div
                           v-if="calendarOpen"
-                          class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-lg p-[12px] flex flex-col gap-[8px]"
+                          class="absolute top-[calc(100%+8px)] left-0 right-0 z-30 bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-lg p-[12px] flex flex-col gap-[8px]"
                           role="dialog"
                           aria-label="Sélecteur de date"
                         >
