@@ -514,6 +514,27 @@ function prevMonth() {
 function nextMonth() {
   calendarMonth.value = new Date(calendarMonth.value.getFullYear(), calendarMonth.value.getMonth() + 1, 1)
 }
+function prevYear() {
+  calendarMonth.value = new Date(calendarMonth.value.getFullYear() - 1, calendarMonth.value.getMonth(), 1)
+}
+function nextYear() {
+  calendarMonth.value = new Date(calendarMonth.value.getFullYear() + 1, calendarMonth.value.getMonth(), 1)
+}
+// Where the connecting bg-brand-surface strip should sit on a cell:
+// - 'full'  → strictly between start and end (square, full cell)
+// - 'right' → start cell when end is set on a later day (covers right half)
+// - 'left'  → end cell (covers left half)
+// - null    → no bg
+type RangeStripeSide = 'full' | 'left' | 'right' | null
+function cellRangeStripe(cell: CalendarCell): RangeStripeSide {
+  const s = vacanceRangeStart.value
+  const e = vacanceRangeEnd.value
+  if (!s || !e || isSameDay(s, e)) return null
+  if (isCellStart(cell)) return 'right'
+  if (isCellEnd(cell)) return 'left'
+  if (cell.date > s && cell.date < e) return 'full'
+  return null
+}
 function selectCalendarDate(d: Date) {
   if (!vacanceRangeStart.value || (vacanceRangeStart.value && vacanceRangeEnd.value)) {
     vacanceRangeStart.value = d
@@ -3298,7 +3319,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           role="dialog"
                           aria-label="Sélecteur de date"
                         >
-                          <!-- Month navigation -->
+                          <!-- Month / year navigation — chevrons on the sides,
+                               month label centered with a tiny year-stepper
+                               (chevron-up/down) docked to its right (Figma). -->
                           <div class="flex items-center justify-between gap-[8px]">
                             <button
                               type="button"
@@ -3308,9 +3331,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                             >
                               <Icon name="chevron-left" variant="solid" :size="16" />
                             </button>
-                            <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral capitalize tabular-nums">
-                              {{ monthLabel }}
-                            </p>
+                            <div class="flex items-center gap-[6px]">
+                              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral capitalize tabular-nums">
+                                {{ monthLabel }}
+                              </p>
+                              <div class="flex flex-col items-center justify-center -my-[2px]">
+                                <button
+                                  type="button"
+                                  class="flex items-center justify-center w-[14px] h-[10px] rounded-[3px] text-icon-neutral-secondary hover:text-icon-neutral-primary hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                                  aria-label="Année suivante"
+                                  @click="nextYear"
+                                >
+                                  <Icon name="chevron-up" variant="solid" :size="10" />
+                                </button>
+                                <button
+                                  type="button"
+                                  class="flex items-center justify-center w-[14px] h-[10px] rounded-[3px] text-icon-neutral-secondary hover:text-icon-neutral-primary hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                                  aria-label="Année précédente"
+                                  @click="prevYear"
+                                >
+                                  <Icon name="chevron-down" variant="solid" :size="10" />
+                                </button>
+                              </div>
+                            </div>
                             <button
                               type="button"
                               class="flex items-center justify-center size-[28px] rounded-[6px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
@@ -3321,37 +3364,55 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                             </button>
                           </div>
 
-                          <!-- Weekday labels -->
-                          <div class="grid grid-cols-7 gap-[2px]">
+                          <!-- Weekday labels — full-width tracks so the range
+                               strip below joins seamlessly across cells. -->
+                          <div class="grid grid-cols-7">
                             <div
                               v-for="d in ['lu','ma','me','je','ve','sa','di']"
                               :key="d"
-                              class="size-[36px] flex items-center justify-center font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary"
+                              class="h-[36px] flex items-center justify-center font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary"
                             >
                               {{ d }}
                             </div>
                           </div>
 
-                          <!-- Day grid -->
-                          <div class="grid grid-cols-7 gap-[2px]">
-                            <button
+                          <!-- Day grid — each cell carries an absolute range
+                               strip (full / left-half / right-half) behind a
+                               circular day button. Strip joins seamlessly
+                               across cells because tracks have no gaps. -->
+                          <div class="grid grid-cols-7">
+                            <div
                               v-for="(cell, i) in calendarCells"
                               :key="i"
-                              type="button"
-                              :class="[
-                                'size-[36px] flex items-center justify-center rounded-[6px] font-sans text-[14px] leading-[1.5] tracking-[-0.42px] tabular-nums transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                                isCellStart(cell) || isCellEnd(cell)
-                                  ? 'bg-brand text-white font-medium'
-                                  : isCellInRange(cell)
-                                  ? 'bg-brand-surface text-text-brand-deep font-medium'
-                                  : cell.inMonth
-                                  ? 'text-text-neutral font-normal hover:bg-neutral-secondary'
-                                  : 'text-text-neutral-secondary/60 font-normal hover:bg-neutral-secondary',
-                              ]"
-                              @click="selectCalendarDate(cell.date)"
+                              class="h-[36px] relative flex items-center justify-center"
                             >
-                              {{ cell.day }}
-                            </button>
+                              <div
+                                v-if="cellRangeStripe(cell)"
+                                :class="[
+                                  'absolute inset-y-[2px] bg-brand-surface',
+                                  cellRangeStripe(cell) === 'full' ? 'inset-x-0' : '',
+                                  cellRangeStripe(cell) === 'right' ? 'right-0 left-1/2' : '',
+                                  cellRangeStripe(cell) === 'left' ? 'left-0 right-1/2' : '',
+                                ]"
+                                aria-hidden="true"
+                              />
+                              <button
+                                type="button"
+                                :class="[
+                                  'relative size-[32px] flex items-center justify-center rounded-full font-sans text-[14px] leading-[1.5] tracking-[-0.42px] tabular-nums transition-colors duration-100 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                                  isCellStart(cell) || isCellEnd(cell)
+                                    ? 'bg-brand text-white font-medium'
+                                    : isCellInRange(cell)
+                                    ? 'text-text-brand-deep font-normal'
+                                    : cell.inMonth
+                                    ? 'text-text-neutral font-normal hover:bg-neutral-secondary'
+                                    : 'text-text-neutral-secondary/60 font-normal hover:bg-neutral-secondary',
+                                ]"
+                                @click="selectCalendarDate(cell.date)"
+                              >
+                                {{ cell.day }}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </Transition>
