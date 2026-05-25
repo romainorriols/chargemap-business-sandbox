@@ -2783,7 +2783,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
           <!-- ── Section 1: Budget (header card + Budget mensuel sub-card, 12px gap) ── -->
           <div class="flex flex-col gap-[12px]">
-            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
               <div class="flex flex-col gap-[4px]">
                 <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                   Budget
@@ -2824,7 +2824,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             >
               <section
                 v-if="budgetForm.active"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]"
               >
                 <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                   Budget mensuel
@@ -2846,7 +2846,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
           <!-- ── Section 2: Alerte (header card + Pourcentage sub-card, 12px gap) ── -->
           <div class="flex flex-col gap-[12px]">
-            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
               <div class="flex flex-col gap-[4px]">
                 <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                   Alerte
@@ -2890,7 +2890,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             >
               <section
                 v-if="alerteForm.active"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]"
               >
                 <Dropdown
                   v-model="alerteForm.type"
@@ -2985,7 +2985,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Body — header card + one card per day (Figma 5980-29659). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
           <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Autorisations quotidiennes
@@ -3025,7 +3025,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <article
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm overflow-clip"
               >
                   <!-- Header row: label + toggle -->
                   <div class="flex items-center justify-between px-[16px] py-[12px]">
@@ -3161,7 +3161,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
              intra-section rhythm. -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[12px]">
           <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Blocage vacance
@@ -3546,7 +3546,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
              (Figma 6201-21643). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
           <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Gérer les réseaux autorisés
@@ -3576,7 +3576,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                Figma 6123-13732; only the title text and right-hand controls
                swap. -->
           <template v-if="reseauForm.active">
-            <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
+            <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm">
               <div class="flex-1 min-w-0 flex flex-col">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
                   {{ reseauForm.blockedNetworks.length }}
@@ -3613,7 +3613,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                  appears once at least one network is blocked. Figma 6173-13372. -->
             <div
               v-if="reseauForm.blockedNetworks.length > 0"
-              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
+              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm"
             >
               <div class="flex items-center justify-between gap-[16px]">
                 <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
@@ -3731,7 +3731,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
              (Figma 6201-21445). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
           <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Gérer les pays autorisés
@@ -3760,7 +3760,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                is on. Mirrors the réseau drawer (Figma 6123-13732 / 6173-13372)
                applied to pays (Figma 6123-15711). -->
           <template v-if="paysForm.active">
-            <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
+            <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm">
               <div class="flex-1 min-w-0 flex flex-col">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
                   {{ paysForm.blockedCountries.length }}
@@ -3796,7 +3796,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <!-- Collapsible "Voir la liste des N pays bloqués" card -->
             <div
               v-if="paysForm.blockedCountries.length > 0"
-              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
+              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm"
             >
               <div class="flex items-center justify-between gap-[16px]">
                 <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
