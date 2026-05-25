@@ -2752,8 +2752,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — two stacked sections (Budget + Alerte) per Figma 5980-29598 -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[24px]">
+        <!-- Body — Budget + Alerte sections, each split into a primary card
+             (title + description + Activé toggle) and an optional secondary
+             card surfaced when the rule is on (Figma 5980-29334). -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
 
           <!-- Zero-budget error Alert (Figma 5980-29334) — compact danger
                banner at the top of the body. Animated in/out so it doesn't
@@ -2778,7 +2780,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </Transition>
 
           <!-- ── Section 1: Budget ───────────────────────────────────── -->
-          <div class="flex flex-col gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Budget
@@ -2806,40 +2808,40 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 aria-label="Activer le budget de recharge"
               />
             </div>
+          </section>
 
-            <!-- Separator + Budget mensuel row only when active -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
+          <!-- Budget mensuel — sub-card surfaced once the budget rule is on. -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <section
+              v-if="budgetForm.active"
+              class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
             >
-              <div v-if="budgetForm.active" class="flex flex-col gap-[16px]">
-                <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-                <div class="flex items-center justify-between gap-[16px]">
-                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                    Budget mensuel
-                  </span>
-                  <div class="shrink-0 w-[150px]">
-                    <Input
-                      v-model="budgetForm.amount"
-                      type="trailingText"
-                      :addon-trailing-text="'Eur'"
-                      :show-currency-icon="false"
-                      :trailing-separator="false"
-                      :destructive="budgetError"
-                      placeholder="0,00"
-                    />
-                  </div>
-                </div>
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Budget mensuel
+              </span>
+              <div class="shrink-0 w-[150px]">
+                <Input
+                  v-model="budgetForm.amount"
+                  type="trailingText"
+                  :addon-trailing-text="'Eur'"
+                  :show-currency-icon="false"
+                  :trailing-separator="false"
+                  :destructive="budgetError"
+                  placeholder="0,00"
+                />
               </div>
-            </Transition>
-          </div>
+            </section>
+          </Transition>
 
           <!-- ── Section 2: Alerte ───────────────────────────────────── -->
-          <div class="flex flex-col gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Alerte
@@ -2867,50 +2869,53 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 aria-label="Activer le seuil d'alerte"
               />
             </div>
+          </section>
 
-            <!-- Separator + type/amount controls when active. The amount is
-                 disabled when type is "percentage" with no budget set — the
-                 same tooltip-explained constraint as the standalone drawer. -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
+          <!-- Alert threshold controls — sub-card surfaced once the alert
+               rule is on. Amount is disabled when type is "percentage" with
+               no budget set, with the same tooltip-explained constraint as
+               the standalone drawer. -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-y-[4px]"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-[4px]"
+          >
+            <section
+              v-if="alerteForm.active"
+              class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
             >
-              <div v-if="alerteForm.active" class="flex flex-col gap-[16px]">
-                <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-                <Dropdown
-                  v-model="alerteForm.type"
-                  :items="alerteTypeItems"
-                  :searchable="false"
-                  :show-label="false"
-                  :show-hint="false"
-                  :teleport="true"
+              <Dropdown
+                v-model="alerteForm.type"
+                :items="alerteTypeItems"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+                :teleport="true"
+              />
+              <div class="relative group/disabled-amount" tabindex="-1">
+                <Input
+                  v-model="alerteForm.amount"
+                  type="trailingText"
+                  :addon-trailing-text="alerteSuffix"
+                  :show-currency-icon="false"
+                  :trailing-separator="false"
+                  :disabled="isAlerteAmountDisabled"
+                  placeholder="0"
                 />
-                <div class="relative group/disabled-amount" tabindex="-1">
-                  <Input
-                    v-model="alerteForm.amount"
-                    type="trailingText"
-                    :addon-trailing-text="alerteSuffix"
-                    :show-currency-icon="false"
-                    :trailing-separator="false"
-                    :disabled="isAlerteAmountDisabled"
-                    placeholder="0"
-                  />
-                  <div
-                    v-if="isAlerteAmountDisabled"
-                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
-                    role="tooltip"
-                  >
-                    Définissez un budget de recharge pour utiliser cette option.
-                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
-                  </div>
+                <div
+                  v-if="isAlerteAmountDisabled"
+                  class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
+                  role="tooltip"
+                >
+                  Définissez un budget de recharge pour utiliser cette option.
+                  <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
                 </div>
               </div>
-            </Transition>
-          </div>
+            </section>
+          </Transition>
         </div>
 
         <!-- Footer -->
