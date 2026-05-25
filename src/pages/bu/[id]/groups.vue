@@ -935,7 +935,7 @@ const rules: ChargingRule[] = reactive([
   },
   {
     id: 'pays',
-    title: 'Bloqué des pays',
+    title: 'Gérer les pays autorisés',
     description: 'Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite',
     icon: 'flag',
     iconVariant: 'outline',
@@ -944,7 +944,7 @@ const rules: ChargingRule[] = reactive([
   },
   {
     id: 'reseau',
-    title: 'Bloqué des réseaux',
+    title: 'Gérer les réseaux autorisés',
     description: 'Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite',
     icon: 'globe-alt',
     iconVariant: 'outline',
@@ -3499,7 +3499,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Configuration du blocage réseau"
+        aria-label="Gérer les réseaux autorisés"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
@@ -3521,10 +3521,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           <!-- Section header — rule title + description -->
           <div class="flex flex-col gap-[4px]">
             <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Blocage réseau
+              Gérer les réseaux autorisés
             </p>
             <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Permet de définir sur quels réseaux la recharge est autorisée ou bloquée, afin de mieux contrôler vos usages
+              Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite
             </p>
           </div>
 
@@ -3538,7 +3538,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <Toggle
               v-model="reseauForm.active"
               size="md"
-              aria-label="Activer le blocage réseau"
+              aria-label="Activer la gestion des réseaux autorisés"
             />
           </div>
 
@@ -3579,7 +3579,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
               </template>
-              <Button v-else type="secondary" size="md" label="Bloquer des réseaux" @click="openNetworkPicker" />
+              <Button v-else type="secondary" size="md" label="Gérer les réseaux" @click="openNetworkPicker" />
             </div>
 
             <!-- Collapsible "Voir la liste des N réseaux bloqués" card —
@@ -3683,7 +3683,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Configuration du blocage pays"
+        aria-label="Gérer les pays autorisés"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
@@ -3705,10 +3705,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           <!-- Section header — rule title + description -->
           <div class="flex flex-col gap-[4px]">
             <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Blocage pays
+              Gérer les pays autorisés
             </p>
             <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Grâce à la restriction géographique, vous pouvez définir les pays dans lesquels la recharge est autorisée ou non.
+              Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite
             </p>
           </div>
 
@@ -3722,7 +3722,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <Toggle
               v-model="paysForm.active"
               size="md"
-              aria-label="Activer le blocage pays"
+              aria-label="Activer la gestion des pays autorisés"
             />
           </div>
 
@@ -3739,7 +3739,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   {{ paysForm.blockedCountries.length <= 1 ? 'pays bloqué' : 'pays bloqués' }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                  Sur {{ countries.length }} pays compatibles
+                  Sur {{ countries.length }} compatibles
                 </p>
               </div>
               <template v-if="paysForm.blockedCountries.length > 0">
@@ -3762,7 +3762,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
               </template>
-              <Button v-else type="secondary" size="md" label="Bloquer des pays" @click="openCountryPicker" />
+              <Button v-else type="secondary" size="md" label="Gérer les pays" @click="openCountryPicker" />
             </div>
 
             <!-- Collapsible "Voir la liste des N pays bloqués" card -->
@@ -3893,7 +3893,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
               <div class="flex flex-col gap-[2px] min-w-0">
                 <p id="network-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                  Bloquer des réseaux
+                  Gérer les réseaux autorisés
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
                   Désactivez les réseaux sur lesquels la recharge ne doit pas être autorisée.
@@ -4176,10 +4176,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
                 <div class="flex flex-col gap-[2px] min-w-0">
                   <p id="country-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                    Bloquer des pays
+                    Gérer les pays autorisés
                   </p>
                   <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                    Désactivez les pays sur lesquels la recharge ne doit pas être autorisée.
+                    Désactivez les pays dans lesquels la recharge ne doit pas être autorisée.
                   </p>
                 </div>
                 <button
@@ -4205,13 +4205,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       aria-label="Rechercher un pays"
                     />
                   </div>
-                  <button
-                    type="button"
-                    class="shrink-0 inline-flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] border border-border-neutral bg-neutral text-text-neutral-secondary font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] hover:bg-neutral-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray active:scale-[0.98]"
-                  >
-                    <Icon name="funnel" variant="outline" :size="20" />
-                    Trier
-                  </button>
                 </div>
                 <div class="shrink-0 flex items-center gap-[8px]">
                   <button
