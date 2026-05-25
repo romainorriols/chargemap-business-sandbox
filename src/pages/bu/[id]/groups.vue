@@ -2754,8 +2754,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
         <!-- Body — Budget + Alerte sections, each split into a primary card
              (title + description + Activé toggle) and an optional secondary
-             card surfaced when the rule is on (Figma 5980-29334). -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+             card surfaced when the rule is on (Figma 5980-28115). Cards
+             inside the same section keep a 12px gap; sections are spaced
+             by 32px. -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[32px]">
 
           <!-- Zero-budget error Alert (Figma 5980-29334) — compact danger
                banner at the top of the body. Animated in/out so it doesn't
@@ -2779,143 +2781,147 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </Transition>
 
-          <!-- ── Section 1: Budget ───────────────────────────────────── -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <div class="flex flex-col gap-[4px]">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Budget
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Définissez un budget mensuel de recharge. Une fois le plafond atteint, les conducteurs peuvent prendre le relais avec leur carte bancaire.
-              </p>
-            </div>
-
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <!-- Désactivé / Activé toggle row -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span
-                :class="[
-                  'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
-                  budgetForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
-                ]"
-              >
-                {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
-              </span>
-              <Toggle
-                v-model="budgetForm.active"
-                size="md"
-                aria-label="Activer le budget de recharge"
-              />
-            </div>
-          </section>
-
-          <!-- Budget mensuel — sub-card surfaced once the budget rule is on. -->
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 -translate-y-[4px]"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-[4px]"
-          >
-            <section
-              v-if="budgetForm.active"
-              class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
-            >
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                Budget mensuel
-              </span>
-              <div class="shrink-0 w-[150px]">
-                <Input
-                  v-model="budgetForm.amount"
-                  type="trailingText"
-                  :addon-trailing-text="'Eur'"
-                  :show-currency-icon="false"
-                  :trailing-separator="false"
-                  :destructive="budgetError"
-                  placeholder="0,00"
-                />
+          <!-- ── Section 1: Budget (header card + Budget mensuel sub-card, 12px gap) ── -->
+          <div class="flex flex-col gap-[12px]">
+            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+              <div class="flex flex-col gap-[4px]">
+                <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                  Budget
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Définissez un budget mensuel de recharge. Une fois le plafond atteint, les conducteurs peuvent prendre le relais avec leur carte bancaire.
+                </p>
               </div>
-            </section>
-          </Transition>
 
-          <!-- ── Section 2: Alerte ───────────────────────────────────── -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <div class="flex flex-col gap-[4px]">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Alerte
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Soyez alerté par e-mail dès qu'un conducteur dépasse un seuil de budget défini.
-              </p>
-            </div>
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <!-- Désactivé / Activé toggle row -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span
-                :class="[
-                  'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
-                  alerteForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
-                ]"
-              >
-                {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
-              </span>
-              <Toggle
-                v-model="alerteForm.active"
-                size="md"
-                aria-label="Activer le seuil d'alerte"
-              />
-            </div>
-          </section>
-
-          <!-- Alert threshold controls — sub-card surfaced once the alert
-               rule is on. Amount is disabled when type is "percentage" with
-               no budget set, with the same tooltip-explained constraint as
-               the standalone drawer. -->
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 -translate-y-[4px]"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-[4px]"
-          >
-            <section
-              v-if="alerteForm.active"
-              class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
-            >
-              <Dropdown
-                v-model="alerteForm.type"
-                :items="alerteTypeItems"
-                :searchable="false"
-                :show-label="false"
-                :show-hint="false"
-                :teleport="true"
-              />
-              <div class="relative group/disabled-amount" tabindex="-1">
-                <Input
-                  v-model="alerteForm.amount"
-                  type="trailingText"
-                  :addon-trailing-text="alerteSuffix"
-                  :show-currency-icon="false"
-                  :trailing-separator="false"
-                  :disabled="isAlerteAmountDisabled"
-                  placeholder="0"
-                />
-                <div
-                  v-if="isAlerteAmountDisabled"
-                  class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
-                  role="tooltip"
+              <!-- Désactivé / Activé toggle row -->
+              <div class="flex items-center justify-between gap-[16px]">
+                <span
+                  :class="[
+                    'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
+                    budgetForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
+                  ]"
                 >
-                  Définissez un budget de recharge pour utiliser cette option.
-                  <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
-                </div>
+                  {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
+                </span>
+                <Toggle
+                  v-model="budgetForm.active"
+                  size="md"
+                  aria-label="Activer le budget de recharge"
+                />
               </div>
             </section>
-          </Transition>
+
+            <!-- Budget mensuel — sub-card surfaced once the budget rule is on. -->
+            <Transition
+              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 -translate-y-[4px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-[4px]"
+            >
+              <section
+                v-if="budgetForm.active"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
+              >
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                  Budget mensuel
+                </span>
+                <div class="shrink-0 w-[150px]">
+                  <Input
+                    v-model="budgetForm.amount"
+                    type="trailingText"
+                    :addon-trailing-text="'Eur'"
+                    :show-currency-icon="false"
+                    :trailing-separator="false"
+                    :destructive="budgetError"
+                    placeholder="0,00"
+                  />
+                </div>
+              </section>
+            </Transition>
+          </div>
+
+          <!-- ── Section 2: Alerte (header card + Pourcentage sub-card, 12px gap) ── -->
+          <div class="flex flex-col gap-[12px]">
+            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+              <div class="flex flex-col gap-[4px]">
+                <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                  Alerte
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Soyez alerté par e-mail dès qu'un conducteur dépasse un seuil de budget défini.
+                </p>
+              </div>
+
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+              <!-- Désactivé / Activé toggle row -->
+              <div class="flex items-center justify-between gap-[16px]">
+                <span
+                  :class="[
+                    'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
+                    alerteForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
+                  ]"
+                >
+                  {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
+                </span>
+                <Toggle
+                  v-model="alerteForm.active"
+                  size="md"
+                  aria-label="Activer le seuil d'alerte"
+                />
+              </div>
+            </section>
+
+            <!-- Alert threshold controls — sub-card surfaced once the alert
+                 rule is on. Amount is disabled when type is "percentage" with
+                 no budget set, with the same tooltip-explained constraint as
+                 the standalone drawer. -->
+            <Transition
+              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              enter-from-class="opacity-0 -translate-y-[4px]"
+              enter-to-class="opacity-100 translate-y-0"
+              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+              leave-from-class="opacity-100 translate-y-0"
+              leave-to-class="opacity-0 -translate-y-[4px]"
+            >
+              <section
+                v-if="alerteForm.active"
+                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
+              >
+                <Dropdown
+                  v-model="alerteForm.type"
+                  :items="alerteTypeItems"
+                  :searchable="false"
+                  :show-label="false"
+                  :show-hint="false"
+                  :teleport="true"
+                />
+                <div class="relative group/disabled-amount" tabindex="-1">
+                  <Input
+                    v-model="alerteForm.amount"
+                    type="trailingText"
+                    :addon-trailing-text="alerteSuffix"
+                    :show-currency-icon="false"
+                    :trailing-separator="false"
+                    :disabled="isAlerteAmountDisabled"
+                    placeholder="0"
+                  />
+                  <div
+                    v-if="isAlerteAmountDisabled"
+                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
+                    role="tooltip"
+                  >
+                    Définissez un budget de recharge pour utiliser cette option.
+                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
+                  </div>
+                </div>
+              </section>
+            </Transition>
+          </div>
         </div>
 
         <!-- Footer -->
@@ -2976,31 +2982,33 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body -->
+        <!-- Body — header card + one card per day (Figma 5980-29659). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header — rule title + description -->
-          <div class="flex flex-col gap-[4px]">
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Autorisations quotidiennes
-            </p>
-            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges
-            </p>
-          </div>
+          <!-- Section header card — rule title + description + Activé toggle -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Autorisations quotidiennes
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges
+              </p>
+            </div>
 
-          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Activé toggle row -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-              Activé
-            </span>
-            <Toggle
-              v-model="autorisationsForm.active"
-              size="md"
-              aria-label="Activer les autorisations quotidiennes"
-            />
-          </div>
+            <!-- Activé toggle row -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Activé
+              </span>
+              <Toggle
+                v-model="autorisationsForm.active"
+                size="md"
+                aria-label="Activer les autorisations quotidiennes"
+              />
+            </div>
+          </section>
 
           <!-- Day cards — only when the master toggle is on. Each day card
                keeps its label/toggle + "Autorisé toute la journée" /
@@ -3014,7 +3022,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
             <div v-if="autorisationsForm.active" class="flex flex-col gap-[16px]">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <article
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
