@@ -3156,31 +3156,34 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body -->
+        <!-- Body — header card + period list + creation form + empty CTA
+             (Figma 5980-31045). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header — rule title + description -->
-          <div class="flex flex-col gap-[4px]">
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Blocage vacance
-            </p>
-            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
-            </p>
-          </div>
+          <!-- Section header card — rule title + description + Activé toggle -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Blocage vacance
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
+              </p>
+            </div>
 
-          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Activé toggle row -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-              Activé
-            </span>
-            <Toggle
-              v-model="vacanceForm.active"
-              size="md"
-              aria-label="Activer le blocage vacance"
-            />
-          </div>
+            <!-- Activé toggle row -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Activé
+              </span>
+              <Toggle
+                v-model="vacanceForm.active"
+                size="md"
+                aria-label="Activer le blocage vacance"
+              />
+            </div>
+          </section>
 
           <!-- Period list + creation form + empty CTA — gated by master toggle -->
           <Transition
@@ -3538,39 +3541,40 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body -->
+        <!-- Body — header card + count card + collapsible list card
+             (Figma 6201-21643). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header — rule title + description -->
-          <div class="flex flex-col gap-[4px]">
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Gérer les réseaux autorisés
-            </p>
-            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite
-            </p>
-          </div>
+          <!-- Section header card — rule title + description + Activé toggle -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Gérer les réseaux autorisés
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite
+              </p>
+            </div>
 
-          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Activé toggle row -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-              Activé
-            </span>
-            <Toggle
-              v-model="reseauForm.active"
-              size="md"
-              aria-label="Activer la gestion des réseaux autorisés"
-            />
-          </div>
+            <!-- Activé toggle row -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Activé
+              </span>
+              <Toggle
+                v-model="reseauForm.active"
+                size="md"
+                aria-label="Activer la gestion des réseaux autorisés"
+              />
+            </div>
+          </section>
 
           <!-- Réseaux bloqués card — appears once the rule is on. The empty
                state and filled state share the same bordered-card shell per
                Figma 6123-13732; only the title text and right-hand controls
                swap. -->
           <template v-if="reseauForm.active">
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
             <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
               <div class="flex-1 min-w-0 flex flex-col">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
@@ -3722,38 +3726,39 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body -->
+        <!-- Body — header card + count card + collapsible list card
+             (Figma 6201-21445). -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header — rule title + description -->
-          <div class="flex flex-col gap-[4px]">
-            <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-              Gérer les pays autorisés
-            </p>
-            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite
-            </p>
-          </div>
+          <!-- Section header card — rule title + description + Activé toggle -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Gérer les pays autorisés
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite
+              </p>
+            </div>
 
-          <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-          <!-- Activé toggle row -->
-          <div class="flex items-center justify-between gap-[16px]">
-            <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-              Activé
-            </span>
-            <Toggle
-              v-model="paysForm.active"
-              size="md"
-              aria-label="Activer la gestion des pays autorisés"
-            />
-          </div>
+            <!-- Activé toggle row -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Activé
+              </span>
+              <Toggle
+                v-model="paysForm.active"
+                size="md"
+                aria-label="Activer la gestion des pays autorisés"
+              />
+            </div>
+          </section>
 
           <!-- Pays bloqués card + collapsible list — appears once the rule
                is on. Mirrors the réseau drawer (Figma 6123-13732 / 6173-13372)
                applied to pays (Figma 6123-15711). -->
           <template v-if="paysForm.active">
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
             <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
               <div class="flex-1 min-w-0 flex flex-col">
                 <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
