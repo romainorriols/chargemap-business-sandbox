@@ -1712,25 +1712,35 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </div>
         </div>
 
-        <!-- Date / Supprimer card -->
-        <div class="bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px]">
-          <div class="flex items-center gap-[16px] w-full">
-            <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Créer le {{ settingsCreatedAt }}
-            </p>
-            <button
-              type="button"
-              class="shrink-0 inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] bg-danger text-white font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-danger-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-error active:scale-[0.97]"
-              @click="deleteSettingsGroup"
-            >
-              Supprimer
-            </button>
+        <!-- Supression section -->
+        <div class="flex flex-col gap-[16px]">
+          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+            Suppression
+          </p>
+          <div class="bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px]">
+            <div class="flex items-center gap-[16px] w-full">
+              <div class="flex-1 min-w-0 flex flex-col">
+                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                  {{ selectedSettingsGroup.name }}
+                </p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Créé le {{ settingsCreatedAt }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 inline-flex items-center justify-center gap-[8px] px-[12px] py-[8px] rounded-[8px] bg-danger text-white font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] hover:bg-danger-hover transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-error active:scale-[0.97]"
+                @click="deleteSettingsGroup"
+              >
+                Supprimer
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Footer actions -->
         <div class="flex items-center justify-end gap-[16px] w-full">
-          <Button type="secondary" size="md" label="Quitter" @click="exitSettings" />
+          <Button type="secondary" size="md" label="Annuler" @click="exitSettings" />
           <Button type="primary" size="md" label="Enregistrer" :disabled="!settingsDirty" @click="saveSettings" />
         </div>
       </div>
