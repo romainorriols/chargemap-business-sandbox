@@ -120,15 +120,12 @@ function onRuleClick(rule: RuleCard) {
           v-for="(rule, i) in rules"
           :key="rule.id"
           type="button"
-          :aria-pressed="selectedRuleId === rule.id"
           :style="{ animationDelay: `${40 + i * 30}ms` }"
           :class="[
             'text-left flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer',
             'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
             'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
-            selectedRuleId === rule.id
-              ? 'bg-neutral-secondary border-border-brand shadow-ring-brand'
-              : 'bg-neutral border-border-neutral-secondary hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+            'bg-neutral border-border-neutral-secondary hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
           ]"
           @click="onRuleClick(rule)"
         >
