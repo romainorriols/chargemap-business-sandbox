@@ -198,6 +198,7 @@ function showSuccessToast(title: string, description: string) {
 </script>
 
 <template>
+  <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
   <div
     class="mx-auto w-full flex flex-col gap-[32px]"
     :style="{ maxWidth: uiStore.getMaxWidth('/bu/badges-cmb') + 'px' }"
@@ -346,33 +347,19 @@ function showSuccessToast(title: string, description: string) {
         <!-- Body — info banner + Budget section + Alerte section. -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[32px]">
           <!-- Inheritance banner — flips between "Règle héritée de la BU"
-               (with Personnaliser link) and "Règle personnalisée"
-               (with Suivre les règles de la BU link). -->
-          <div class="bg-[#eff6ff] border border-[#dbeafe] rounded-[12px] p-[16px] flex items-start gap-[12px]">
-            <Icon name="information-circle" variant="outline" :size="20" class="shrink-0 mt-[2px] text-[#2463eb]" />
-            <div class="flex-1 min-w-0 flex flex-col gap-[8px]">
-              <div class="flex flex-col gap-[4px]">
-                <p class="font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-[#1e3a8a]">
-                  {{ budgetForm.draftOrigin === 'inherited' ? 'Règle héritée de la BU' : 'Règle personnalisée' }}
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-[#1e3a8a]">
-                  <template v-if="budgetForm.draftOrigin === 'inherited'">
-                    Personnalisez-la pour définir le fonctionnement de ce badge.
-                  </template>
-                  <template v-else>
-                    Cette règle est propre à ce badge, elle ne suivra plus les modifications de la règle BU.
-                  </template>
-                </p>
-              </div>
-              <button
-                type="button"
-                class="self-start font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#2463eb] underline underline-offset-2 hover:text-[#1d4ed8] transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:rounded-[4px] focus-visible:shadow-ring-brand"
-                @click="budgetForm.draftOrigin === 'inherited' ? personalizeBudget() : inheritBudget()"
-              >
-                {{ budgetForm.draftOrigin === 'inherited' ? 'Personnaliser' : 'Suivre les règles de la BU' }}
-              </button>
-            </div>
-          </div>
+               (Personnaliser action) and "Règle personnalisée"
+               (Suivre les règles de la BU action). -->
+          <Alert
+            type="brand"
+            :dismissable="false"
+            :title="budgetForm.draftOrigin === 'inherited' ? 'Règle héritée de la BU' : 'Règle personnalisée'"
+            :description="budgetForm.draftOrigin === 'inherited'
+              ? 'Personnalisez-la pour définir le fonctionnement de ce badge.'
+              : 'Cette règle est propre à ce badge, elle ne suivra plus les modifications de la règle BU.'"
+            :primary-action-label="''"
+            :secondary-action-label="budgetForm.draftOrigin === 'inherited' ? 'Personnaliser' : 'Suivre les règles de la BU'"
+            @secondary-action="budgetForm.draftOrigin === 'inherited' ? personalizeBudget() : inheritBudget()"
+          />
 
           <!-- Cross-fade between read-only (inherited) and editable
                (custom) views. Same card structure either way; toggles
@@ -613,5 +600,6 @@ function showSuccessToast(title: string, description: string) {
         />
       </div>
     </div>
+  </div>
   </div>
 </template>
