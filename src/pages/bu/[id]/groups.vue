@@ -3157,8 +3157,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
 
         <!-- Body — header card + period list + creation form + empty CTA
-             (Figma 5980-31045). -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+             (Figma 5980-31045). Single section so cards sit at the 12px
+             intra-section rhythm. -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[12px]">
           <!-- Section header card — rule title + description + Activé toggle -->
           <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
             <div class="flex flex-col gap-[4px]">
@@ -3194,11 +3195,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
-            <div v-if="vacanceForm.active" class="flex flex-col gap-[16px]">
+            <div v-if="vacanceForm.active" class="flex flex-col gap-[12px]">
                 <!-- Saved period cards -->
                 <TransitionGroup
                   tag="div"
-                  class="flex flex-col gap-[16px]"
+                  class="flex flex-col gap-[12px]"
                   enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
                   enter-from-class="opacity-0 -translate-y-[6px]"
                   enter-to-class="opacity-100 translate-y-0"
