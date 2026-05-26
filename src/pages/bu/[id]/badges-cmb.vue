@@ -614,15 +614,21 @@ function showSuccessToast(title: string, description: string) {
           type="button"
           :style="{ animationDelay: `${40 + i * 30}ms` }"
           :class="[
-            'text-left flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer',
+            'text-left flex flex-col p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer',
             'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
             'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
             'bg-neutral border-border-neutral-secondary hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+            uiStore.ruleCardVariant === 'v2' ? 'gap-[24px]' : 'gap-[16px]',
           ]"
           @click="onRuleClick(rule)"
         >
           <div class="flex items-center justify-between gap-[8px] w-full">
-            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
+            <div
+              :class="[
+                'flex items-center justify-center shrink-0 rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary',
+                uiStore.ruleCardVariant === 'v2' ? 'size-[40px]' : 'size-[37px]',
+              ]"
+            >
               <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
             </div>
             <div class="shrink-0 flex items-center gap-[8px]">

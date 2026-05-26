@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS, GROUP_LIST_VARIANT_OPTIONS, NETWORK_PICKER_VARIANT_OPTIONS, ADD_BADGES_VARIANT_OPTIONS, type GroupListVariant, type NetworkPickerVariant, type AddBadgesVariant } from '~/stores/ui'
+import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS, GROUP_LIST_VARIANT_OPTIONS, NETWORK_PICKER_VARIANT_OPTIONS, ADD_BADGES_VARIANT_OPTIONS, RULE_CARD_VARIANT_OPTIONS, type GroupListVariant, type NetworkPickerVariant, type AddBadgesVariant, type RuleCardVariant } from '~/stores/ui'
 
 // Sandbox-only floating control center. A single FAB at the bottom-right
 // opens a small popover that lists every dev / demo toggle (nav V2 vs V1,
@@ -189,6 +189,31 @@ const controls = computed<Control[]>(() => [
               @click="uiStore.addBadgesVariant = v as AddBadgesVariant"
             >
               {{ v === 'swap' ? 'Permutation' : 'Modal' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Rule card design — legacy (37px tile, 16px gap) vs v2
+             (Figma 5957-15232: 40px tile, 24px gap). -->
+        <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+            Cards règles
+          </span>
+          <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
+            <button
+              v-for="v in RULE_CARD_VARIANT_OPTIONS"
+              :key="v"
+              type="button"
+              :class="[
+                'px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
+                uiStore.ruleCardVariant === v
+                  ? 'bg-neutral text-text-neutral shadow-sm'
+                  : 'text-text-neutral-secondary hover:text-text-neutral',
+              ]"
+              :aria-pressed="uiStore.ruleCardVariant === v"
+              @click="uiStore.ruleCardVariant = v as RuleCardVariant"
+            >
+              {{ v === 'legacy' ? 'Ancienne' : 'V2' }}
             </button>
           </div>
         </div>
