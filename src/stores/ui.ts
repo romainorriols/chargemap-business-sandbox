@@ -7,7 +7,6 @@ const MAX_WIDTH_KEY                = 'cm-sandbox-max-width-by-page'
 const GROUP_LIST_VARIANT_KEY       = 'cm-sandbox-group-list-variant'
 const NETWORK_PICKER_VARIANT_KEY   = 'cm-sandbox-network-picker-variant'
 const ADD_BADGES_VARIANT_KEY       = 'cm-sandbox-add-badges-variant'
-const RULE_CARD_VARIANT_KEY        = 'cm-sandbox-rule-card-variant'
 
 export type SandboxMaxWidth = 2192 | 1600 | 800
 
@@ -24,12 +23,6 @@ export const NETWORK_PICKER_VARIANT_OPTIONS: readonly NetworkPickerVariant[] = [
 // on top of the detail view (Figma 6131-33437).
 export type AddBadgesVariant = 'swap' | 'modal'
 export const ADD_BADGES_VARIANT_OPTIONS: readonly AddBadgesVariant[] = ['swap', 'modal'] as const
-
-// Charging-rule card design. 'legacy' = original size (37px tile,
-// 16px header-to-body gap); 'v2' = Figma 5957-15232 refresh (40px tile,
-// 24px gap).
-export type RuleCardVariant = 'legacy' | 'v2'
-export const RULE_CARD_VARIANT_OPTIONS: readonly RuleCardVariant[] = ['legacy', 'v2'] as const
 
 // Default max-width per page key. All defaults must be one of the
 // SANDBOX_MAX_WIDTH_OPTIONS so the segmented control always has an
@@ -69,7 +62,6 @@ export const useUiStore = defineStore('ui', () => {
   let initialGroupVariant: GroupListVariant = 'compact'
   let initialPickerVariant: NetworkPickerVariant = 'default'
   let initialAddBadgesVariant: AddBadgesVariant = 'modal'
-  let initialRuleCardVariant: RuleCardVariant = 'v2'
   if (import.meta.client) {
     const storedEmpty = localStorage.getItem(EMPTY_STATE_KEY)
     if (storedEmpty !== null) initialEmpty = storedEmpty === 'true'
@@ -94,17 +86,12 @@ export const useUiStore = defineStore('ui', () => {
     if (storedAddBadgesVariant === 'swap' || storedAddBadgesVariant === 'modal') {
       initialAddBadgesVariant = storedAddBadgesVariant
     }
-    const storedRuleCardVariant = localStorage.getItem(RULE_CARD_VARIANT_KEY)
-    if (storedRuleCardVariant === 'legacy' || storedRuleCardVariant === 'v2') {
-      initialRuleCardVariant = storedRuleCardVariant
-    }
   }
   const showEmptyState         = ref(initialEmpty)
   const maxWidthByPage         = ref<Partial<Record<string, SandboxMaxWidth>>>(initialMaxByPage)
   const groupListVariant       = ref<GroupListVariant>(initialGroupVariant)
   const networkPickerVariant   = ref<NetworkPickerVariant>(initialPickerVariant)
   const addBadgesVariant       = ref<AddBadgesVariant>(initialAddBadgesVariant)
-  const ruleCardVariant        = ref<RuleCardVariant>(initialRuleCardVariant)
 
   /** Read the active max-width for a page key — user override or default. */
   function getMaxWidth(key: string): SandboxMaxWidth {
@@ -121,7 +108,6 @@ export const useUiStore = defineStore('ui', () => {
     watch(groupListVariant,      v => localStorage.setItem(GROUP_LIST_VARIANT_KEY, v))
     watch(networkPickerVariant,  v => localStorage.setItem(NETWORK_PICKER_VARIANT_KEY, v))
     watch(addBadgesVariant,      v => localStorage.setItem(ADD_BADGES_VARIANT_KEY, v))
-    watch(ruleCardVariant,       v => localStorage.setItem(RULE_CARD_VARIANT_KEY, v))
   }
 
   return {
@@ -129,7 +115,6 @@ export const useUiStore = defineStore('ui', () => {
     groupListVariant,
     networkPickerVariant,
     addBadgesVariant,
-    ruleCardVariant,
     getMaxWidth, setMaxWidth,
   }
 })
