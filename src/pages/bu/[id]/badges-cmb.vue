@@ -1220,12 +1220,12 @@ function showSuccessToast(title: string, description: string) {
         class="fixed right-[8px] top-[8px] bottom-[8px] z-40 w-[424px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
         role="dialog"
         aria-modal="true"
-        aria-label="Blocage vacance"
+        aria-label="Configuration"
       >
         <!-- Header -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Blocage vacance
+            Configuration
           </p>
           <button
             type="button"

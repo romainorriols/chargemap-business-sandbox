@@ -178,7 +178,7 @@ const showActions = computed(
           <button
             v-if="secondaryActionLabel"
             type="button"
-            class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] outline-none focus-visible:shadow-ring-gray rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80"
+            class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] underline underline-offset-2 outline-none focus-visible:shadow-ring-gray rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80"
             @click="$emit('secondary-action')"
           >
             {{ secondaryActionLabel }}
@@ -186,7 +186,7 @@ const showActions = computed(
           <button
             v-if="primaryActionLabel"
             type="button"
-            class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] outline-none focus-visible:shadow-ring-gray rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80"
+            class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] underline underline-offset-2 outline-none focus-visible:shadow-ring-gray rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80"
             @click="$emit('primary-action')"
           >
             {{ primaryActionLabel }}
