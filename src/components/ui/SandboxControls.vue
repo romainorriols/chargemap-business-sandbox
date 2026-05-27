@@ -163,7 +163,7 @@ const controls = computed<Control[]>(() => [
               :aria-pressed="uiStore.networkPickerVariant === v"
               @click="uiStore.networkPickerVariant = v as NetworkPickerVariant"
             >
-              {{ v === 'default' ? 'Simple' : 'Super Partners' }}
+              {{ v === 'default' ? 'Simple' : v === 'super-partners' ? 'Super P.' : 'Bloquer' }}
             </button>
           </div>
         </div>

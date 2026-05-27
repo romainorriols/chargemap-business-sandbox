@@ -15,8 +15,8 @@ export const SANDBOX_MAX_WIDTH_OPTIONS: readonly SandboxMaxWidth[] = [2192, 1600
 export type GroupListVariant = 'detailed' | 'compact'
 export const GROUP_LIST_VARIANT_OPTIONS: readonly GroupListVariant[] = ['detailed', 'compact'] as const
 
-export type NetworkPickerVariant = 'default' | 'super-partners'
-export const NETWORK_PICKER_VARIANT_OPTIONS: readonly NetworkPickerVariant[] = ['default', 'super-partners'] as const
+export type NetworkPickerVariant = 'default' | 'super-partners' | 'block-mode'
+export const NETWORK_PICKER_VARIANT_OPTIONS: readonly NetworkPickerVariant[] = ['default', 'super-partners', 'block-mode'] as const
 
 // "Ajouter des badges" entry from the group detail view either swaps the
 // in-page table for the add-mode table (default) or pops a modal layered
@@ -79,7 +79,7 @@ export const useUiStore = defineStore('ui', () => {
       initialGroupVariant = storedGroupVariant
     }
     const storedPickerVariant = localStorage.getItem(NETWORK_PICKER_VARIANT_KEY)
-    if (storedPickerVariant === 'default' || storedPickerVariant === 'super-partners') {
+    if (storedPickerVariant === 'default' || storedPickerVariant === 'super-partners' || storedPickerVariant === 'block-mode') {
       initialPickerVariant = storedPickerVariant
     }
     const storedAddBadgesVariant = localStorage.getItem(ADD_BADGES_VARIANT_KEY)

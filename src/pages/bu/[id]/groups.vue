@@ -3918,10 +3918,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
               <div class="flex flex-col gap-[2px] min-w-0">
                 <p id="network-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                  Gérer les réseaux autorisés
+                  {{ uiStore.networkPickerVariant === 'block-mode' ? 'Bloquer des réseaux' : 'Gérer les réseaux autorisés' }}
                 </p>
                 <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                  Désactivez les réseaux sur lesquels la recharge ne doit pas être autorisée.
+                  {{ uiStore.networkPickerVariant === 'block-mode'
+                    ? 'Bloquez les réseaux sur lesquels la recharge ne doit pas être autorisée.'
+                    : 'Désactivez les réseaux sur lesquels la recharge ne doit pas être autorisée.' }}
                 </p>
               </div>
               <button
@@ -4054,9 +4056,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px]',
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'outline-none focus-visible:shadow-ring-gray',
-                      isNetworkAuthorized(net.id)
+                      uiStore.networkPickerVariant === 'block-mode'
                         ? 'bg-neutral hover:bg-neutral-secondary'
-                        : 'bg-neutral-secondary hover:bg-neutral-tertiary',
+                        : isNetworkAuthorized(net.id)
+                          ? 'bg-neutral hover:bg-neutral-secondary'
+                          : 'bg-neutral-secondary hover:bg-neutral-tertiary',
                     ]"
                     @click="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                     @keydown.enter.prevent="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
@@ -4066,15 +4070,17 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       <div
                         :class="[
                           'shrink-0 size-[38px] rounded-[12px] overflow-hidden flex items-center justify-center border',
-                          isNetworkAuthorized(net.id)
-                            ? 'bg-neutral-secondary border-border-neutral-tertiary'
-                            : 'bg-[#f1f5f9] border-[#f1f5f9]',
+                          uiStore.networkPickerVariant !== 'block-mode' && !isNetworkAuthorized(net.id)
+                            ? 'bg-[#f1f5f9] border-[#f1f5f9]'
+                            : 'bg-neutral-secondary border-border-neutral-tertiary',
                         ]"
                       >
                         <p
                           :class="[
                             'font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px]',
-                            isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-[#94a3b8]',
+                            uiStore.networkPickerVariant !== 'block-mode' && !isNetworkAuthorized(net.id)
+                              ? 'text-[#94a3b8]'
+                              : 'text-text-neutral-secondary',
                           ]"
                         >
                           {{ initialsFor(net.name) }}
@@ -4085,7 +4091,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           {{ net.name }}
                         </p>
                         <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                          <template v-if="isNetworkAuthorized(net.id)">
+                          <template v-if="uiStore.networkPickerVariant === 'block-mode'">
+                            <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                            <span :class="isNetworkAuthorized(net.id) ? 'text-[#18b97e]' : 'text-[#e21d48]'">
+                              {{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}
+                            </span>
+                          </template>
+                          <template v-else-if="isNetworkAuthorized(net.id)">
                             <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations autorisées</span>
                           </template>
                           <template v-else>
@@ -4125,7 +4137,31 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         Le label Super Partners distingue les réseaux de recharge offrant des tarifs négociés et une expérience utilisateur de confiance.
                       </span>
                     </div>
+                    <!-- Toggle — lib component on default / super-partners; a
+                         custom green↔red track when block-mode is on
+                         (Figma 6395-19503), where the knob stays right and
+                         only the track color flips with the rule state. -->
+                    <button
+                      v-if="uiStore.networkPickerVariant === 'block-mode'"
+                      type="button"
+                      role="switch"
+                      :aria-checked="!isNetworkAuthorized(net.id)"
+                      :aria-label="`${isNetworkAuthorized(net.id) ? 'Bloquer' : 'Autoriser'} ${net.name}`"
+                      :class="[
+                        'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
+                        'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
+                        'focus-visible:shadow-ring-gray',
+                        isNetworkAuthorized(net.id) ? 'bg-[#18b97e]' : 'bg-[#f43f5e]',
+                      ]"
+                      @click.stop="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
+                    >
+                      <span
+                        class="block size-[16px] rounded-full bg-white shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.1)]"
+                        style="transform: translateX(16px)"
+                      />
+                    </button>
                     <Toggle
+                      v-else
                       :model-value="isNetworkAuthorized(net.id)"
                       size="sm"
                       :aria-label="`Autoriser ${net.name}`"
