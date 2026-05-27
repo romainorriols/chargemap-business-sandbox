@@ -4239,10 +4239,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
                 <div class="flex flex-col gap-[2px] min-w-0">
                   <p id="country-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                    Gérer les pays autorisés
+                    {{ uiStore.networkPickerVariant === 'block-mode' ? 'Bloquer des pays' : 'Gérer les pays autorisés' }}
                   </p>
                   <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                    Désactivez les pays dans lesquels la recharge ne doit pas être autorisée.
+                    {{ uiStore.networkPickerVariant === 'block-mode'
+                      ? 'Bloquez les pays dans lesquels la recharge ne doit pas être autorisée.'
+                      : 'Désactivez les pays dans lesquels la recharge ne doit pas être autorisée.' }}
                   </p>
                 </div>
                 <button
@@ -4316,9 +4318,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px] overflow-clip',
                         'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                         'outline-none focus-visible:shadow-ring-gray',
-                        isCountryAuthorized(c.id)
+                        uiStore.networkPickerVariant === 'block-mode'
                           ? 'bg-neutral hover:bg-neutral-secondary'
-                          : 'bg-neutral-secondary hover:bg-neutral-tertiary',
+                          : isCountryAuthorized(c.id)
+                            ? 'bg-neutral hover:bg-neutral-secondary'
+                            : 'bg-neutral-secondary hover:bg-neutral-tertiary',
                       ]"
                       @click="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
                       @keydown.enter.prevent="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
@@ -4347,7 +4351,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           </p>
                         </div>
                       </div>
+                      <!-- Toggle — lib component on default; a custom green↔red
+                           track in block-mode, mirroring the network picker. -->
+                      <button
+                        v-if="uiStore.networkPickerVariant === 'block-mode'"
+                        type="button"
+                        role="switch"
+                        :aria-checked="!isCountryAuthorized(c.id)"
+                        :aria-label="`${isCountryAuthorized(c.id) ? 'Bloquer' : 'Autoriser'} ${c.name}`"
+                        :class="[
+                          'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
+                          'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
+                          'focus-visible:shadow-ring-gray',
+                          isCountryAuthorized(c.id) ? 'bg-[#18b97e]' : 'bg-[#f43f5e]',
+                        ]"
+                        @click.stop="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
+                      >
+                        <span
+                          class="block size-[16px] rounded-full bg-white shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.1)] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                          :style="{ transform: isCountryAuthorized(c.id) ? 'translateX(0)' : 'translateX(16px)' }"
+                        />
+                      </button>
                       <Toggle
+                        v-else
                         :model-value="isCountryAuthorized(c.id)"
                         size="sm"
                         :aria-label="`Autoriser ${c.name}`"
