@@ -4092,10 +4092,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         </p>
                         <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
                           <template v-if="uiStore.networkPickerVariant === 'block-mode'">
-                            <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
-                            <span :class="isNetworkAuthorized(net.id) ? 'text-[#18b97e]' : 'text-[#e21d48]'">
-                              {{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}
-                            </span>
+                            <template v-if="isNetworkAuthorized(net.id)">
+                              <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations autorisées</span>
+                            </template>
+                            <template v-else>
+                              <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
+                              <span class="text-[#e21d48]">bloquées</span>
+                            </template>
                           </template>
                           <template v-else-if="isNetworkAuthorized(net.id)">
                             <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations autorisées</span>
