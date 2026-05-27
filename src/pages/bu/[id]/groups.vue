@@ -4057,9 +4057,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'outline-none focus-visible:shadow-ring-gray',
                       uiStore.networkPickerVariant === 'block-mode'
-                        ? isNetworkAuthorized(net.id)
-                          ? 'bg-neutral hover:bg-neutral-secondary'
-                          : 'bg-[#fff1f2] hover:bg-[#fee2e5]'
+                        ? 'bg-neutral hover:bg-neutral-secondary'
                         : isNetworkAuthorized(net.id)
                           ? 'bg-neutral hover:bg-neutral-secondary'
                           : 'bg-neutral-secondary hover:bg-neutral-tertiary',
@@ -4321,9 +4319,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                         'outline-none focus-visible:shadow-ring-gray',
                         uiStore.networkPickerVariant === 'block-mode'
-                          ? isCountryAuthorized(c.id)
-                            ? 'bg-neutral hover:bg-neutral-secondary'
-                            : 'bg-[#fff1f2] hover:bg-[#fee2e5]'
+                          ? 'bg-neutral hover:bg-neutral-secondary'
                           : isCountryAuthorized(c.id)
                             ? 'bg-neutral hover:bg-neutral-secondary'
                             : 'bg-neutral-secondary hover:bg-neutral-tertiary',
