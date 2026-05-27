@@ -749,13 +749,13 @@ function showSuccessToast(title: string, description: string) {
             <div v-if="budgetForm.draftOrigin === 'inherited'" key="ro" class="flex flex-col gap-[32px]">
               <!-- Budget section (read-only) -->
               <div class="flex flex-col gap-[12px]">
-                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                   <div class="flex flex-col gap-[4px]">
                     <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                       Budget
                     </p>
                     <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                      Définissez un budget mensuel de recharge. Une fois le plafond atteint, les conducteurs peuvent prendre le relais avec leur carte bancaire.
+                      Fixer un budget mensuel de recharge ainsi que des alertes en cas de dépassement d'un certain seuil
                     </p>
                   </div>
 
@@ -773,7 +773,7 @@ function showSuccessToast(title: string, description: string) {
 
                 <section
                   v-if="budgetForm.active"
-                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]"
+                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
                 >
                   <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                     Budget mensuel
@@ -786,7 +786,7 @@ function showSuccessToast(title: string, description: string) {
 
               <!-- Alerte section (read-only) -->
               <div class="flex flex-col gap-[12px]">
-                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                   <div class="flex flex-col gap-[4px]">
                     <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                       Alerte
@@ -810,7 +810,7 @@ function showSuccessToast(title: string, description: string) {
 
                 <section
                   v-if="budgetForm.alertActive"
-                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]"
+                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
                 >
                   <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                     {{ budgetReadOnlyAlertLabel }}
@@ -826,13 +826,13 @@ function showSuccessToast(title: string, description: string) {
             <div v-else key="edit" class="flex flex-col gap-[32px]">
               <!-- Budget section (editable) -->
               <div class="flex flex-col gap-[12px]">
-                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                   <div class="flex flex-col gap-[4px]">
                     <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                       Budget
                     </p>
                     <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                      Définissez un budget mensuel de recharge. Une fois le plafond atteint, les conducteurs peuvent prendre le relais avec leur carte bancaire.
+                      Fixer un budget mensuel de recharge ainsi que des alertes en cas de dépassement d'un certain seuil
                     </p>
                   </div>
 
@@ -865,7 +865,7 @@ function showSuccessToast(title: string, description: string) {
                 >
                   <section
                     v-if="budgetForm.active"
-                    class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex items-center justify-between gap-[16px]"
+                    class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
                   >
                     <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                       Budget mensuel
@@ -886,7 +886,7 @@ function showSuccessToast(title: string, description: string) {
 
               <!-- Alerte section (editable) -->
               <div class="flex flex-col gap-[12px]">
-                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+                <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                   <div class="flex flex-col gap-[4px]">
                     <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                       Alerte
@@ -925,7 +925,7 @@ function showSuccessToast(title: string, description: string) {
                 >
                   <section
                     v-if="budgetForm.alertActive"
-                    class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]"
+                    class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
                   >
                     <Dropdown
                       v-model="budgetForm.alertType"
@@ -1032,7 +1032,7 @@ function showSuccessToast(title: string, description: string) {
             <!-- ─────────── READ-ONLY (inherited) ─────────── -->
             <div v-if="autorisationsForm.draftOrigin === 'inherited'" key="ro" class="flex flex-col gap-[16px]">
               <!-- Header card (read-only) -->
-              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                 <div class="flex flex-col gap-[4px]">
                   <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                     Autorisations quotidiennes
@@ -1057,7 +1057,7 @@ function showSuccessToast(title: string, description: string) {
                 <article
                   v-for="day in autorisationsForm.days"
                   :key="day.id"
-                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm overflow-clip"
+                  class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip"
                 >
                   <div class="px-[16px] py-[12px]">
                     <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -1076,7 +1076,7 @@ function showSuccessToast(title: string, description: string) {
 
             <!-- ─────────── EDITABLE (custom) ─────────── -->
             <div v-else key="edit" class="flex flex-col gap-[16px]">
-              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                 <div class="flex flex-col gap-[4px]">
                   <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                     Autorisations quotidiennes
@@ -1110,7 +1110,7 @@ function showSuccessToast(title: string, description: string) {
                   <article
                     v-for="day in autorisationsForm.days"
                     :key="day.id"
-                    class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm overflow-clip"
+                    class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip"
                   >
                     <div class="flex items-center justify-between px-[16px] py-[12px]">
                       <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -1263,7 +1263,7 @@ function showSuccessToast(title: string, description: string) {
             <!-- ─────────── READ-ONLY (inherited) ─────────── -->
             <div v-if="vacanceForm.draftOrigin === 'inherited'" key="ro" class="flex flex-col gap-[12px]">
               <!-- Header card -->
-              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                 <div class="flex flex-col gap-[4px]">
                   <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                     Blocage vacance
@@ -1297,7 +1297,7 @@ function showSuccessToast(title: string, description: string) {
                   v-for="period in vacanceForm.periods"
                   v-else
                   :key="period.id"
-                  class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex items-center gap-[16px]"
+                  class="bg-neutral border border-border-neutral-secondary rounded-[16px] p-[16px] flex items-center gap-[16px]"
                 >
                   <div class="pointer-events-none opacity-60">
                     <Toggle
@@ -1320,7 +1320,7 @@ function showSuccessToast(title: string, description: string) {
 
             <!-- ─────────── EDITABLE (custom) — ported from group-level drawer ─────────── -->
             <div v-else key="edit" class="flex flex-col gap-[12px]">
-              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[16px]">
+              <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
                 <div class="flex flex-col gap-[4px]">
                   <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                     Blocage vacance
@@ -1364,7 +1364,7 @@ function showSuccessToast(title: string, description: string) {
                     <div
                       v-for="period in vacanceForm.periods"
                       :key="period.id"
-                      class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex items-center gap-[16px]"
+                      class="bg-neutral border border-border-neutral-secondary rounded-[16px] p-[16px] flex items-center gap-[16px]"
                     >
                       <Toggle
                         v-model="period.active"
@@ -1452,7 +1452,7 @@ function showSuccessToast(title: string, description: string) {
                   >
                     <div
                       v-if="vacanceForm.creating"
-                      class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[16px] flex flex-col gap-[12px]"
+                      class="bg-neutral border border-border-neutral-secondary rounded-[16px] p-[16px] flex flex-col gap-[12px]"
                     >
                       <Input
                         v-model="vacanceForm.draft.name"
