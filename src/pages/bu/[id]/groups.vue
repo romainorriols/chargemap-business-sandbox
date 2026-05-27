@@ -4057,7 +4057,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'outline-none focus-visible:shadow-ring-gray',
                       uiStore.networkPickerVariant === 'block-mode'
-                        ? 'bg-neutral hover:bg-neutral-secondary'
+                        ? isNetworkAuthorized(net.id)
+                          ? 'bg-neutral hover:bg-neutral-secondary'
+                          : 'bg-[#fff1f2] hover:bg-[#fee2e5]'
                         : isNetworkAuthorized(net.id)
                           ? 'bg-neutral hover:bg-neutral-secondary'
                           : 'bg-neutral-secondary hover:bg-neutral-tertiary',
@@ -4139,10 +4141,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </span>
                     </div>
                     <!-- Toggle — lib component on default / super-partners; a
-                         custom green↔red track when block-mode is on
-                         (Figma 6395-19503). The knob sits left on green
-                         (authorised, "off") and slides right on rose
-                         (blocked, "on"). -->
+                         custom neutral↔rose track when block-mode is on
+                         (Figma 6395-19503). The knob sits left on neutral
+                         (authorised, status quo) and slides right on rose
+                         (blocked, the active decision the user just made). -->
                     <button
                       v-if="uiStore.networkPickerVariant === 'block-mode'"
                       type="button"
@@ -4153,7 +4155,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
                         'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                         'focus-visible:shadow-ring-gray',
-                        isNetworkAuthorized(net.id) ? 'bg-[#18b97e]' : 'bg-[#f43f5e]',
+                        isNetworkAuthorized(net.id) ? 'bg-[var(--bg-neutral-tertiary)]' : 'bg-[#e11d48]',
                       ]"
                       @click.stop="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                     >
@@ -4319,7 +4321,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                         'outline-none focus-visible:shadow-ring-gray',
                         uiStore.networkPickerVariant === 'block-mode'
-                          ? 'bg-neutral hover:bg-neutral-secondary'
+                          ? isCountryAuthorized(c.id)
+                            ? 'bg-neutral hover:bg-neutral-secondary'
+                            : 'bg-[#fff1f2] hover:bg-[#fee2e5]'
                           : isCountryAuthorized(c.id)
                             ? 'bg-neutral hover:bg-neutral-secondary'
                             : 'bg-neutral-secondary hover:bg-neutral-tertiary',
@@ -4333,7 +4337,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           :src="c.flagUrl"
                           alt=""
                           aria-hidden="true"
-                          class="shrink-0 size-[32px] rounded-full object-cover"
+                          :class="[
+                            'shrink-0 size-[32px] rounded-full object-cover',
+                            'transition-[filter,opacity] duration-200 ease-out motion-reduce:transition-none',
+                            uiStore.networkPickerVariant === 'block-mode' && !isCountryAuthorized(c.id)
+                              ? 'grayscale opacity-60'
+                              : '',
+                          ]"
                           loading="lazy"
                         />
                         <div class="w-[250px] flex flex-col">
@@ -4351,8 +4361,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           </p>
                         </div>
                       </div>
-                      <!-- Toggle — lib component on default; a custom green↔red
-                           track in block-mode, mirroring the network picker. -->
+                      <!-- Toggle — lib component on default; a custom
+                           neutral↔rose track in block-mode, mirroring the
+                           network picker. -->
                       <button
                         v-if="uiStore.networkPickerVariant === 'block-mode'"
                         type="button"
@@ -4363,7 +4374,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
                           'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                           'focus-visible:shadow-ring-gray',
-                          isCountryAuthorized(c.id) ? 'bg-[#18b97e]' : 'bg-[#f43f5e]',
+                          isCountryAuthorized(c.id) ? 'bg-[var(--bg-neutral-tertiary)]' : 'bg-[#e11d48]',
                         ]"
                         @click.stop="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
                       >
