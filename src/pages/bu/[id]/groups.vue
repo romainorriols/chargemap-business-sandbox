@@ -2684,7 +2684,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </span>
             </div>
             <div class="flex flex-col gap-[4px] w-full">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
                 {{ rule.title }}
               </p>
               <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
