@@ -4139,8 +4139,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                     <!-- Toggle — lib component on default / super-partners; a
                          custom green↔red track when block-mode is on
-                         (Figma 6395-19503), where the knob stays right and
-                         only the track color flips with the rule state. -->
+                         (Figma 6395-19503). The knob sits left on green
+                         (authorised, "off") and slides right on rose
+                         (blocked, "on"). -->
                     <button
                       v-if="uiStore.networkPickerVariant === 'block-mode'"
                       type="button"
@@ -4156,8 +4157,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       @click.stop="setNetworkAuthorized(net.id, !isNetworkAuthorized(net.id))"
                     >
                       <span
-                        class="block size-[16px] rounded-full bg-white shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.1)]"
-                        style="transform: translateX(16px)"
+                        class="block size-[16px] rounded-full bg-white shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.1)] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                        :style="{ transform: isNetworkAuthorized(net.id) ? 'translateX(0)' : 'translateX(16px)' }"
                       />
                     </button>
                     <Toggle
