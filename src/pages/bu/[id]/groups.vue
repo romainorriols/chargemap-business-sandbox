@@ -4070,17 +4070,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       <div
                         :class="[
                           'shrink-0 size-[38px] rounded-[12px] overflow-hidden flex items-center justify-center border',
-                          uiStore.networkPickerVariant !== 'block-mode' && !isNetworkAuthorized(net.id)
-                            ? 'bg-[#f1f5f9] border-[#f1f5f9]'
-                            : 'bg-neutral-secondary border-border-neutral-tertiary',
+                          isNetworkAuthorized(net.id)
+                            ? 'bg-neutral-secondary border-border-neutral-tertiary'
+                            : 'bg-[#f1f5f9] border-[#f1f5f9]',
                         ]"
                       >
                         <p
                           :class="[
                             'font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px]',
-                            uiStore.networkPickerVariant !== 'block-mode' && !isNetworkAuthorized(net.id)
-                              ? 'text-[#94a3b8]'
-                              : 'text-text-neutral-secondary',
+                            isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-[#94a3b8]',
                           ]"
                         >
                           {{ initialsFor(net.name) }}
