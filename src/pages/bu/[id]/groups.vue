@@ -913,8 +913,8 @@ const rules: ChargingRule[] = reactive([
   {
     id: 'budget',
     title: 'Budget et alertes',
-    description: "Fixer un budget mensuel de recharge ainsi que des alertes en cas de dépassement d'un certain seuil",
-    icon: 'money-coins',
+    description: 'Fixer un budget et des alertes par email, en cas de dépassement les conducteurs peuvent activer le relais par CB',
+    icon: 'wallet',
     iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
@@ -942,7 +942,7 @@ const rules: ChargingRule[] = reactive([
   },
   {
     id: 'pays',
-    title: 'Gérer les pays autorisés',
+    title: 'Bloquer des pays',
     description: 'Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite',
     icon: 'flag',
     iconVariant: 'solid',
@@ -952,9 +952,9 @@ const rules: ChargingRule[] = reactive([
   },
   {
     id: 'reseau',
-    title: 'Gérer les réseaux autorisés',
+    title: 'Bloquer des réseaux',
     description: 'Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite',
-    icon: 'globe-alt',
+    icon: 'map-pin',
     iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
