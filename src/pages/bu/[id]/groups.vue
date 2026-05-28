@@ -4133,7 +4133,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         v-if="uiStore.networkPickerVariant !== 'super-partners'"
                         :id="`sp-tip-${net.id}`"
                         role="tooltip"
-                        class="pointer-events-none absolute right-0 top-[calc(100%+8px)] z-30 w-[260px] px-[12px] py-[8px] rounded-[8px] bg-[#0f1729] text-white font-sans font-normal text-[13px] leading-[1.45] tracking-[-0.26px] text-left shadow-lg opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/sp:opacity-100 group-hover/sp:translate-y-0 group-focus-visible/sp:opacity-100 group-focus-visible/sp:translate-y-0"
+                        class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-30 w-max max-w-[320px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-white font-sans font-normal text-[13px] leading-[1.45] tracking-[-0.26px] text-left shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/sp:opacity-100 group-hover/sp:translate-y-0 group-focus-visible/sp:opacity-100 group-focus-visible/sp:translate-y-0 after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:size-0 after:border-l-[8px] after:border-r-[8px] after:border-t-[6px] after:border-l-transparent after:border-r-transparent after:border-t-text-neutral"
                       >
                         Le label Super Partners distingue les réseaux de recharge offrant des tarifs négociés et une expérience utilisateur de confiance.
                       </span>
