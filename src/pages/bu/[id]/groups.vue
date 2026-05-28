@@ -2694,7 +2694,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   :name="rule.icon"
                   :variant="rule.iconVariant"
                   :size="24"
-                  :class="rule.statusIcon === 'check' ? 'text-white' : 'text-icon-neutral-secondary'"
+                  :class="rule.statusIcon === 'check' ? 'text-white' : 'text-icon-neutral-disabled'"
                 />
               </div>
               <div class="shrink-0 flex items-center gap-[8px]">
