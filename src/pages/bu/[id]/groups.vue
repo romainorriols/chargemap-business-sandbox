@@ -3643,7 +3643,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                Suivre les règles de la BU CTA. Background sits on
                bg-neutral-secondary so the banner reads as a meta /
                information block above the editable section card. -->
-          <section class="bg-neutral-secondary border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+          <section class="bg-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
             <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
               <Icon
                 :name="reseauForm.draftOrigin === 'custom' ? 'map-pin' : 'lock-closed'"
