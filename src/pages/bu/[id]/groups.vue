@@ -643,7 +643,7 @@ const reseauForm = reactive<{ active: boolean; blockedNetworks: string[]; draftO
 })
 // Expanded state of the "Voir la liste des N réseaux bloqués" card (Figma
 // 6173-13372). Defaults to expanded since the screenshot ships in that state.
-const blockedNetworksListExpanded = ref(true)
+const blockedNetworksListExpanded = ref(false)
 const blockedNetworkDetails = computed(() =>
   networks.filter(n => reseauForm.blockedNetworks.includes(n.id)),
 )
@@ -2768,7 +2768,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   :class="[
                     'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
                     rule.statusIcon === 'check'
-                      ? 'bg-brand-lighter text-brand-medium'
+                      ? 'bg-[var(--bg-accent-brand)] text-[var(--text-accent-brand)]'
                       : 'bg-[#fafafa] text-[#48566a]',
                   ]"
                 >
@@ -3688,8 +3688,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               />
             </div>
 
-            <!-- Custom + active: count row with edit/clear actions (or
-                 the picker CTA when nothing is blocked yet). -->
+            <!-- Custom + active: count row with a single "Tout autoriser"
+                 secondary CTA (Figma 6467-22877), or the picker CTA when
+                 the blocklist is still empty. -->
             <template v-if="reseauForm.draftOrigin === 'custom' && reseauForm.active">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="flex items-center justify-between gap-[16px]">
@@ -3702,27 +3703,20 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <span class="text-[#e21d48]">{{ reseauForm.blockedNetworks.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
                   </span>
                 </p>
-                <template v-if="reseauForm.blockedNetworks.length > 0">
-                  <div class="shrink-0 flex items-center gap-[8px]">
-                    <button
-                      type="button"
-                      class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                      aria-label="Modifier la liste de blocage"
-                      @click="openNetworkPicker"
-                    >
-                      <Icon name="pencil" variant="outline" :size="18" />
-                    </button>
-                    <button
-                      type="button"
-                      class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                      aria-label="Vider la liste de blocage"
-                      @click="clearReseauBlocklist"
-                    >
-                      <Icon name="trash" variant="outline" :size="18" />
-                    </button>
-                  </div>
-                </template>
-                <Button v-else type="secondary" size="sm" label="Bloquer des réseaux" @click="openNetworkPicker" />
+                <Button
+                  v-if="reseauForm.blockedNetworks.length > 0"
+                  type="secondary"
+                  size="sm"
+                  label="Tout autoriser"
+                  @click="clearReseauBlocklist"
+                />
+                <Button
+                  v-else
+                  type="secondary"
+                  size="sm"
+                  label="Bloquer des réseaux"
+                  @click="openNetworkPicker"
+                />
               </div>
             </template>
 

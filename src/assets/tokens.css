@@ -58,7 +58,7 @@
   --bg-accent-cyan: #ebfeff;
   --bg-accent-yellow: #fefce7;
   --bg-accent-turquoise: #f2fdf9;
-  --bg-accent-brand: #f6f5ff;
+  --bg-accent-brand: var(--brand-surface);
   --bg-accent-gray: #fafafa;
 
   /* ─────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@
   --text-accent-cyan: #088eaf;
   --text-accent-yellow: #c88a04;
   --text-accent-turquoise: #18b97e;
-  --text-accent-brand: #7c3bed;
+  --text-accent-brand: var(--brand-base);
   --text-accent-gray: #48566a;
 
   /* ─────────────────────────────────────────────────────────
