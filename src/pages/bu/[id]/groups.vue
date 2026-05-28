@@ -3646,7 +3646,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           <section class="bg-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
             <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
               <Icon
-                :name="reseauForm.draftOrigin === 'custom' ? 'map-pin' : 'lock-closed'"
+                :name="reseauForm.draftOrigin === 'custom' ? 'lock-open' : 'lock-closed'"
                 variant="solid"
                 :size="24"
                 class="text-white"
@@ -3656,10 +3656,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 {{ reseauForm.draftOrigin === 'custom' ? 'Règle personnalisée' : 'Règle héritée de la BU' }}
               </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                {{ reseauForm.draftOrigin === 'custom'
-                  ? 'Cette règle est propre à ce groupe, elle ne suivra plus les modifications de la règle BU.'
-                  : 'Cliquez sur personnaliser, pour définir des règles propre uniquement à ce groupe.' }}
+              <p v-if="reseauForm.draftOrigin === 'custom'" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cette règle est propre à ce groupe, elle ne suivra plus les modifications de la <span class="text-text-brand-medium hover:underline cursor-pointer">règle BU</span>.
+              </p>
+              <p v-else class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cliquez sur personnaliser, pour définir des règles propre uniquement à ce groupe.
               </p>
             </div>
             <Button
