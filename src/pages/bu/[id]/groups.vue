@@ -15,6 +15,7 @@ interface Badge {
   vehicle: BadgeVehicle | null
   itinerance: boolean
   groupId: string | null
+  costCenter: string | null
 }
 interface Group {
   id: string
@@ -37,6 +38,13 @@ const driverPool: BadgeDriver[] = [
   { name: 'Lucas Roussel',          initials: 'LR' },
   { name: 'Chloé Vidal',            initials: 'CV' },
   { name: 'Mathieu Caron',          initials: 'MC' },
+]
+const costCenterPool: string[] = [
+  'Direction Paris',
+  'Direction Lyon',
+  'Direction Marseille',
+  'Direction Bordeaux',
+  'Direction Lille',
 ]
 const vehiclePool: BadgeVehicle[] = [
   { model: 'Renault Zoé',           plate: 'AB-123-CD' },
@@ -70,6 +78,8 @@ function makeBadge(groupId: string | null, slot: number): Badge {
   // ~92% of badges have itinérance activated — feels closer to the Figma
   // mock (48/50) than a coin flip would.
   const itinerance = m !== 4 && m !== 13
+  // ~60% of badges land on a cost center; the rest stay unassigned (--).
+  const hasCostCenter = m % 5 !== 0 && m % 5 !== 3
   return {
     id: `b-${groupId ?? 'pool'}-${slot}`,
     identifier: badgeIdentifier(seedCounter),
@@ -77,6 +87,7 @@ function makeBadge(groupId: string | null, slot: number): Badge {
     vehicle: hasVehicle ? vehiclePool[(slot * 5 + (groupId?.length ?? 0)) % vehiclePool.length] : null,
     itinerance,
     groupId,
+    costCenter: hasCostCenter ? costCenterPool[(slot * 7 + (groupId?.length ?? 0)) % costCenterPool.length] : null,
   }
 }
 function seedBadges(groupId: string | null, count: number): Badge[] {
@@ -2214,26 +2225,50 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- ── Tab: Infos et composition ──────────────────────────── -->
         <div v-if="activeTab === 'informations'" key="informations" class="flex flex-col gap-[32px]">
 
-          <!-- KPI strip — Responsable / Nombre de badges / Nombre de véhicules /
-               Nombre de conducteurs (Figma 6106-38930). 4 equal-width cards. -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] anim-fade-up" style="animation-delay: 60ms">
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Responsable</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">{{ selectedGroup.manager }}</p>
+          <!-- KPI strip — Responsable / Badges / Véhicules / Conducteurs
+               (Figma 6467-44844). Single bordered container with a 4-column
+               grid; each KPI carries a small brand icon tile, the value on
+               top and the label below. -->
+          <section class="bg-neutral border border-border-neutral-tertiary rounded-[16px] shadow-sm p-[24px] anim-fade-up" style="animation-delay: 60ms">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-[24px] gap-y-[24px]">
+              <div class="flex flex-col gap-[16px] min-w-0">
+                <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+                  <Icon name="identification" variant="solid" :size="24" class="text-white" />
+                </div>
+                <div class="flex flex-col gap-[4px] min-w-0">
+                  <p class="font-sans font-semibold text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral truncate">{{ selectedGroup.manager }}</p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Responsable</p>
+                </div>
+              </div>
+              <div class="flex flex-col gap-[16px] min-w-0">
+                <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+                  <Icon name="charging-badge-pass" variant="solid" :size="24" class="text-white" />
+                </div>
+                <div class="flex flex-col gap-[4px] min-w-0">
+                  <p class="font-sans font-semibold text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Badges</p>
+                </div>
+              </div>
+              <div class="flex flex-col gap-[16px] min-w-0">
+                <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+                  <Icon name="car" variant="solid" :size="24" class="text-white" />
+                </div>
+                <div class="flex flex-col gap-[4px] min-w-0">
+                  <p class="font-sans font-semibold text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral tabular-nums">{{ kpis.withVehicle }}</p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Véhicules</p>
+                </div>
+              </div>
+              <div class="flex flex-col gap-[16px] min-w-0">
+                <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+                  <Icon name="user-group" variant="solid" :size="24" class="text-white" />
+                </div>
+                <div class="flex flex-col gap-[4px] min-w-0">
+                  <p class="font-sans font-semibold text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral tabular-nums">{{ kpis.withDriver }}</p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Conducteurs</p>
+                </div>
+              </div>
             </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de badges</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.total }}</p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de véhicules</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withVehicle }}</p>
-            </div>
-            <div class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[16px] flex flex-col gap-[12px]">
-              <p class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral">Nombre de conducteurs</p>
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral tabular-nums">{{ kpis.withDriver }}</p>
-            </div>
-          </div>
+          </section>
 
           <!-- View ↔ Add swap. The drawer (add) carries a static fake-card
                peek to suggest layering, matching the Figma Frame 6070 mock. -->
@@ -2288,6 +2323,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
                       <Skeleton width="80px" height="14px" />
                     </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="90px" height="14px" />
+                    </div>
                     <div class="w-[68px] shrink-0" aria-hidden="true" />
                   </div>
                   <div
@@ -2306,6 +2344,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                     <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
                       <Skeleton width="140px" height="14px" />
+                    </div>
+                    <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="120px" height="14px" />
                     </div>
                     <div class="w-[68px] shrink-0 px-[16px] py-[12px] flex items-center justify-end">
                       <Skeleton width="20px" height="20px" rounded="6px" />
@@ -2343,6 +2384,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </div>
                   <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                     Conducteur
+                  </div>
+                  <div class="flex-[300] min-w-[200px] px-[16px] py-[12px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Centre de coûts
                   </div>
                   <div class="w-[68px] shrink-0" aria-hidden="true" />
                 </div>
@@ -2414,10 +2458,18 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
 
                     <!-- Conducteur -->
-                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
                       <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                         <template v-if="b.driver">{{ b.driver.name }}</template>
                         <span v-else aria-label="Non rattaché">--</span>
+                      </p>
+                    </div>
+
+                    <!-- Centre de coûts -->
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.costCenter">{{ b.costCenter }}</template>
+                        <span v-else aria-label="Aucun centre de coûts">--</span>
                       </p>
                     </div>
 
@@ -2578,6 +2630,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                         Conducteur
                       </div>
+                      <div class="flex-[300] min-w-[200px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                        Centre de coûts
+                      </div>
                       <div class="w-[68px] shrink-0" aria-hidden="true" />
                     </div>
 
@@ -2636,9 +2691,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                             <span v-else>--</span>
                           </p>
                         </div>
-                        <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                        <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
                           <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                             <template v-if="b.driver">{{ b.driver.name }}</template>
+                            <span v-else>--</span>
+                          </p>
+                        </div>
+                        <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                            <template v-if="b.costCenter">{{ b.costCenter }}</template>
                             <span v-else>--</span>
                           </p>
                         </div>
@@ -2675,7 +2736,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             type="button"
             :style="{ animationDelay: `${40 + i * 30}ms` }"
             :class="[
-              'text-left flex flex-col gap-[24px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer',
+              'text-left flex flex-col gap-[24px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer min-h-[201px]',
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
               'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
               'bg-neutral border-border-neutral-tertiary hover:bg-neutral-secondary focus-visible:shadow-ring-brand focus-visible:border-border-brand',
@@ -4540,6 +4601,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                   Conducteur
                 </div>
+                <div class="flex-[300] min-w-[160px] px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                  Centre de coûts
+                </div>
               </div>
 
               <!-- Scrollable row area (infinite scroll, see loadMoreAddModal) -->
@@ -4599,9 +4663,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         <span v-else>--</span>
                       </p>
                     </div>
-                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
                       <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
                         <template v-if="b.driver">{{ b.driver.name }}</template>
+                        <span v-else>--</span>
+                      </p>
+                    </div>
+                    <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.costCenter">{{ b.costCenter }}</template>
                         <span v-else>--</span>
                       </p>
                     </div>
@@ -4628,6 +4698,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                     <div class="flex-[300] min-w-[160px] px-[16px] py-[12px] flex items-center">
                       <Skeleton width="160px" height="14px" rounded="4px" />
+                    </div>
+                    <div class="flex-[300] min-w-[160px] px-[16px] py-[12px] flex items-center">
+                      <Skeleton width="120px" height="14px" rounded="4px" />
                     </div>
                   </div>
                 </div>
