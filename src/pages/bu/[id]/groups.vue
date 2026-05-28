@@ -3644,17 +3644,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                card (brand bg with map-pin when custom, flat gray with a
                lock when inherited). -->
           <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <div
-              :class="[
-                'flex items-center justify-center shrink-0 size-[37px] rounded-[12px]',
-                reseauForm.draftOrigin === 'custom' ? 'bg-brand' : 'bg-[#fafafa]',
-              ]"
-            >
+            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
               <Icon
                 :name="reseauForm.draftOrigin === 'custom' ? 'map-pin' : 'lock-closed'"
                 variant="solid"
                 :size="24"
-                :class="reseauForm.draftOrigin === 'custom' ? 'text-white' : 'text-icon-neutral-disabled'"
+                class="text-white"
               />
             </div>
             <div class="flex flex-col gap-[4px]">
