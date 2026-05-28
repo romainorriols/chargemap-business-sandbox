@@ -2752,18 +2752,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             @click="onRuleClick(rule)"
           >
             <div class="flex items-center justify-between gap-[8px] w-full">
-              <div
-                :class="[
-                  'flex items-center justify-center shrink-0 size-[37px] rounded-[12px]',
-                  'transition-colors duration-150 ease-out motion-reduce:transition-none',
-                  rule.statusIcon === 'check' ? 'bg-brand' : 'bg-[#fafafa]',
-                ]"
-              >
+              <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
                 <Icon
                   :name="rule.icon"
                   :variant="rule.iconVariant"
                   :size="24"
-                  :class="rule.statusIcon === 'check' ? 'text-white' : 'text-icon-brand'"
+                  class="text-white"
                 />
               </div>
               <div class="shrink-0 flex items-center gap-[8px]">
