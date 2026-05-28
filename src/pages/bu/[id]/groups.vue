@@ -354,6 +354,10 @@ interface ChargingRule {
   iconVariant: IconVariant
   statusIcon: StatusIcon
   statusLabel: 'Activé' | 'Désactivé'
+  // Mirror of the per-badge pattern (badges-cmb.vue) — each rule either
+  // falls back to the BU defaults ('inherited') or has been overridden at
+  // the group level ('custom'). Surfaced as a left-side pill on the card.
+  origin: 'inherited' | 'custom'
 }
 // Selected rule (Figma state) — click on a card to toggle the selected
 // visual state. Budget de recharge also opens an edit drawer.
@@ -911,45 +915,50 @@ const rules: ChargingRule[] = reactive([
     title: 'Budget et alertes',
     description: "Fixer un budget mensuel de recharge ainsi que des alertes en cas de dépassement d'un certain seuil",
     icon: 'money-coins',
-    iconVariant: 'outline',
+    iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
+    origin: 'inherited',
   },
   {
     id: 'autorisations',
     title: 'Autorisations quotidiennes',
     description: 'Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges',
     icon: 'calendar-days',
-    iconVariant: 'outline',
+    iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
+    origin: 'inherited',
   },
   {
     id: 'vacance',
     title: 'Blocage vacance',
     description: 'Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée',
     icon: 'airport-alt',
-    iconVariant: 'outline',
+    iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
+    origin: 'inherited',
   },
   {
     id: 'pays',
     title: 'Gérer les pays autorisés',
     description: 'Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite',
     icon: 'flag',
-    iconVariant: 'outline',
+    iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
+    origin: 'inherited',
   },
   {
     id: 'reseau',
     title: 'Gérer les réseaux autorisés',
     description: 'Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite',
     icon: 'globe-alt',
-    iconVariant: 'outline',
+    iconVariant: 'solid',
     statusIcon: 'x-mark',
     statusLabel: 'Désactivé',
+    origin: 'inherited',
   },
 ])
 
@@ -2653,7 +2662,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </Transition>
         </div>
 
-        <!-- ── Tab: Règles de recharge — 3×2 grid (Figma 5959-38687) ──── -->
+        <!-- ── Tab: Règles de recharge — 3×2 grid (Figma 6464-10384) ────
+             Two pills at the top right: origin (Hérité de la BU /
+             Personnalisé) + status (Activé / Désactivé). The icon tile
+             flips to the brand purple when the rule is on and to a flat
+             gray when off. Same inherited↔custom principle as the
+             per-badge cards (badges-cmb.vue). -->
         <div v-else key="charging-rules" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
           <button
             v-for="(rule, i) in rules"
@@ -2664,24 +2678,40 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               'text-left flex flex-col gap-[24px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer',
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
               'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
-              'bg-neutral border-border-neutral-secondary hover:bg-neutral-hover focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+              'bg-neutral border-border-neutral-tertiary hover:bg-neutral-secondary focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
             @click="onRuleClick(rule)"
           >
-            <div class="flex items-center justify-between w-full">
-              <div class="flex items-center justify-center shrink-0 size-[40px] rounded-[12px] bg-neutral-secondary border border-border-neutral-tertiary">
-                <Icon :name="rule.icon" :variant="rule.iconVariant" :size="24" class="text-icon-neutral-secondary" />
-              </div>
-              <span
+            <div class="flex items-center justify-between gap-[8px] w-full">
+              <div
                 :class="[
-                  'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
-                  rule.statusIcon === 'check'
-                    ? 'bg-[#f2fdf9] border-[#bdfae3] text-[#18b97e]'
-                    : 'bg-[#fafafa] border-[#e4e4e7] text-[#48566a]',
+                  'flex items-center justify-center shrink-0 size-[37px] rounded-[12px]',
+                  'transition-colors duration-150 ease-out motion-reduce:transition-none',
+                  rule.statusIcon === 'check' ? 'bg-brand' : 'bg-[#fafafa]',
                 ]"
               >
-                {{ rule.statusLabel }}
-              </span>
+                <Icon
+                  :name="rule.icon"
+                  :variant="rule.iconVariant"
+                  :size="24"
+                  :class="rule.statusIcon === 'check' ? 'text-white' : 'text-icon-neutral-secondary'"
+                />
+              </div>
+              <div class="shrink-0 flex items-center gap-[8px]">
+                <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] bg-[#fafafa] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#48566a] whitespace-nowrap">
+                  {{ rule.origin === 'inherited' ? 'Hérité de la BU' : 'Personnalisé' }}
+                </span>
+                <span
+                  :class="[
+                    'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
+                    rule.statusIcon === 'check'
+                      ? 'bg-[#f6f5ff] text-[#7c3bed]'
+                      : 'bg-[#fafafa] text-[#48566a]',
+                  ]"
+                >
+                  {{ rule.statusLabel }}
+                </span>
+              </div>
             </div>
             <div class="flex flex-col gap-[4px] w-full">
               <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
