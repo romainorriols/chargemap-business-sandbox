@@ -308,6 +308,17 @@ function saveCreateGroup() {
       ? '1 badge rattaché'
       : `${count} badges rattachés`
   showSuccessToast('Groupe créé', detail)
+  // Surface the "Appliquez des règles de recharge" popover (Figma
+  // 6529-39169) just after the user lands on the new group's detail.
+  newGroupTipOpen.value = true
+}
+
+// Onboarding tip shown after a fresh group lands on its detail view.
+const newGroupTipOpen = ref(false)
+function closeNewGroupTip() { newGroupTipOpen.value = false }
+function discoverChargingRules() {
+  activeTab.value = 'charging-rules'
+  newGroupTipOpen.value = false
 }
 // Clear individual error flags as the user fills each field, so the red
 // state disappears immediately on correction rather than waiting for the
@@ -321,6 +332,11 @@ const isLoading = ref(false)
 let loadingTimer: ReturnType<typeof setTimeout> | null = null
 watch(selectedId, (id) => {
   if (loadingTimer) { clearTimeout(loadingTimer); loadingTimer = null }
+  // Close the new-group onboarding tip whenever the user leaves the
+  // detail it was anchored to. The tip itself is opened later in
+  // saveCreateGroup (after this watcher has already fired), so the
+  // close here is a no-op on initial entry.
+  newGroupTipOpen.value = false
   if (id) {
     // First visit of a freshly created group: reset charging rules so the
     // group starts with everything désactivé regardless of edits made
@@ -4946,7 +4962,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </span>
             </button>
           </div>
-          <div class="h-px mx-[12px] my-[4px] bg-border-neutral-tertiary" aria-hidden="true" />
           <div class="px-[4px]">
             <button
               type="button"
@@ -5002,9 +5017,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="transfer-modal-title"
           aria-describedby="transfer-modal-desc"
         >
-          <div class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col p-[24px] gap-[16px]">
-            <!-- Header — title + X close, no internal hairlines (Figma 6529-34908) -->
-            <div class="flex items-center gap-[16px]">
+          <div class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col">
+            <!-- Header — title + X close, hairline below (Figma 6529-34908) -->
+            <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
               <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Transférer des badges
               </p>
@@ -5019,25 +5034,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </div>
 
             <!-- Body — description + field label + target group dropdown -->
-            <p id="transfer-modal-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-              Transférer les badges vers un autre groupe de cette Business unit.
-            </p>
-            <div class="flex flex-col gap-[6px]">
-              <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                Sélectionnez le groupe cible
-              </label>
-              <Dropdown
-                v-model="transferTargetGroupId"
-                :items="transferGroupItems"
-                placeholder="Sélectionnez un groupe"
-                :searchable="false"
-                :show-label="false"
-                :show-hint="false"
-              />
+            <div class="px-[24px] py-[16px] flex flex-col gap-[16px] border-b border-border-neutral-secondary">
+              <p id="transfer-modal-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Transférer les badges vers un autre groupe de cette Business unit.
+              </p>
+              <div class="flex flex-col gap-[6px]">
+                <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                  Sélectionnez le groupe cible
+                </label>
+                <Dropdown
+                  v-model="transferTargetGroupId"
+                  :items="transferGroupItems"
+                  placeholder="Sélectionnez un groupe"
+                  :searchable="false"
+                  :show-label="false"
+                  :show-hint="false"
+                />
+              </div>
             </div>
 
             <!-- Footer — Annuler + Transférer aligned right -->
-            <div class="flex items-center justify-end gap-[12px] pt-[8px]">
+            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px]">
               <Button type="secondary" size="md" label="Annuler" @click="closeTransferModal" />
               <Button
                 type="primary"
@@ -5133,6 +5150,70 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         </div>
       </Transition>
     </div>
+
+    <!-- ── New-group onboarding popover (Figma 6529-39169) ───────────────
+         Surfaced right after a group is created and the user lands on
+         the new detail. Encourages configuring charging rules. Sits in
+         the bottom-right above the bulk-action pill / table content. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 translate-y-[16px]"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-[16px]"
+      >
+        <div
+          v-if="newGroupTipOpen"
+          class="fixed bottom-[24px] right-[24px] z-[55] w-[340px] bg-neutral border border-border-neutral-tertiary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] p-[16px] flex flex-col gap-[16px]"
+          role="dialog"
+          aria-labelledby="new-group-tip-title"
+        >
+          <!-- Rule card preview — static thumbnail mirroring the Budget
+               et alertes card so the user recognises the destination. -->
+          <div class="rounded-[12px] bg-neutral-secondary p-[12px] flex flex-col gap-[12px]">
+            <div class="flex items-center justify-between gap-[8px]">
+              <div class="flex items-center justify-center shrink-0 size-[28px] rounded-[8px] bg-brand">
+                <Icon name="wallet" variant="solid" :size="16" class="text-white" />
+              </div>
+              <div class="shrink-0 flex items-center gap-[6px]">
+                <span class="inline-flex items-center justify-center px-[8px] py-[1px] rounded-[6px] bg-[#fafafa] font-sans font-medium text-[10px] leading-[1.5] tracking-[-0.3px] text-[#48566a] whitespace-nowrap">
+                  Hérité de la BU
+                </span>
+                <span class="inline-flex items-center justify-center px-[8px] py-[1px] rounded-[6px] bg-[var(--bg-accent-brand)] text-[var(--text-accent-brand)] font-sans font-medium text-[10px] leading-[1.5] tracking-[-0.3px] whitespace-nowrap">
+                  Activé
+                </span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-[2px]">
+              <p class="font-sans font-medium text-[14px] leading-[1.4] tracking-[-0.42px] text-text-neutral">
+                Budget et alertes
+              </p>
+              <p class="font-sans font-normal text-[11px] leading-[1.4] tracking-[-0.33px] text-text-neutral-secondary line-clamp-2">
+                Fixer un budget et des alertes mensuel, en cas de dépassement les conducteurs peuvent activer le relais par CB.
+              </p>
+            </div>
+          </div>
+
+          <!-- Tip copy -->
+          <div class="flex flex-col gap-[4px]">
+            <p id="new-group-tip-title" class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              Appliquez des règles de recharges !
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Définissez des règles de recharge applicables à l'ensemble du groupe afin de mieux maîtriser les usages de vos conducteurs et le budget de votre flotte.
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-end gap-[8px]">
+            <Button type="secondary" size="sm" label="Fermer" @click="closeNewGroupTip" />
+            <Button type="primary" size="sm" label="Découvrir" @click="discoverChargingRules" />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- ── Toast ─────────────────────────────────────────────────────────── -->
     <div class="pointer-events-none fixed top-[24px] right-[24px] z-50">
