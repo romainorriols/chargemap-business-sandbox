@@ -47,6 +47,7 @@ export default {
           'neutral-inverse': 'var(--text-neutral-inverse)',
           'brand-medium': 'var(--text-brand-medium)',
           'brand-deep': 'var(--text-brand-deep)',
+          'link-medium': 'var(--text-link-medium)',
           'danger-medium': 'var(--text-danger-medium)',
           'danger-deep': 'var(--text-danger-deep)',
           'success-medium': 'var(--text-success-medium)',

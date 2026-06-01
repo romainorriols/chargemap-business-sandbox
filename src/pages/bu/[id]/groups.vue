@@ -490,7 +490,17 @@ const selectedRuleId = ref<string | null>(null)
 
 // Drawer state for the Budget de recharge rule (Figma 5980-29598 / 5980-28115)
 const budgetDrawerOpen = ref(false)
-const budgetForm = reactive({ active: true, amount: '230,00' })
+// `draftOrigin` mirrors the reseauForm pattern — the Budget+Alerte rule
+// flips between inherited (read-only, follows the BU) and custom
+// (editable). Both sub-toggles share the same origin since they live in
+// the same rule.
+function personalizeBudget() { budgetForm.draftOrigin = 'custom' }
+function inheritBudget() { budgetForm.draftOrigin = 'inherited' }
+const budgetForm = reactive<{ active: boolean; amount: string; draftOrigin: 'inherited' | 'custom' }>({
+  active: true,
+  amount: '230,00',
+  draftOrigin: 'inherited',
+})
 
 // Zero-amount guard for the Budget section (Figma 5980-29334). When the user
 // turns the section on but leaves the amount at 0/empty, Enregistrer is
@@ -1144,10 +1154,13 @@ function onRuleClick(rule: ChargingRule) {
 
   if (rule.id === 'budget') {
     // The "Budget et alertes" card opens one drawer with both sub-toggles.
-    // We don't reseed budgetForm/alerteForm from the rule status — the form
-    // state is the source of truth between saves, since one rule status now
-    // represents two independent toggles.
+    // We don't reseed budgetForm.active / alerteForm.active from the rule
+    // status — the form state is the source of truth between saves, since
+    // one rule status represents two independent toggles. The drawer's
+    // origin draft is reseeded from the rule so the banner CTA reflects
+    // the live state when the user re-opens it.
     selectedRuleId.value = rule.id
+    budgetForm.draftOrigin = rule.origin
     budgetDrawerOpen.value = true
     return
   }
@@ -1208,6 +1221,7 @@ function saveBudget() {
 function commitBudget() {
   const rule = rules.find(r => r.id === 'budget')
   if (rule) {
+    rule.origin = budgetForm.draftOrigin
     const active = budgetForm.active || alerteForm.active
     rule.statusIcon = active ? 'check' : 'x-mark'
     rule.statusLabel = active ? 'Activé' : 'Désactivé'
@@ -2629,13 +2643,14 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </p>
                     </div>
 
-                    <!-- Véhicule -->
+                    <!-- Véhicule — link colour matches Figma's
+                         --text-link-medium token (#1e40af). -->
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
                       <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
                         <button
                           v-if="b.vehicle"
                           type="button"
-                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                          class="text-text-link-medium hover:underline outline-none focus-visible:underline"
                           @click.stop
                         >{{ b.vehicle.plate }}</button>
                         <span v-else class="text-text-neutral-secondary" aria-label="Non rattaché">--</span>
@@ -2648,7 +2663,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         <button
                           v-if="b.driver"
                           type="button"
-                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                          class="text-text-link-medium hover:underline outline-none focus-visible:underline"
                           @click.stop
                         >{{ b.driver.name }}</button>
                         <span v-else class="text-text-neutral-secondary" aria-label="Non rattaché">--</span>
@@ -2847,25 +2862,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           </p>
                         </div>
                         <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                            <button
-                              v-if="b.vehicle"
-                              type="button"
-                              class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
-                              @click.stop
-                            >{{ b.vehicle.plate }}</button>
-                            <span v-else class="text-text-neutral-secondary">--</span>
+                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                            <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
+                            <span v-else>--</span>
                           </p>
                         </div>
                         <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                            <button
-                              v-if="b.driver"
-                              type="button"
-                              class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
-                              @click.stop
-                            >{{ b.driver.name }}</button>
-                            <span v-else class="text-text-neutral-secondary">--</span>
+                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                            <template v-if="b.driver">{{ b.driver.name }}</template>
+                            <span v-else>--</span>
                           </p>
                         </div>
                         <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
@@ -3005,176 +3010,176 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — Budget + Alerte sections, each split into a primary card
-             (title + description + Activé toggle) and an optional secondary
-             card surfaced when the rule is on (Figma 5980-28115). Cards
-             inside the same section keep a 12px gap; sections are spaced
-             by 32px. -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[32px]">
+        <!-- Body — origin banner + Budget section + Alerte section
+             (Figma 6467-21083 / 6467-21158). Each section is a single
+             card: a title row with the toggle inline, plus the editable
+             sub-content folded into the same card when the toggle is on. -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
 
-          <!-- Zero-budget error Alert (Figma 5980-29334) — compact danger
-               banner at the top of the body. Animated in/out so it doesn't
-               pop on save attempts. -->
-          <Transition
-            enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 -translate-y-[6px]"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-[4px]"
-          >
-            <Alert
-              v-if="budgetError"
-              type="danger"
-              :leading-text-only="true"
-              :dismissable="false"
-              title="veuillez définir un budget supérieur à 0.00 €"
-              :primary-action-label="''"
-              :secondary-action-label="''"
+          <!-- Origin banner — same shape as the reseau drawer. -->
+          <section class="bg-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+              <Icon
+                :name="budgetForm.draftOrigin === 'custom' ? 'lock-open' : 'lock-closed'"
+                variant="solid"
+                :size="24"
+                class="text-white"
+              />
+            </div>
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                {{ budgetForm.draftOrigin === 'custom' ? 'Règle personnalisée' : 'Règle héritée de la BU' }}
+              </p>
+              <p v-if="budgetForm.draftOrigin === 'custom'" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cette règle est propre à ce groupe, elle ne suivra plus les modifications de la <span class="text-text-brand-medium hover:underline cursor-pointer">règle BU</span>.
+              </p>
+              <p v-else class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cliquez sur personnaliser, pour définir des règles propre uniquement à ce groupe.
+              </p>
+            </div>
+            <Button
+              type="primary"
+              size="md"
+              :label="budgetForm.draftOrigin === 'custom' ? 'Suivre les règles de la BU' : 'Personnaliser'"
+              @click="budgetForm.draftOrigin === 'custom' ? inheritBudget() : personalizeBudget()"
             />
-          </Transition>
+          </section>
 
-          <!-- ── Section 1: Budget (header card + Budget mensuel sub-card, 12px gap) ── -->
-          <div class="flex flex-col gap-[12px]">
-            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-              <div class="flex flex-col gap-[4px]">
-                <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                  Budget
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                  Fixer un budget mensuel de recharge ainsi que des alertes en cas de dépassement d'un certain seuil
-                </p>
-              </div>
+          <!-- Budget section — title row + toggle, sub-content folded in
+               when custom + active. -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Budget
+              </span>
+              <Toggle
+                v-if="budgetForm.draftOrigin === 'custom'"
+                v-model="budgetForm.active"
+                size="md"
+                aria-label="Activer le budget de recharge"
+              />
+            </div>
 
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-              <!-- Désactivé / Activé toggle row -->
-              <div class="flex items-center justify-between gap-[16px]">
-                <span
-                  :class="[
-                    'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
-                    budgetForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
-                  ]"
-                >
-                  {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
-                </span>
-                <Toggle
-                  v-model="budgetForm.active"
-                  size="md"
-                  aria-label="Activer le budget de recharge"
+            <!-- Custom + active: budget mensuel input (error hint inline). -->
+            <template v-if="budgetForm.draftOrigin === 'custom' && budgetForm.active">
+              <div class="flex flex-col gap-[6px]">
+                <label class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                  Budget mensuel
+                </label>
+                <Input
+                  v-model="budgetForm.amount"
+                  type="trailingText"
+                  :addon-trailing-text="'Eur'"
+                  :show-currency-icon="false"
+                  :trailing-separator="false"
+                  :destructive="budgetError"
+                  placeholder="0,00"
+                  :hint="budgetError ? 'Veuillez définir un budget supérieur à 0.00 €' : ''"
+                  :show-hint="budgetError"
                 />
               </div>
-            </section>
+            </template>
 
-            <!-- Budget mensuel — sub-card surfaced once the budget rule is on. -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
-            >
-              <section
-                v-if="budgetForm.active"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
-              >
+            <!-- Inherited + inactive: read-only État/Désactivé. -->
+            <template v-if="budgetForm.draftOrigin === 'inherited' && !budgetForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  État
+                </span>
                 <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                  Désactivé
+                </span>
+              </div>
+            </template>
+
+            <!-- Inherited + active: read-only budget mensuel. -->
+            <template v-if="budgetForm.draftOrigin === 'inherited' && budgetForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                   Budget mensuel
                 </span>
-                <div class="shrink-0 w-[150px]">
-                  <Input
-                    v-model="budgetForm.amount"
-                    type="trailingText"
-                    :addon-trailing-text="'Eur'"
-                    :show-currency-icon="false"
-                    :trailing-separator="false"
-                    :destructive="budgetError"
-                    placeholder="0,00"
-                  />
-                </div>
-              </section>
-            </Transition>
-          </div>
-
-          <!-- ── Section 2: Alerte (header card + Pourcentage sub-card, 12px gap) ── -->
-          <div class="flex flex-col gap-[12px]">
-            <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-              <div class="flex flex-col gap-[4px]">
-                <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                  Alerte
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                  Soyez alerté par e-mail dès qu'un conducteur dépasse un seuil de budget défini.
-                </p>
-              </div>
-
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-              <!-- Désactivé / Activé toggle row -->
-              <div class="flex items-center justify-between gap-[16px]">
-                <span
-                  :class="[
-                    'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
-                    alerteForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
-                  ]"
-                >
-                  {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ budgetForm.amount }} Eur
                 </span>
-                <Toggle
-                  v-model="alerteForm.active"
-                  size="md"
-                  aria-label="Activer le seuil d'alerte"
-                />
               </div>
-            </section>
+            </template>
+          </section>
 
-            <!-- Alert threshold controls — sub-card surfaced once the alert
-                 rule is on. Amount is disabled when type is "percentage" with
-                 no budget set, with the same tooltip-explained constraint as
-                 the standalone drawer. -->
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
-            >
-              <section
-                v-if="alerteForm.active"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
-              >
-                <Dropdown
-                  v-model="alerteForm.type"
-                  :items="alerteTypeItems"
-                  :searchable="false"
-                  :show-label="false"
-                  :show-hint="false"
-                  :teleport="true"
+          <!-- Alerte section — same shape as Budget. -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Alerte
+              </span>
+              <Toggle
+                v-if="budgetForm.draftOrigin === 'custom'"
+                v-model="alerteForm.active"
+                size="md"
+                aria-label="Activer le seuil d'alerte"
+              />
+            </div>
+
+            <!-- Custom + active: type dropdown + amount input. Amount
+                 disabled with the same tooltip-explained constraint when
+                 percentage type is selected without a budget. -->
+            <template v-if="budgetForm.draftOrigin === 'custom' && alerteForm.active">
+              <Dropdown
+                v-model="alerteForm.type"
+                :items="alerteTypeItems"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+                :teleport="true"
+              />
+              <div class="relative group/disabled-amount" tabindex="-1">
+                <Input
+                  v-model="alerteForm.amount"
+                  type="trailingText"
+                  :addon-trailing-text="alerteSuffix"
+                  :show-currency-icon="false"
+                  :trailing-separator="false"
+                  :disabled="isAlerteAmountDisabled"
+                  placeholder="0"
                 />
-                <div class="relative group/disabled-amount" tabindex="-1">
-                  <Input
-                    v-model="alerteForm.amount"
-                    type="trailingText"
-                    :addon-trailing-text="alerteSuffix"
-                    :show-currency-icon="false"
-                    :trailing-separator="false"
-                    :disabled="isAlerteAmountDisabled"
-                    placeholder="0"
-                  />
-                  <div
-                    v-if="isAlerteAmountDisabled"
-                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
-                    role="tooltip"
-                  >
-                    Définissez un budget de recharge pour utiliser cette option.
-                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
-                  </div>
+                <div
+                  v-if="isAlerteAmountDisabled"
+                  class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
+                  role="tooltip"
+                >
+                  Définissez un budget de recharge pour utiliser cette option.
+                  <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
                 </div>
-              </section>
-            </Transition>
-          </div>
+              </div>
+            </template>
+
+            <!-- Inherited + inactive: read-only État/Désactivé. -->
+            <template v-if="budgetForm.draftOrigin === 'inherited' && !alerteForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  État
+                </span>
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                  Désactivé
+                </span>
+              </div>
+            </template>
+
+            <!-- Inherited + active: read-only seuil. -->
+            <template v-if="budgetForm.draftOrigin === 'inherited' && alerteForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  Seuil d'alerte
+                </span>
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                  {{ alerteForm.amount }} {{ alerteSuffix }}
+                </span>
+              </div>
+            </template>
+          </section>
         </div>
 
         <!-- Footer -->
@@ -4873,25 +4878,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                        <button
-                          v-if="b.vehicle"
-                          type="button"
-                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
-                          @click.stop
-                        >{{ b.vehicle.plate }}</button>
-                        <span v-else class="text-text-neutral-secondary">--</span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
+                        <span v-else>--</span>
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                        <button
-                          v-if="b.driver"
-                          type="button"
-                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
-                          @click.stop
-                        >{{ b.driver.name }}</button>
-                        <span v-else class="text-text-neutral-secondary">--</span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
+                        <template v-if="b.driver">{{ b.driver.name }}</template>
+                        <span v-else>--</span>
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">

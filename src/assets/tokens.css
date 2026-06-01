@@ -75,6 +75,10 @@
   --text-brand-medium: var(--brand-base);
   --text-brand-deep: var(--brand-deep);
 
+  /* Dedicated link color — slightly deeper than brand-medium so links
+     read with more authority. Matches the Figma --text-link-medium. */
+  --text-link-medium: #1e40af;
+
   --text-danger-lighter: #f87171;
   --text-danger-medium: #ba1b1b;
   --text-danger-deep: #811d1d;
