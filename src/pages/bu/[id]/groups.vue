@@ -3396,8 +3396,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </div>
 
                 <!-- Separator — sits inside the 16px padded area, so it's
-                     inset on each side (matches the Figma component). -->
-                <div class="h-px w-full bg-[var(--border-neutral-secondary)]" aria-hidden="true" />
+                     inset on each side (matches the Figma component).
+                     Uses the explicit hex so the colour ships regardless
+                     of how Tailwind picks up the bg-border-* classes. -->
+                <div class="h-px w-full bg-[#e1e7ef]" aria-hidden="true" />
 
                 <!-- Body — fixed 37px height keeps the card at 125px
                      regardless of which variant renders. -->
