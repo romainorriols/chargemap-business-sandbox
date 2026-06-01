@@ -3360,16 +3360,16 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
                 :class="[
-                  'rounded-[12px] border border-border-neutral-secondary overflow-clip flex flex-col',
+                  'rounded-[16px] border border-border-neutral-secondary overflow-clip flex flex-col justify-center gap-[16px] p-[16px] h-[125px]',
                   day.blocked ? 'bg-neutral-secondary' : 'bg-neutral',
                 ]"
               >
                 <!-- Header — day label + (custom only) red block toggle -->
-                <div class="p-[16px] flex items-center justify-between gap-[16px]">
+                <div class="flex items-center gap-[16px]">
                   <p
                     :class="[
-                      'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]',
-                      day.blocked ? 'text-text-neutral-secondary' : 'text-text-neutral',
+                      'flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]',
+                      day.blocked ? 'text-text-neutral-disabled' : 'text-text-neutral',
                     ]"
                   >
                     {{ day.label }}
@@ -3384,7 +3384,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
                       'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                       'focus-visible:shadow-ring-gray',
-                      day.blocked ? 'bg-[#e11d48]' : 'bg-[var(--bg-neutral-tertiary)]',
+                      day.blocked ? 'bg-danger' : 'bg-[var(--bg-neutral-tertiary)]',
                     ]"
                     @click="day.blocked = !day.blocked"
                   >
@@ -3395,13 +3395,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
 
-                <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+                <!-- Separator edge-to-edge via negative horizontal margin. -->
+                <div class="h-px -mx-[16px] bg-border-neutral-secondary" aria-hidden="true" />
 
-                <!-- Body — 4 variants (Figma 6529-27247). -->
-                <div class="p-[16px] flex items-center justify-between gap-[8px]">
+                <!-- Body — fixed 37px height so the card stays at 125px
+                     regardless of which variant renders. -->
+                <div class="flex items-center gap-[16px] h-[37px]">
                   <!-- Variant 4: blocked -->
                   <template v-if="day.blocked">
-                    <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled">
                       Bloqué toute la journée
                     </p>
                   </template>
