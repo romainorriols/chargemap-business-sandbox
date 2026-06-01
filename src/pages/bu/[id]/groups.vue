@@ -3360,12 +3360,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
                 :class="[
-                  'rounded-[16px] border border-border-neutral-secondary overflow-clip flex flex-col justify-center gap-[16px] p-[16px] h-[125px]',
+                  'rounded-[16px] border border-border-neutral-secondary overflow-clip flex flex-col',
                   day.blocked ? 'bg-neutral-secondary' : 'bg-neutral',
                 ]"
               >
-                <!-- Header — day label + (custom only) red block toggle -->
-                <div class="flex items-center gap-[16px]">
+                <!-- Header — padded block: day label + (custom only) red toggle -->
+                <div class="p-[16px] flex items-center gap-[16px]">
                   <p
                     :class="[
                       'flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]',
@@ -3395,15 +3395,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
 
-                <!-- Separator edge-to-edge via negative horizontal margin.
-                     Uses an arbitrary value so the colour ships even if
-                     the bg-border-neutral-secondary class isn't picked up
-                     by the JIT scan elsewhere in the file. -->
-                <div class="h-px -mx-[16px] bg-[var(--border-neutral-secondary)]" aria-hidden="true" />
+                <!-- Separator — full-width edge-to-edge between the two
+                     padded blocks. -->
+                <div class="h-px bg-[var(--border-neutral-secondary)]" aria-hidden="true" />
 
-                <!-- Body — fixed 37px height so the card stays at 125px
-                     regardless of which variant renders. -->
-                <div class="flex items-center gap-[16px] h-[37px]">
+                <!-- Body — padded block, h-[37px] inner row keeps the card
+                     height stable across variants. -->
+                <div class="p-[16px] flex items-center gap-[16px] min-h-[69px]">
                   <!-- Variant 4: blocked -->
                   <template v-if="day.blocked">
                     <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled">
