@@ -1583,6 +1583,17 @@ function runPillAction() {
     case 'remove': bulkRemoveSelected(); break
   }
 }
+// Transferring badges to another group is a sandbox stub for now — the
+// Figma exposes the affordance in the floating bulk-action bar but the
+// destination picker isn't designed yet, so we acknowledge via toast.
+function bulkTransferSelected() {
+  if (!selectedGroup.value || selectedToRemove.size === 0) return
+  const count = selectedToRemove.size
+  showSuccessToast(
+    count === 1 ? '1 badge prêt à être transféré' : `${count} badges prêts à être transférés`,
+    '',
+  )
+}
 
 // ── Pill positioning ────────────────────────────────────────────────────────
 // Default = 32px from viewport bottom. When the table ends short of the
@@ -4886,7 +4897,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               {{ fmtCount(pillCount) }}
             </span>
             <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px]">
-              {{ pillCount > 1 ? 'éléments' : 'élément' }}
+              {{ pillCount > 1 ? 'badges' : 'badge' }}
             </span>
             <button
               type="button"
@@ -4897,20 +4908,46 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <Icon name="x-mark" variant="solid" :size="18" />
             </button>
           </div>
-          <button
-            type="button"
-            class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
-            @click="runPillAction"
-          >
-            <Icon
-              :name="pillMode === 'add' ? 'plus' : 'trash'"
-              variant="outline"
-              :size="20"
-            />
-            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-              {{ pillMode === 'add' ? 'Ajouter' : 'Supprimer du groupe' }}
-            </span>
-          </button>
+          <!-- Action area — single CTA when adding, Transférer + Supprimer pair
+               (with a vertical divider between them) when removing. Figma
+               5931-23349 surfaces both bulk actions on the dark pill. -->
+          <div class="flex items-center gap-[4px]">
+            <template v-if="pillMode === 'add'">
+              <button
+                type="button"
+                class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
+                @click="runPillAction"
+              >
+                <Icon name="plus" variant="outline" :size="20" />
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                  Ajouter
+                </span>
+              </button>
+            </template>
+            <template v-else>
+              <button
+                type="button"
+                class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
+                @click="bulkTransferSelected"
+              >
+                <Icon name="switch-horizontal" variant="outline" :size="20" />
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                  Transférer
+                </span>
+              </button>
+              <div class="h-[16px] w-px bg-[#344256]" aria-hidden="true" />
+              <button
+                type="button"
+                class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#fda4a4] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-error"
+                @click="runPillAction"
+              >
+                <Icon name="trash" variant="outline" :size="20" />
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                  Supprimer du groupe
+                </span>
+              </button>
+            </template>
+          </div>
         </div>
       </Transition>
     </div>
