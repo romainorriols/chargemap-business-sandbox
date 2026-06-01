@@ -317,10 +317,82 @@ function saveCreateGroup() {
 
 // Onboarding tip shown after a fresh group lands on its detail view.
 const newGroupTipOpen = ref(false)
+const newGroupTipRef = ref<HTMLElement | null>(null)
+// Discovery modal opened from the onboarding tip — same illustration,
+// fuller copy + bulleted list (Figma 6538-40440). The modal morphs out
+// of the tip's bounding box via a FLIP transform on enter.
+const rulesDiscoveryOpen = ref(false)
+const rulesDiscoveryRef = ref<HTMLElement | null>(null)
+let tipRectSnapshot: DOMRect | null = null
 function closeNewGroupTip() { newGroupTipOpen.value = false }
+function openRulesDiscovery() {
+  // Capture the tip's rect (if visible) so the modal can morph out of
+  // it. We don't unmount the tip until the modal has rendered so the
+  // measurement is accurate.
+  tipRectSnapshot = newGroupTipRef.value?.getBoundingClientRect() ?? null
+  rulesDiscoveryOpen.value = true
+  newGroupTipOpen.value = false
+}
+function closeRulesDiscovery() {
+  rulesDiscoveryOpen.value = false
+  tipRectSnapshot = null
+}
 function discoverChargingRules() {
   activeTab.value = 'charging-rules'
-  newGroupTipOpen.value = false
+  closeRulesDiscovery()
+}
+// FLIP enter hook for the discovery modal. Starts the modal at the
+// tip's position+size and animates to its centered final layout.
+function onRulesDiscoveryEnter(el: Element, done: () => void) {
+  const modalEl = el as HTMLElement
+  if (!tipRectSnapshot) {
+    // No source rect (e.g. modal opened without a visible tip) → just
+    // fade in via CSS transition.
+    modalEl.style.opacity = '0'
+    modalEl.style.transform = 'scale(0.96) translateY(8px)'
+    requestAnimationFrame(() => {
+      modalEl.style.transition = 'opacity 220ms ease-out, transform 220ms cubic-bezier(0.23,1,0.32,1)'
+      modalEl.style.opacity = '1'
+      modalEl.style.transform = 'scale(1) translateY(0)'
+      const onEnd = () => { modalEl.style.transition = ''; modalEl.removeEventListener('transitionend', onEnd); done() }
+      modalEl.addEventListener('transitionend', onEnd, { once: true })
+    })
+    return
+  }
+  const from = tipRectSnapshot
+  const to = modalEl.getBoundingClientRect()
+  const dx = (from.left + from.width / 2) - (to.left + to.width / 2)
+  const dy = (from.top + from.height / 2) - (to.top + to.height / 2)
+  const sx = from.width / to.width
+  const sy = from.height / to.height
+  modalEl.style.transformOrigin = 'center center'
+  modalEl.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+  modalEl.style.opacity = '0.6'
+  modalEl.style.transition = 'none'
+  // Force a reflow so the initial transform sticks before we trigger
+  // the animation.
+  void modalEl.offsetWidth
+  requestAnimationFrame(() => {
+    modalEl.style.transition = 'transform 380ms cubic-bezier(0.23,1,0.32,1), opacity 200ms ease-out 80ms'
+    modalEl.style.transform = 'translate(0, 0) scale(1, 1)'
+    modalEl.style.opacity = '1'
+    const onEnd = (e: TransitionEvent) => {
+      if (e.propertyName !== 'transform') return
+      modalEl.style.transition = ''
+      modalEl.style.transform = ''
+      modalEl.style.transformOrigin = ''
+      modalEl.removeEventListener('transitionend', onEnd)
+      done()
+    }
+    modalEl.addEventListener('transitionend', onEnd)
+  })
+}
+function onRulesDiscoveryLeave(el: Element, done: () => void) {
+  const modalEl = el as HTMLElement
+  modalEl.style.transition = 'opacity 160ms ease-out, transform 160ms ease-out'
+  modalEl.style.opacity = '0'
+  modalEl.style.transform = 'scale(0.97) translateY(6px)'
+  modalEl.addEventListener('transitionend', () => done(), { once: true })
 }
 // Clear individual error flags as the user fills each field, so the red
 // state disappears immediately on correction rather than waiting for the
@@ -5168,9 +5240,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       >
         <div
           v-if="newGroupTipOpen"
-          class="fixed bottom-[24px] right-[24px] z-[55] w-[340px] bg-neutral border border-border-neutral-tertiary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] p-[16px] flex flex-col gap-[16px]"
+          ref="newGroupTipRef"
+          class="fixed bottom-[24px] right-[24px] z-[55] w-[340px] bg-neutral border border-border-neutral-tertiary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] p-[16px] flex flex-col gap-[16px] cursor-pointer"
           role="dialog"
           aria-labelledby="new-group-tip-title"
+          @click="openRulesDiscovery"
         >
           <!-- Illustration section (Figma 6529-40070) — single PNG that
                already carries the gray surround + stacked card shadow. -->
@@ -5191,10 +5265,82 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </p>
           </div>
 
-          <!-- Actions — full-width split, Fermer (tertiary) / Découvrir. -->
-          <div class="flex items-stretch gap-[8px]">
+          <!-- Actions — full-width split, Fermer (tertiary) / Découvrir.
+               The whole card is clickable too, so the buttons stop the
+               click so they don't double-fire. -->
+          <div class="flex items-stretch gap-[8px]" @click.stop>
             <Button class="flex-1" type="tertiaryGray" size="sm" label="Fermer" @click="closeNewGroupTip" />
-            <Button class="flex-1" type="primary" size="sm" label="Découvrir" @click="discoverChargingRules" />
+            <Button class="flex-1" type="primary" size="sm" label="Découvrir" @click="openRulesDiscovery" />
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ── Rules discovery modal (Figma 6538-40440) ─────────────────────
+         Opens from the onboarding popover. Larger card with the same
+         illustration, fuller copy and a 5-rule bulleted list. Enters
+         via a FLIP morph from the popover's bounding rect. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="rulesDiscoveryOpen"
+          class="fixed inset-0 z-[70] bg-black/40"
+          aria-hidden="true"
+          @click="closeRulesDiscovery"
+        />
+      </Transition>
+
+      <Transition
+        :css="false"
+        @enter="onRulesDiscoveryEnter"
+        @leave="onRulesDiscoveryLeave"
+      >
+        <div
+          v-if="rulesDiscoveryOpen"
+          class="fixed inset-0 z-[71] flex items-center justify-center p-[24px] pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rules-discovery-title"
+        >
+          <div
+            ref="rulesDiscoveryRef"
+            class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-tertiary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] p-[16px] flex flex-col gap-[16px]"
+          >
+            <img
+              :src="newGroupTipIllustration"
+              alt=""
+              aria-hidden="true"
+              class="w-full h-auto block rounded-[12px]"
+            />
+            <div class="flex flex-col gap-[8px]">
+              <p id="rules-discovery-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Appliquez des règles de recharge !
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Définissez des règles de recharge applicables à l'ensemble du groupe afin de mieux maîtriser les usages de vos conducteurs et le budget de votre flotte.
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Par défaut, tous les badges du groupe héritent des règles définies au niveau de votre Business unit. Vous pouvez aussi en configurer certaines spécifiquement pour ce groupe, parmi :
+              </p>
+              <ul class="list-disc pl-[20px] flex flex-col gap-[2px] font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                <li>Budget et alertes mensuels</li>
+                <li>Autorisations quotidiennes</li>
+                <li>Blocage vacance</li>
+                <li>Bloquer des réseaux</li>
+                <li>Bloquer des pays</li>
+              </ul>
+            </div>
+            <div class="flex items-stretch gap-[8px]">
+              <Button class="flex-1" type="tertiaryGray" size="md" label="Fermer" @click="closeRulesDiscovery" />
+              <Button class="flex-1" type="primary" size="md" label="Découvrir" @click="discoverChargingRules" />
+            </div>
           </div>
         </div>
       </Transition>
