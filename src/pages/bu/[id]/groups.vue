@@ -5,6 +5,7 @@ import { ref, computed, reactive, watch, onUnmounted, nextTick } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
 import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
+import newGroupTipIllustration from '@/assets/illustrations/new-group-tip.png'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -5170,31 +5171,14 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           role="dialog"
           aria-labelledby="new-group-tip-title"
         >
-          <!-- Rule card preview — static thumbnail mirroring the Budget
-               et alertes card so the user recognises the destination. -->
-          <div class="rounded-[12px] bg-neutral-secondary p-[12px] flex flex-col gap-[12px]">
-            <div class="flex items-center justify-between gap-[8px]">
-              <div class="flex items-center justify-center shrink-0 size-[28px] rounded-[8px] bg-brand">
-                <Icon name="wallet" variant="solid" :size="16" class="text-white" />
-              </div>
-              <div class="shrink-0 flex items-center gap-[6px]">
-                <span class="inline-flex items-center justify-center px-[8px] py-[1px] rounded-[6px] bg-[#fafafa] font-sans font-medium text-[10px] leading-[1.5] tracking-[-0.3px] text-[#48566a] whitespace-nowrap">
-                  Hérité de la BU
-                </span>
-                <span class="inline-flex items-center justify-center px-[8px] py-[1px] rounded-[6px] bg-[var(--bg-accent-brand)] text-[var(--text-accent-brand)] font-sans font-medium text-[10px] leading-[1.5] tracking-[-0.3px] whitespace-nowrap">
-                  Activé
-                </span>
-              </div>
-            </div>
-            <div class="flex flex-col gap-[2px]">
-              <p class="font-sans font-medium text-[14px] leading-[1.4] tracking-[-0.42px] text-text-neutral">
-                Budget et alertes
-              </p>
-              <p class="font-sans font-normal text-[11px] leading-[1.4] tracking-[-0.33px] text-text-neutral-secondary line-clamp-2">
-                Fixer un budget et des alertes mensuel, en cas de dépassement les conducteurs peuvent activer le relais par CB.
-              </p>
-            </div>
-          </div>
+          <!-- Illustration section (Figma 6529-40070) — single PNG that
+               already carries the gray surround + stacked card shadow. -->
+          <img
+            :src="newGroupTipIllustration"
+            alt=""
+            aria-hidden="true"
+            class="w-full h-auto block rounded-[12px]"
+          />
 
           <!-- Tip copy -->
           <div class="flex flex-col gap-[4px]">
