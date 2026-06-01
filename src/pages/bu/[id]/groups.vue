@@ -1525,6 +1525,13 @@ function removeBadge(b: Badge) {
   closeMenus()
   showUndoToast('Badge retiré du groupe', b.identifier)
 }
+// Per-row "Transférer" stub — same shape as bulkTransferSelected, kept
+// as a separate handler so the toast can name the single badge being
+// transferred. Real flow wires up to a group picker later.
+function transferBadge(b: Badge) {
+  closeMenus()
+  showSuccessToast('1 badge prêt à être transféré', b.identifier)
+}
 function bulkRemoveSelected() {
   if (!selectedGroup.value || selectedToRemove.size === 0) return
   const ids = Array.from(selectedToRemove)
@@ -2522,15 +2529,31 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         >
                           <div
                             v-if="openMenuId === b.id"
-                            class="absolute top-[calc(100%+4px)] right-0 z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[12px] flex flex-col gap-[4px] min-w-[200px]"
+                            class="absolute top-[calc(100%+4px)] right-0 z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[8px] flex flex-col min-w-[220px]"
                             role="menu"
                             @click.stop
                           >
-                            <div class="px-[4px] py-[2px]">
+                            <!-- Transférer — neutral row, Figma 6529-31356 -->
+                            <div class="px-[4px]">
                               <button
                                 type="button"
                                 role="menuitem"
                                 class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+                                @click="transferBadge(b)"
+                              >
+                                <Icon name="switch-horizontal" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
+                                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                                  Transférer
+                                </span>
+                              </button>
+                            </div>
+                            <div class="h-px mx-[12px] my-[4px] bg-border-neutral-tertiary" aria-hidden="true" />
+                            <!-- Supprimer du groupe — destructive row -->
+                            <div class="px-[4px]">
+                              <button
+                                type="button"
+                                role="menuitem"
+                                class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-danger-surface transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-error"
                                 @click="removeBadge(b)"
                               >
                                 <Icon name="trash" variant="outline" :size="20" class="shrink-0 text-icon-danger" />
