@@ -5190,10 +5190,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </p>
           </div>
 
-          <!-- Actions -->
-          <div class="flex items-center justify-end gap-[8px]">
-            <Button type="secondary" size="sm" label="Fermer" @click="closeNewGroupTip" />
-            <Button type="primary" size="sm" label="Découvrir" @click="discoverChargingRules" />
+          <!-- Actions — full-width split, Fermer left / Découvrir right. -->
+          <div class="flex items-stretch gap-[8px]">
+            <Button class="flex-1" type="secondary" size="sm" label="Fermer" @click="closeNewGroupTip" />
+            <Button class="flex-1" type="primary" size="sm" label="Découvrir" @click="discoverChargingRules" />
           </div>
         </div>
       </Transition>
