@@ -3045,10 +3045,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </section>
 
-          <!-- Budget section — title row + toggle, sub-content folded in
-               when custom + active. -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <div class="flex items-center justify-between gap-[16px]">
+          <!-- Budget section — padded header + hairline + padded body.
+               Body only renders (with the hairline above it) when there
+               is something to show below the header. -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
+            <div class="p-[16px] flex items-center justify-between gap-[16px]">
               <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                 Budget
               </span>
@@ -3060,9 +3061,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               />
             </div>
 
-            <!-- Custom + active: budget mensuel input (error hint inline). -->
+            <!-- Custom + active: budget mensuel input. -->
             <template v-if="budgetForm.draftOrigin === 'custom' && budgetForm.active">
-              <div class="flex flex-col gap-[6px]">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="p-[16px] flex flex-col gap-[6px]">
                 <label class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
                   Budget mensuel
                 </label>
@@ -3080,36 +3082,40 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </template>
 
-            <!-- Inherited + inactive: read-only État/Désactivé. -->
-            <template v-if="budgetForm.draftOrigin === 'inherited' && !budgetForm.active">
+            <!-- Inherited: read-only État + the configured Budget mensuel
+                 when the rule overall is active (Figma 6467-21025 /
+                 6467-21932). -->
+            <template v-if="budgetForm.draftOrigin === 'inherited'">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  État
-                </span>
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  Désactivé
-                </span>
-              </div>
-            </template>
-
-            <!-- Inherited + active: read-only budget mensuel. -->
-            <template v-if="budgetForm.draftOrigin === 'inherited' && budgetForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  Budget mensuel
-                </span>
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                  {{ budgetForm.amount }} Eur
-                </span>
+              <div class="p-[16px] flex flex-col gap-[16px]">
+                <div class="flex items-center justify-between gap-[16px]">
+                  <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                    État
+                  </span>
+                  <span
+                    :class="[
+                      'font-sans text-[16px] leading-[1.5] tracking-[-0.48px]',
+                      budgetForm.active ? 'font-medium text-text-neutral' : 'font-normal text-text-neutral-secondary',
+                    ]"
+                  >
+                    {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
+                  </span>
+                </div>
+                <div v-if="budgetForm.active || alerteForm.active" class="flex items-center justify-between gap-[16px]">
+                  <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                    Budget mensuel
+                  </span>
+                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                    {{ budgetForm.amount }} Eur
+                  </span>
+                </div>
               </div>
             </template>
           </section>
 
           <!-- Alerte section — same shape as Budget. -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <div class="flex items-center justify-between gap-[16px]">
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
+            <div class="p-[16px] flex items-center justify-between gap-[16px]">
               <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
                 Alerte
               </span>
@@ -3125,58 +3131,64 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                  disabled with the same tooltip-explained constraint when
                  percentage type is selected without a budget. -->
             <template v-if="budgetForm.draftOrigin === 'custom' && alerteForm.active">
-              <Dropdown
-                v-model="alerteForm.type"
-                :items="alerteTypeItems"
-                :searchable="false"
-                :show-label="false"
-                :show-hint="false"
-                :teleport="true"
-              />
-              <div class="relative group/disabled-amount" tabindex="-1">
-                <Input
-                  v-model="alerteForm.amount"
-                  type="trailingText"
-                  :addon-trailing-text="alerteSuffix"
-                  :show-currency-icon="false"
-                  :trailing-separator="false"
-                  :disabled="isAlerteAmountDisabled"
-                  placeholder="0"
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="p-[16px] flex flex-col gap-[16px]">
+                <Dropdown
+                  v-model="alerteForm.type"
+                  :items="alerteTypeItems"
+                  :searchable="false"
+                  :show-label="false"
+                  :show-hint="false"
+                  :teleport="true"
                 />
-                <div
-                  v-if="isAlerteAmountDisabled"
-                  class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
-                  role="tooltip"
-                >
-                  Définissez un budget de recharge pour utiliser cette option.
-                  <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
+                <div class="relative group/disabled-amount" tabindex="-1">
+                  <Input
+                    v-model="alerteForm.amount"
+                    type="trailingText"
+                    :addon-trailing-text="alerteSuffix"
+                    :show-currency-icon="false"
+                    :trailing-separator="false"
+                    :disabled="isAlerteAmountDisabled"
+                    placeholder="0"
+                  />
+                  <div
+                    v-if="isAlerteAmountDisabled"
+                    class="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] z-10 pointer-events-none w-[282px] px-[12px] py-[8px] rounded-[8px] bg-text-neutral text-[#f1f5f9] shadow-[0px_4px_6px_-2px_rgba(0,0,0,0.1)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-left opacity-0 -translate-y-[2px] transition-[opacity,transform] duration-150 ease-out motion-reduce:transition-none group-hover/disabled-amount:opacity-100 group-hover/disabled-amount:translate-y-0 group-focus-within/disabled-amount:opacity-100 group-focus-within/disabled-amount:translate-y-0"
+                    role="tooltip"
+                  >
+                    Définissez un budget de recharge pour utiliser cette option.
+                    <span class="absolute left-1/2 -translate-x-1/2 bottom-full block size-0 border-l-[6px] border-r-[6px] border-b-[6px] border-l-transparent border-r-transparent border-b-text-neutral" aria-hidden="true" />
+                  </div>
                 </div>
               </div>
             </template>
 
-            <!-- Inherited + inactive: read-only État/Désactivé. -->
-            <template v-if="budgetForm.draftOrigin === 'inherited' && !alerteForm.active">
+            <!-- Inherited: read-only État + threshold when the rule
+                 overall is active (mirrors Budget's behaviour). -->
+            <template v-if="budgetForm.draftOrigin === 'inherited'">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  État
-                </span>
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  Désactivé
-                </span>
-              </div>
-            </template>
-
-            <!-- Inherited + active: read-only seuil. -->
-            <template v-if="budgetForm.draftOrigin === 'inherited' && alerteForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  Seuil d'alerte
-                </span>
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                  {{ alerteForm.amount }} {{ alerteSuffix }}
-                </span>
+              <div class="p-[16px] flex flex-col gap-[16px]">
+                <div class="flex items-center justify-between gap-[16px]">
+                  <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                    État
+                  </span>
+                  <span
+                    :class="[
+                      'font-sans text-[16px] leading-[1.5] tracking-[-0.48px]',
+                      alerteForm.active ? 'font-medium text-text-neutral' : 'font-normal text-text-neutral-secondary',
+                    ]"
+                  >
+                    {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
+                  </span>
+                </div>
+                <div v-if="budgetForm.active || alerteForm.active" class="flex items-center justify-between gap-[16px]">
+                  <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                    Si le budget dépasse
+                  </span>
+                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                    {{ alerteForm.amount }}{{ alerteForm.type === 'percentage' ? '%' : ' Eur' }}
+                  </span>
+                </div>
               </div>
             </template>
           </section>
