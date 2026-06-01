@@ -3084,7 +3084,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
             <!-- Inherited: read-only État + the configured Budget mensuel
                  when the rule overall is active (Figma 6467-21025 /
-                 6467-21932). -->
+                 6467-21932). Hairline between rows. -->
             <template v-if="budgetForm.draftOrigin === 'inherited'">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="p-[16px] flex flex-col gap-[16px]">
@@ -3101,14 +3101,17 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
                   </span>
                 </div>
-                <div v-if="budgetForm.active || alerteForm.active" class="flex items-center justify-between gap-[16px]">
-                  <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                    Budget mensuel
-                  </span>
-                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                    {{ budgetForm.amount }} Eur
-                  </span>
-                </div>
+                <template v-if="budgetForm.active || alerteForm.active">
+                  <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+                  <div class="flex items-center justify-between gap-[16px]">
+                    <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                      Budget mensuel
+                    </span>
+                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                      {{ budgetForm.amount }} Eur
+                    </span>
+                  </div>
+                </template>
               </div>
             </template>
           </section>
@@ -3164,7 +3167,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </template>
 
             <!-- Inherited: read-only État + threshold when the rule
-                 overall is active (mirrors Budget's behaviour). -->
+                 overall is active (mirrors Budget's behaviour). Hairline
+                 between rows. -->
             <template v-if="budgetForm.draftOrigin === 'inherited'">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="p-[16px] flex flex-col gap-[16px]">
@@ -3181,14 +3185,17 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
                   </span>
                 </div>
-                <div v-if="budgetForm.active || alerteForm.active" class="flex items-center justify-between gap-[16px]">
-                  <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                    Si le budget dépasse
-                  </span>
-                  <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
-                    {{ alerteForm.amount }}{{ alerteForm.type === 'percentage' ? '%' : ' Eur' }}
-                  </span>
-                </div>
+                <template v-if="budgetForm.active || alerteForm.active">
+                  <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+                  <div class="flex items-center justify-between gap-[16px]">
+                    <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                      Si le budget dépasse
+                    </span>
+                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                      {{ alerteForm.amount }}{{ alerteForm.type === 'percentage' ? '%' : ' Eur' }}
+                    </span>
+                  </div>
+                </template>
               </div>
             </template>
           </section>
