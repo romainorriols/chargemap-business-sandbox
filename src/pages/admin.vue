@@ -98,7 +98,6 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               <Button
                 type="secondary"
                 size="md"
-                icon-left="adjustments-horizontal"
                 label="Filtres"
               />
               <!-- Segmented switch: Orga Actives / Orga désactivées
