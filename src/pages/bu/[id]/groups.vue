@@ -2631,17 +2631,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
                     <!-- Véhicule -->
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                        <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
-                        <span v-else aria-label="Non rattaché">--</span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <button
+                          v-if="b.vehicle"
+                          type="button"
+                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                          @click.stop
+                        >{{ b.vehicle.plate }}</button>
+                        <span v-else class="text-text-neutral-secondary" aria-label="Non rattaché">--</span>
                       </p>
                     </div>
 
                     <!-- Conducteur -->
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                        <template v-if="b.driver">{{ b.driver.name }}</template>
-                        <span v-else aria-label="Non rattaché">--</span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <button
+                          v-if="b.driver"
+                          type="button"
+                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                          @click.stop
+                        >{{ b.driver.name }}</button>
+                        <span v-else class="text-text-neutral-secondary" aria-label="Non rattaché">--</span>
                       </p>
                     </div>
 
@@ -2837,15 +2847,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           </p>
                         </div>
                         <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                            <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
-                            <span v-else>--</span>
+                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                            <button
+                              v-if="b.vehicle"
+                              type="button"
+                              class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                              @click.stop
+                            >{{ b.vehicle.plate }}</button>
+                            <span v-else class="text-text-neutral-secondary">--</span>
                           </p>
                         </div>
                         <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                            <template v-if="b.driver">{{ b.driver.name }}</template>
-                            <span v-else>--</span>
+                          <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                            <button
+                              v-if="b.driver"
+                              type="button"
+                              class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                              @click.stop
+                            >{{ b.driver.name }}</button>
+                            <span v-else class="text-text-neutral-secondary">--</span>
                           </p>
                         </div>
                         <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
@@ -4853,15 +4873,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                        <template v-if="b.vehicle">{{ b.vehicle.plate }}</template>
-                        <span v-else>--</span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <button
+                          v-if="b.vehicle"
+                          type="button"
+                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                          @click.stop
+                        >{{ b.vehicle.plate }}</button>
+                        <span v-else class="text-text-neutral-secondary">--</span>
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] flex items-center">
-                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                        <template v-if="b.driver">{{ b.driver.name }}</template>
-                        <span v-else>--</span>
+                      <p class="min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                        <button
+                          v-if="b.driver"
+                          type="button"
+                          class="text-text-brand-medium hover:underline outline-none focus-visible:underline"
+                          @click.stop
+                        >{{ b.driver.name }}</button>
+                        <span v-else class="text-text-neutral-secondary">--</span>
                       </p>
                     </div>
                     <div class="flex-[300] min-w-0 px-[24px] md:px-[16px] py-[8px] md:py-[12px] pb-[16px] md:pb-[12px] flex items-center">
