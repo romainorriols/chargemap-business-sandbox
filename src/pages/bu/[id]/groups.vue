@@ -3395,8 +3395,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
 
-                <!-- Separator edge-to-edge via negative horizontal margin. -->
-                <div class="h-px -mx-[16px] bg-border-neutral-secondary" aria-hidden="true" />
+                <!-- Separator edge-to-edge via negative horizontal margin.
+                     Uses an arbitrary value so the colour ships even if
+                     the bg-border-neutral-secondary class isn't picked up
+                     by the JIT scan elsewhere in the file. -->
+                <div class="h-px -mx-[16px] bg-[var(--border-neutral-secondary)]" aria-hidden="true" />
 
                 <!-- Body — fixed 37px height so the card stays at 125px
                      regardless of which variant renders. -->
@@ -3496,7 +3499,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Footer -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeAutorisationsDrawer" />
-          <Button type="primary" size="md" label="Enregistrer" @click="saveAutorisations" />
+          <Button
+            type="primary"
+            size="md"
+            label="Enregistrer"
+            :disabled="autorisationsForm.draftOrigin === 'inherited'"
+            @click="saveAutorisations"
+          />
         </div>
       </aside>
     </Transition>
