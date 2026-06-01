@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS, GROUP_LIST_VARIANT_OPTIONS, NETWORK_PICKER_VARIANT_OPTIONS, ADD_BADGES_VARIANT_OPTIONS, type GroupListVariant, type NetworkPickerVariant, type AddBadgesVariant } from '~/stores/ui'
 
 // Sandbox-only floating control center. A single FAB at the bottom-right
@@ -10,6 +10,13 @@ import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS, GROUP_LIST_VARIANT_OPTIONS, 
 const navStore = useNavStore()
 const uiStore = useUiStore()
 const route = useRoute()
+const router = useRouter()
+
+// Admin widget — opens the cross-orga "Organisations & BU" listing
+// (Figma 6557-5010). Lives behind the sandbox controls because in the
+// real product the page is only reachable from an internal admin
+// entry point.
+function openAdmin() { router.push('/admin'); close() }
 
 // Max-width is stored per-page so each page keeps an independent value.
 // The popover always reflects the page the user is currently looking at.
@@ -77,6 +84,24 @@ const controls = computed<Control[]>(() => [
         <p class="px-[8px] pt-[4px] pb-[8px] font-sans font-semibold text-[11px] uppercase tracking-[0.6px] text-text-neutral-secondary">
           Sandbox
         </p>
+
+        <!-- Admin entry — opens /admin (Organisations & BU listing). -->
+        <button
+          type="button"
+          class="flex items-center justify-between gap-[8px] px-[8px] py-[8px] rounded-[8px] transition-colors duration-150 ease-out hover:bg-neutral-secondary motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+          @click="openAdmin"
+        >
+          <span class="flex items-center gap-[8px]">
+            <Icon name="building-library" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+              Admin — Orgas &amp; BU
+            </span>
+          </span>
+          <Icon name="arrow-up-right" variant="outline" :size="14" class="text-icon-neutral-secondary" />
+        </button>
+
+        <div class="h-px my-[4px] mx-[4px] bg-border-neutral-tertiary" aria-hidden="true" />
+
         <div
           v-for="c in controls"
           :key="c.label"
