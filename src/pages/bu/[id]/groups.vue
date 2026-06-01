@@ -5002,10 +5002,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="transfer-modal-title"
           aria-describedby="transfer-modal-desc"
         >
-          <div class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col">
-            <!-- Header — title + X close, hairline below -->
-            <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
-              <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+          <div class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col p-[24px] gap-[16px]">
+            <!-- Header — title + X close, no internal hairlines (Figma 6529-34908) -->
+            <div class="flex items-center gap-[16px]">
+              <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Transférer des badges
               </p>
               <button
@@ -5019,27 +5019,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </div>
 
             <!-- Body — description + field label + target group dropdown -->
-            <div class="px-[24px] py-[16px] flex flex-col gap-[16px] border-b border-border-neutral-secondary">
-              <p id="transfer-modal-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Transférer les badges vers un autre groupe de cette Business unit.
-              </p>
-              <div class="flex flex-col gap-[6px]">
-                <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                  Sélectionnez le groupe cible
-                </label>
-                <Dropdown
-                  v-model="transferTargetGroupId"
-                  :items="transferGroupItems"
-                  placeholder="Sélectionnez un groupe"
-                  :searchable="false"
-                  :show-label="false"
-                  :show-hint="false"
-                />
-              </div>
+            <p id="transfer-modal-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              Transférer les badges vers un autre groupe de cette Business unit.
+            </p>
+            <div class="flex flex-col gap-[6px]">
+              <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Sélectionnez le groupe cible
+              </label>
+              <Dropdown
+                v-model="transferTargetGroupId"
+                :items="transferGroupItems"
+                placeholder="Sélectionnez un groupe"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+              />
             </div>
 
             <!-- Footer — Annuler + Transférer aligned right -->
-            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px]">
+            <div class="flex items-center justify-end gap-[12px] pt-[8px]">
               <Button type="secondary" size="md" label="Annuler" @click="closeTransferModal" />
               <Button
                 type="primary"
