@@ -5019,39 +5019,40 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-describedby="transfer-modal-desc"
         >
           <div class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col">
-            <!-- Header — title + X close, hairline below (Figma 6529-34908) -->
-            <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
-              <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Transférer des badges
-              </p>
-              <button
-                type="button"
-                class="shrink-0 flex items-center justify-center size-[24px] text-icon-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray rounded-[4px]"
-                aria-label="Fermer"
-                @click="closeTransferModal"
-              >
-                <Icon name="x-mark" variant="outline" :size="20" />
-              </button>
-            </div>
-
-            <!-- Body — description + field label + target group dropdown -->
-            <div class="px-[24px] py-[16px] flex flex-col gap-[16px] border-b border-border-neutral-secondary">
+            <!-- Header — title row + X + description below, hairline at
+                 the bottom (Figma 6529-34908). -->
+            <div class="flex flex-col gap-[8px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
+              <div class="flex items-center gap-[16px]">
+                <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                  Transférer des badges
+                </p>
+                <button
+                  type="button"
+                  class="shrink-0 flex items-center justify-center size-[24px] text-icon-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray rounded-[4px]"
+                  aria-label="Fermer"
+                  @click="closeTransferModal"
+                >
+                  <Icon name="x-mark" variant="outline" :size="20" />
+                </button>
+              </div>
               <p id="transfer-modal-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
                 Transférer les badges vers un autre groupe de cette Business unit.
               </p>
-              <div class="flex flex-col gap-[6px]">
-                <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                  Sélectionnez le groupe cible
-                </label>
-                <Dropdown
-                  v-model="transferTargetGroupId"
-                  :items="transferGroupItems"
-                  placeholder="Sélectionnez un groupe"
-                  :searchable="false"
-                  :show-label="false"
-                  :show-hint="false"
-                />
-              </div>
+            </div>
+
+            <!-- Body — target group dropdown only -->
+            <div class="px-[24px] py-[16px] flex flex-col gap-[6px] border-b border-border-neutral-secondary">
+              <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Sélectionnez le groupe cible
+              </label>
+              <Dropdown
+                v-model="transferTargetGroupId"
+                :items="transferGroupItems"
+                placeholder="Sélectionnez un groupe"
+                :searchable="false"
+                :show-label="false"
+                :show-hint="false"
+              />
             </div>
 
             <!-- Footer — Annuler + Transférer aligned right -->
@@ -5190,9 +5191,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </p>
           </div>
 
-          <!-- Actions — full-width split, Fermer left / Découvrir right. -->
+          <!-- Actions — full-width split, Fermer (tertiary) / Découvrir. -->
           <div class="flex items-stretch gap-[8px]">
-            <Button class="flex-1" type="secondary" size="sm" label="Fermer" @click="closeNewGroupTip" />
+            <Button class="flex-1" type="tertiaryGray" size="sm" label="Fermer" @click="closeNewGroupTip" />
             <Button class="flex-1" type="primary" size="sm" label="Découvrir" @click="discoverChargingRules" />
           </div>
         </div>
