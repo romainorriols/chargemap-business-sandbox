@@ -4938,7 +4938,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <div class="h-[16px] w-px bg-[#344256]" aria-hidden="true" />
               <button
                 type="button"
-                class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#fda4a4] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-error"
+                class="flex items-center gap-[8px] px-[8px] h-[32px] rounded-[8px] text-[#f1f5f9] hover:bg-white/10 transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-brand"
                 @click="runPillAction"
               >
                 <Icon name="trash" variant="outline" :size="20" />
