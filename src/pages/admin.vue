@@ -101,16 +101,21 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
                 icon-left="adjustments-horizontal"
                 label="Filtres"
               />
-              <!-- Segmented switch: Orga Actives / Orga désactivées. Inline
-                   here since the listing is the only place using it. -->
-              <div class="inline-flex items-center bg-neutral-tertiary rounded-[8px] p-[2px]">
+              <!-- Segmented switch: Orga Actives / Orga désactivées
+                   (Figma 6562-17021). Container is bg-neutral-tertiary
+                   with 4px padding + 4px gap; each button keeps the same
+                   px-[12px] py-[8px] size so the chip never reflows when
+                   the selection moves. The active pill gets a white fill
+                   + faint drop-shadow; the inactive pill matches the
+                   container's gray. -->
+              <div class="inline-flex items-center gap-[4px] bg-neutral-tertiary rounded-[8px] p-[4px]">
                 <button
                   type="button"
                   :class="[
-                    'px-[12px] py-[6px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] transition-[background-color,color] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                    'px-[12px] py-[8px] rounded-[6px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
                     scope === 'actives'
-                      ? 'bg-neutral text-text-neutral shadow-sm'
-                      : 'text-text-neutral-secondary hover:text-text-neutral',
+                      ? 'bg-neutral text-text-neutral drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]'
+                      : 'bg-neutral-tertiary text-text-neutral-secondary hover:text-text-neutral',
                   ]"
                   @click="scope = 'actives'"
                 >
@@ -119,10 +124,10 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
                 <button
                   type="button"
                   :class="[
-                    'px-[12px] py-[6px] rounded-[6px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] transition-[background-color,color] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                    'px-[12px] py-[8px] rounded-[6px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
                     scope === 'disabled'
-                      ? 'bg-neutral text-text-neutral shadow-sm'
-                      : 'text-text-neutral-secondary hover:text-text-neutral',
+                      ? 'bg-neutral text-text-neutral drop-shadow-[0px_1px_1px_rgba(0,0,0,0.05)]'
+                      : 'bg-neutral-tertiary text-text-neutral-secondary hover:text-text-neutral',
                   ]"
                   @click="scope = 'disabled'"
                 >
