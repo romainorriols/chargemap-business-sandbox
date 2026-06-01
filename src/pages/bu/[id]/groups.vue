@@ -1904,7 +1904,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             Informations
           </p>
           <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            Le responsable du groupe recevra toutes les notifications liées à ce groupe.
+            Le responsable du groupe recevra toutes les notifications liées à ce groupe
           </p>
         </div>
         <div class="h-px w-full bg-border-neutral-tertiary" aria-hidden="true" />
@@ -1948,8 +1948,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <div class="px-[16px] pt-[16px] pb-[16px] flex items-center justify-between gap-[16px]">
           <p class="min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px]">
             <template v-if="createSelected.size === 0">
-              <span class="font-medium text-text-neutral">Aucun badge</span>
-              <span class="text-text-neutral-secondary"> ajouté</span>
+              <span class="font-medium text-text-neutral tabular-nums">0</span>
+              <span class="text-text-neutral-secondary"> badge ajouté</span>
             </template>
             <template v-else>
               <span class="font-semibold text-text-neutral tabular-nums">{{ createSelected.size }} {{ createSelected.size === 1 ? 'badge' : 'badges' }}</span>
