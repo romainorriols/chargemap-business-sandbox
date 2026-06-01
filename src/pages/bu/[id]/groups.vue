@@ -376,7 +376,7 @@ const selectedRuleId = ref<string | null>(null)
 
 // Drawer state for the Budget de recharge rule (Figma 5980-29598 / 5980-28115)
 const budgetDrawerOpen = ref(false)
-const budgetForm = reactive({ active: false, amount: '230,00' })
+const budgetForm = reactive({ active: true, amount: '230,00' })
 
 // Zero-amount guard for the Budget section (Figma 5980-29334). When the user
 // turns the section on but leaves the amount at 0/empty, Enregistrer is
@@ -911,7 +911,7 @@ if (import.meta.client) {
 // amount field is disabled with a tooltip explaining the constraint.
 type AlerteType = 'percentage' | 'monthly'
 const alerteForm = reactive<{ active: boolean; type: AlerteType; amount: string }>({
-  active: false,
+  active: true,
   type: 'percentage',
   amount: '50',
 })
@@ -932,8 +932,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Fixer un budget et des alertes par email, en cas de dépassement les conducteurs peuvent activer le relais par CB',
     icon: 'wallet',
     iconVariant: 'solid',
-    statusIcon: 'x-mark',
-    statusLabel: 'Désactivé',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
     origin: 'inherited',
   },
   {
@@ -942,8 +942,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges',
     icon: 'calendar-days',
     iconVariant: 'solid',
-    statusIcon: 'x-mark',
-    statusLabel: 'Désactivé',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
     origin: 'inherited',
   },
   {
@@ -952,8 +952,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée',
     icon: 'airport-alt',
     iconVariant: 'solid',
-    statusIcon: 'x-mark',
-    statusLabel: 'Désactivé',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
     origin: 'inherited',
   },
   {
@@ -962,8 +962,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite',
     icon: 'flag',
     iconVariant: 'solid',
-    statusIcon: 'x-mark',
-    statusLabel: 'Désactivé',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
     origin: 'inherited',
   },
   {
@@ -972,8 +972,8 @@ const rules: ChargingRule[] = reactive([
     description: 'Définissez réseau par réseau ceux sur lesquels la recharge est autorisée ou interdite',
     icon: 'map-pin',
     iconVariant: 'solid',
-    statusIcon: 'x-mark',
-    statusLabel: 'Désactivé',
+    statusIcon: 'check',
+    statusLabel: 'Activé',
     origin: 'inherited',
   },
 ])
