@@ -137,11 +137,36 @@ function goto(n: number) {
 // Per-card ellipsis menu (shared between listing cards and detail rows —
 // they never render at the same time, so one key space is fine).
 const openMenuId = ref<string | null>(null)
+// Badge-row kebab menu lives inside an overflow-clip table, so it gets
+// teleported to <body> and positioned with fixed coords captured from
+// the trigger button's rect when the menu opens.
+const badgeMenuPos = ref({ top: 0, right: 0 })
 function toggleMenu(id: string, e: MouseEvent) {
   e.stopPropagation()
   openMenuId.value = openMenuId.value === id ? null : id
 }
+function toggleBadgeMenu(id: string, e: MouseEvent) {
+  e.stopPropagation()
+  if (openMenuId.value === id) {
+    openMenuId.value = null
+    return
+  }
+  const btn = e.currentTarget as HTMLElement
+  const rect = btn.getBoundingClientRect()
+  badgeMenuPos.value = {
+    top: rect.bottom + 4,
+    right: Math.max(8, window.innerWidth - rect.right),
+  }
+  openMenuId.value = id
+}
 function closeMenus() { openMenuId.value = null }
+if (import.meta.client) {
+  // Close the teleported badge menu on scroll/resize so the floating
+  // popup never drifts away from its anchor.
+  const closeOnViewportChange = () => { if (openMenuId.value) closeMenus() }
+  window.addEventListener('scroll', closeOnViewportChange, true)
+  window.addEventListener('resize', closeOnViewportChange)
+}
 
 // ── Detail view ────────────────────────────────────────────────────────────
 const selectedId = ref<string | null>(null)
@@ -1326,6 +1351,12 @@ const badgePaginated = computed(() => {
 })
 const badgeRangeStart = computed(() => filteredBadges.value.length === 0 ? 0 : (badgePage.value - 1) * badgePerPage + 1)
 const badgeRangeEnd = computed(() => Math.min(badgePage.value * badgePerPage, filteredBadges.value.length))
+// Badge currently driving the teleported row menu (null when the open
+// menu belongs to another context like a listing-group card).
+const currentMenuBadge = computed(() => {
+  if (!openMenuId.value) return null
+  return badgePaginated.value.find(b => b.id === openMenuId.value) ?? null
+})
 watch([badgeSearch, itineranceFilter, rattachementFilter], () => { badgePage.value = 1 })
 
 // View-mode multi-select for bulk remove.
@@ -2533,72 +2564,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       </p>
                     </div>
 
-                    <!-- Row menu (trailing) -->
+                    <!-- Row menu trigger — the menu itself lives in a
+                         shared Teleport at the bottom of the template so
+                         it can escape the table's overflow-clip. -->
                     <div class="w-full md:w-[68px] shrink-0 px-[24px] md:px-[16px] pb-[16px] md:pb-[12px] md:py-[12px] flex md:items-center md:justify-end">
-                      <div class="relative">
-                        <button
-                          type="button"
-                          :class="[
-                            'flex items-center justify-center w-[32px] h-[32px] rounded-[8px] transition-[background-color,color,transform] duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray',
-                            openMenuId === b.id
-                              ? 'bg-neutral-tertiary text-icon-neutral-primary'
-                              : 'text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary',
-                          ]"
-                          :aria-label="`Actions sur ${b.identifier}`"
-                          :aria-expanded="openMenuId === b.id"
-                          aria-haspopup="menu"
-                          @click.stop="toggleMenu(b.id, $event)"
-                          @keydown.enter.stop
-                          @keydown.space.stop
-                        >
-                          <Icon name="ellipsis-vertical" variant="outline" :size="20" />
-                        </button>
-                        <Transition
-                          enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-                          enter-from-class="opacity-0 scale-[0.96] -translate-y-[4px]"
-                          enter-to-class="opacity-100 scale-100 translate-y-0"
-                          leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out"
-                          leave-from-class="opacity-100 scale-100 translate-y-0"
-                          leave-to-class="opacity-0 scale-[0.96] -translate-y-[4px]"
-                        >
-                          <div
-                            v-if="openMenuId === b.id"
-                            class="absolute top-[calc(100%+4px)] right-0 z-20 origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[8px] flex flex-col min-w-[220px]"
-                            role="menu"
-                            @click.stop
-                          >
-                            <!-- Transférer — neutral row, Figma 6529-31356 -->
-                            <div class="px-[4px]">
-                              <button
-                                type="button"
-                                role="menuitem"
-                                class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-                                @click="transferBadge(b)"
-                              >
-                                <Icon name="switch-horizontal" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
-                                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
-                                  Transférer
-                                </span>
-                              </button>
-                            </div>
-                            <div class="h-px mx-[12px] my-[4px] bg-border-neutral-tertiary" aria-hidden="true" />
-                            <!-- Supprimer du groupe — destructive row -->
-                            <div class="px-[4px]">
-                              <button
-                                type="button"
-                                role="menuitem"
-                                class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-danger-surface transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-error"
-                                @click="removeBadge(b)"
-                              >
-                                <Icon name="trash" variant="outline" :size="20" class="shrink-0 text-icon-danger" />
-                                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-danger-medium whitespace-nowrap">
-                                  Supprimer du groupe
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        </Transition>
-                      </div>
+                      <button
+                        type="button"
+                        :class="[
+                          'flex items-center justify-center w-[32px] h-[32px] rounded-[8px] transition-[background-color,color,transform] duration-150 ease-out motion-reduce:transition-none active:scale-[0.95] outline-none focus-visible:shadow-ring-gray',
+                          openMenuId === b.id
+                            ? 'bg-neutral-tertiary text-icon-neutral-primary'
+                            : 'text-icon-neutral-secondary hover:bg-neutral-tertiary hover:text-icon-neutral-primary',
+                        ]"
+                        :aria-label="`Actions sur ${b.identifier}`"
+                        :aria-expanded="openMenuId === b.id"
+                        aria-haspopup="menu"
+                        @click.stop="toggleBadgeMenu(b.id, $event)"
+                        @keydown.enter.stop
+                        @keydown.space.stop
+                      >
+                        <Icon name="ellipsis-vertical" variant="outline" :size="20" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -4927,6 +4913,57 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </Transition>
     </Teleport>
 
+    <!-- ── Badge row kebab menu (teleported) ─────────────────────────────
+         The table card uses overflow-clip for its rounded corners, so the
+         per-row menu lives at the page root and gets fixed-positioned
+         from the trigger's rect on open. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[180ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.96] -translate-y-[4px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.96] -translate-y-[4px]"
+      >
+        <div
+          v-if="currentMenuBadge"
+          :style="{ top: badgeMenuPos.top + 'px', right: badgeMenuPos.right + 'px' }"
+          class="fixed z-[60] origin-top-right bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg py-[8px] flex flex-col min-w-[220px]"
+          role="menu"
+          @click.stop
+        >
+          <div class="px-[4px]">
+            <button
+              type="button"
+              role="menuitem"
+              class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              @click="transferBadge(currentMenuBadge)"
+            >
+              <Icon name="switch-horizontal" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+                Transférer
+              </span>
+            </button>
+          </div>
+          <div class="h-px mx-[12px] my-[4px] bg-border-neutral-tertiary" aria-hidden="true" />
+          <div class="px-[4px]">
+            <button
+              type="button"
+              role="menuitem"
+              class="w-full flex items-center gap-[8px] p-[12px] rounded-[8px] text-left hover:bg-danger-surface transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-error"
+              @click="removeBadge(currentMenuBadge)"
+            >
+              <Icon name="trash" variant="outline" :size="20" class="shrink-0 text-icon-danger" />
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-danger-medium whitespace-nowrap">
+                Supprimer du groupe
+              </span>
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- ── Transfer-badges modal (Figma 6529-11525) ──────────────────────
          Compact picker fronting both transfer entry points (per-row
          kebab + bulk pill). Lists the BU's other groups; on confirm,
@@ -4965,7 +5002,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="transfer-modal-title"
           aria-describedby="transfer-modal-desc"
         >
-          <div class="pointer-events-auto w-full max-w-[480px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
+          <div class="pointer-events-auto w-full max-w-[600px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col">
             <!-- Header — title + X close, hairline below -->
             <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
               <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
@@ -4997,7 +5034,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   :searchable="false"
                   :show-label="false"
                   :show-hint="false"
-                  :teleport="true"
                 />
               </div>
             </div>
