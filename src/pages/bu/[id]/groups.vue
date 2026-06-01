@@ -729,26 +729,56 @@ function onDayTimeBlur(day: DayRule, key: 'start' | 'end') {
 }
 
 const autorisationsDrawerOpen = ref(false)
+// `blocked: true` → toggle ON in red (the day is blocked for the entire
+// rule). `customHours: true` + start/end → saved time window. `editing`
+// is transient and surfaces the time pickers (Figma 6529-27247).
 interface DayRule {
   id: string
   label: string
-  active: boolean
+  blocked: boolean
   customHours: boolean
+  editing: boolean
   start: string
   end: string
 }
-const autorisationsForm = reactive<{ active: boolean; days: DayRule[] }>({
+const autorisationsForm = reactive<{ active: boolean; days: DayRule[]; draftOrigin: 'inherited' | 'custom' }>({
   active: false,
+  draftOrigin: 'inherited',
   days: [
-    { id: 'lundi',    label: 'Lundi',    active: true, customHours: false, start: '', end: '' },
-    { id: 'mardi',    label: 'Mardi',    active: true, customHours: false, start: '', end: '' },
-    { id: 'mercredi', label: 'Mercredi', active: true, customHours: false, start: '', end: '' },
-    { id: 'jeudi',    label: 'Jeudi',    active: true, customHours: false, start: '', end: '' },
-    { id: 'vendredi', label: 'Vendredi', active: true, customHours: false, start: '', end: '' },
-    { id: 'samedi',   label: 'Samedi',   active: true, customHours: false, start: '', end: '' },
-    { id: 'dimanche', label: 'Dimanche', active: true, customHours: false, start: '', end: '' },
+    { id: 'lundi',    label: 'Lundi',    blocked: false, customHours: false, editing: false, start: '', end: '' },
+    { id: 'mardi',    label: 'Mardi',    blocked: false, customHours: false, editing: false, start: '', end: '' },
+    { id: 'mercredi', label: 'Mercredi', blocked: false, customHours: false, editing: false, start: '', end: '' },
+    { id: 'jeudi',    label: 'Jeudi',    blocked: false, customHours: false, editing: false, start: '', end: '' },
+    { id: 'vendredi', label: 'Vendredi', blocked: false, customHours: false, editing: false, start: '', end: '' },
+    { id: 'samedi',   label: 'Samedi',   blocked: false, customHours: false, editing: false, start: '', end: '' },
+    { id: 'dimanche', label: 'Dimanche', blocked: false, customHours: false, editing: false, start: '', end: '' },
   ],
 })
+function personalizeAutorisations() { autorisationsForm.draftOrigin = 'custom' }
+function inheritAutorisations() { autorisationsForm.draftOrigin = 'inherited' }
+function startEditingDay(day: DayRule) {
+  if (!day.customHours) { day.start = ''; day.end = '' }
+  day.editing = true
+}
+function validateDayHours(day: DayRule) {
+  // Strict validation isn't required for the prototype; an empty range
+  // just resets to "autorisé toute la journée".
+  if (!day.start || !day.end) {
+    day.editing = false
+    day.customHours = false
+    day.start = ''
+    day.end = ''
+    return
+  }
+  day.customHours = true
+  day.editing = false
+}
+function resetDayHours(day: DayRule) {
+  day.customHours = false
+  day.editing = false
+  day.start = ''
+  day.end = ''
+}
 
 // Drawer state for the Blocage réseau rule (Figma 6010-29265 / 6010-29165).
 // The drawer's "Sélectionner des réseaux" CTA opens a network picker panel
@@ -1167,6 +1197,7 @@ function onRuleClick(rule: ChargingRule) {
   if (rule.id === 'autorisations') {
     selectedRuleId.value = rule.id
     autorisationsForm.active = rule.statusIcon === 'check'
+    autorisationsForm.draftOrigin = rule.origin
     autorisationsDrawerOpen.value = true
     return
   }
@@ -1247,6 +1278,7 @@ function commitAutorisations() {
   if (rule) {
     rule.statusIcon = autorisationsForm.active ? 'check' : 'x-mark'
     rule.statusLabel = autorisationsForm.active ? 'Activé' : 'Désactivé'
+    rule.origin = autorisationsForm.draftOrigin
   }
   autorisationsDrawerOpen.value = false
   selectedRuleId.value = null
@@ -3249,37 +3281,72 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — header card + one card per day (Figma 5980-29659). -->
+        <!-- Body — origin banner + master "Autorisations quotidiennes"
+             card + day cards (Figma 6529-27036 / 6529-27845). The master
+             card collapses to title + toggle in custom mode; an État row
+             is shown in inherited. Each day card carries the 4 variants
+             defined in 6529-27247: autorisé all-day / editing range /
+             custom hours / blocked. -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+
+          <!-- Origin banner — same shape as the budget/réseau drawers. -->
+          <section class="bg-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+              <Icon
+                :name="autorisationsForm.draftOrigin === 'custom' ? 'lock-open' : 'lock-closed'"
+                variant="solid"
+                :size="24"
+                class="text-white"
+              />
+            </div>
             <div class="flex flex-col gap-[4px]">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Autorisations quotidiennes
+              <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
+                {{ autorisationsForm.draftOrigin === 'custom' ? 'Règle personnalisée' : 'Règle héritée de la BU' }}
               </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Maîtrisez les jours et les plages horaires pendant lesquels vous souhaitez autoriser ou interdire les recharges
+              <p v-if="autorisationsForm.draftOrigin === 'custom'" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cette règle est propre à ce groupe, elle ne suivra plus les modifications de la <span class="text-text-brand-medium hover:underline cursor-pointer">règle BU</span>.
+              </p>
+              <p v-else class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cliquez sur personnaliser, pour définir une règle propre uniquement à ce groupe.
               </p>
             </div>
+            <Button
+              type="primary"
+              size="md"
+              :label="autorisationsForm.draftOrigin === 'custom' ? 'Suivre les règles de la BU' : 'Personnaliser'"
+              @click="autorisationsForm.draftOrigin === 'custom' ? inheritAutorisations() : personalizeAutorisations()"
+            />
+          </section>
 
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <!-- Activé toggle row -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                Activé
+          <!-- Master Autorisations card -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
+            <div class="p-[16px] flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Autorisations quotidiennes
               </span>
               <Toggle
+                v-if="autorisationsForm.draftOrigin === 'custom'"
                 v-model="autorisationsForm.active"
                 size="md"
                 aria-label="Activer les autorisations quotidiennes"
               />
             </div>
+            <template v-if="autorisationsForm.draftOrigin === 'inherited'">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="p-[16px] flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  État
+                </span>
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
+                  {{ autorisationsForm.active ? 'Activé' : 'Désactivé' }}
+                </span>
+              </div>
+            </template>
           </section>
 
-          <!-- Day cards — only when the master toggle is on. Each day card
-               keeps its label/toggle + "Autorisé toute la journée" /
-               time-range row, as in the existing flow. -->
+          <!-- Day cards — surface when the master toggle is on. In custom
+               mode every part is interactive; in inherited mode the cards
+               are read-only summaries. -->
           <Transition
             enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
             enter-from-class="opacity-0 -translate-y-[4px]"
@@ -3292,78 +3359,136 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <article
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
-                class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip"
+                :class="[
+                  'rounded-[12px] border border-border-neutral-secondary overflow-clip flex flex-col',
+                  day.blocked ? 'bg-neutral-secondary' : 'bg-neutral',
+                ]"
               >
-                  <!-- Header row: label + toggle -->
-                  <div class="flex items-center justify-between px-[16px] py-[12px]">
-                    <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                      {{ day.label }}
-                    </p>
-                    <Toggle
-                      v-model="day.active"
-                      size="sm"
-                      :aria-label="`Activer ${day.label}`"
+                <!-- Header — day label + (custom only) red block toggle -->
+                <div class="p-[16px] flex items-center justify-between gap-[16px]">
+                  <p
+                    :class="[
+                      'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]',
+                      day.blocked ? 'text-text-neutral-secondary' : 'text-text-neutral',
+                    ]"
+                  >
+                    {{ day.label }}
+                  </p>
+                  <button
+                    v-if="autorisationsForm.draftOrigin === 'custom'"
+                    type="button"
+                    role="switch"
+                    :aria-checked="day.blocked"
+                    :aria-label="`Bloquer ${day.label}`"
+                    :class="[
+                      'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
+                      'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
+                      'focus-visible:shadow-ring-gray',
+                      day.blocked ? 'bg-[#e11d48]' : 'bg-[var(--bg-neutral-tertiary)]',
+                    ]"
+                    @click="day.blocked = !day.blocked"
+                  >
+                    <span
+                      class="block size-[16px] rounded-full bg-white shadow-[0_1px_2px_-1px_rgba(0,0,0,0.1),0_1px_3px_0_rgba(0,0,0,0.1)] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                      :style="{ transform: day.blocked ? 'translateX(16px)' : 'translateX(0)' }"
                     />
-                  </div>
+                  </button>
+                </div>
 
-                  <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+                <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
 
-                  <!-- Body row (always shown; gated by day.active for button) -->
-                  <div class="flex items-center justify-between gap-[8px] px-[16px] py-[12px]">
-                    <template v-if="!day.customHours">
-                      <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                        {{ day.active ? 'Autorisé toute la journée' : 'Bloqué toute la journée' }}
-                      </p>
-                      <Button
-                        type="secondary"
-                        size="sm"
-                        label="Modifier"
-                        :disabled="!day.active"
-                        class="w-[77px]"
-                        @click="day.customHours = true"
-                      />
-                    </template>
-                    <template v-else>
-                      <div class="flex-1 min-w-0 flex items-center gap-[8px]">
-                        <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
-                          <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
-                          <input
-                            :value="day.start"
-                            inputmode="numeric"
-                            placeholder="00:00"
-                            maxlength="5"
-                            :aria-label="`Heure de début ${day.label}`"
-                            class="flex-1 min-w-0 outline-none bg-transparent font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary placeholder:text-text-neutral-secondary"
-                            @input="onDayTimeInput(day, 'start', $event)"
-                            @blur="onDayTimeBlur(day, 'start')"
-                          >
-                        </div>
-                        <span class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">à</span>
-                        <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
-                          <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
-                          <input
-                            :value="day.end"
-                            inputmode="numeric"
-                            placeholder="00:00"
-                            maxlength="5"
-                            :aria-label="`Heure de fin ${day.label}`"
-                            class="flex-1 min-w-0 outline-none bg-transparent font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary placeholder:text-text-neutral-secondary"
-                            @input="onDayTimeInput(day, 'end', $event)"
-                            @blur="onDayTimeBlur(day, 'end')"
-                          >
-                        </div>
+                <!-- Body — 4 variants (Figma 6529-27247). -->
+                <div class="p-[16px] flex items-center justify-between gap-[8px]">
+                  <!-- Variant 4: blocked -->
+                  <template v-if="day.blocked">
+                    <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      Bloqué toute la journée
+                    </p>
+                  </template>
+
+                  <!-- Variant 2: editing time range (custom only) -->
+                  <template v-else-if="day.editing && autorisationsForm.draftOrigin === 'custom'">
+                    <div class="flex-1 min-w-0 flex items-center gap-[8px]">
+                      <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
+                        <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+                        <input
+                          :value="day.start"
+                          inputmode="numeric"
+                          placeholder="00:00"
+                          maxlength="5"
+                          :aria-label="`Heure de début ${day.label}`"
+                          class="flex-1 min-w-0 outline-none bg-transparent font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral placeholder:text-text-neutral-secondary"
+                          @input="onDayTimeInput(day, 'start', $event)"
+                          @blur="onDayTimeBlur(day, 'start')"
+                        >
                       </div>
-                      <Button
-                        type="secondary"
-                        size="sm"
-                        label="Supprimer"
-                        @click="day.customHours = false"
-                      />
+                      <span class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">à</span>
+                      <div class="flex-1 min-w-0 flex items-center gap-[8px] px-[12px] py-[8px] rounded-[8px] border border-border-neutral-secondary bg-neutral shadow-sm transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none focus-within:border-brand focus-within:shadow-ring-brand">
+                        <Icon name="clock" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+                        <input
+                          :value="day.end"
+                          inputmode="numeric"
+                          placeholder="00:00"
+                          maxlength="5"
+                          :aria-label="`Heure de fin ${day.label}`"
+                          class="flex-1 min-w-0 outline-none bg-transparent font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral placeholder:text-text-neutral-secondary"
+                          @input="onDayTimeInput(day, 'end', $event)"
+                          @blur="onDayTimeBlur(day, 'end')"
+                        >
+                      </div>
+                    </div>
+                    <Button
+                      type="secondary"
+                      size="sm"
+                      label="Valider"
+                      @click="validateDayHours(day)"
+                    />
+                  </template>
+
+                  <!-- Variant 3: saved custom hours (pencil + reset icons) -->
+                  <template v-else-if="day.customHours">
+                    <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      Autorisé de {{ day.start }} à {{ day.end }}
+                    </p>
+                    <template v-if="autorisationsForm.draftOrigin === 'custom'">
+                      <div class="shrink-0 flex items-center gap-[8px]">
+                        <button
+                          type="button"
+                          class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                          :aria-label="`Modifier la plage horaire pour ${day.label}`"
+                          @click="startEditingDay(day)"
+                        >
+                          <Icon name="pencil" variant="outline" :size="18" />
+                        </button>
+                        <button
+                          type="button"
+                          class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                          :aria-label="`Réinitialiser la plage horaire pour ${day.label}`"
+                          @click="resetDayHours(day)"
+                        >
+                          <Icon name="arrow-path" variant="outline" :size="18" />
+                        </button>
+                      </div>
                     </template>
-                  </div>
-                </article>
-              </div>
-            </Transition>
+                  </template>
+
+                  <!-- Variant 1: authorized all day (default) -->
+                  <template v-else>
+                    <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      Autorisé toute la journée
+                    </p>
+                    <Button
+                      v-if="autorisationsForm.draftOrigin === 'custom'"
+                      type="secondary"
+                      size="sm"
+                      label="Modifier"
+                      @click="startEditingDay(day)"
+                    />
+                  </template>
+                </div>
+              </article>
+            </div>
+          </Transition>
         </div>
 
         <!-- Footer -->
