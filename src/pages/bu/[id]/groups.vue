@@ -308,9 +308,10 @@ function saveCreateGroup() {
       ? '1 badge rattaché'
       : `${count} badges rattachés`
   showSuccessToast('Groupe créé', detail)
-  // Surface the "Appliquez des règles de recharge" popover (Figma
-  // 6529-39169) just after the user lands on the new group's detail.
-  newGroupTipOpen.value = true
+  // The "Appliquez des règles de recharge" popover (Figma 6529-39169)
+  // is opened by the selectedId watcher when it sees the brand-new id
+  // (see `newGroupIds.has(id)`), so the timing is consistent with the
+  // skeleton/reset run on first detail entry.
 }
 
 // Onboarding tip shown after a fresh group lands on its detail view.
@@ -333,17 +334,16 @@ let loadingTimer: ReturnType<typeof setTimeout> | null = null
 watch(selectedId, (id) => {
   if (loadingTimer) { clearTimeout(loadingTimer); loadingTimer = null }
   // Close the new-group onboarding tip whenever the user leaves the
-  // detail it was anchored to. The tip itself is opened later in
-  // saveCreateGroup (after this watcher has already fired), so the
-  // close here is a no-op on initial entry.
+  // detail it was anchored to.
   newGroupTipOpen.value = false
   if (id) {
     // First visit of a freshly created group: reset charging rules so the
     // group starts with everything désactivé regardless of edits made
-    // elsewhere in the session.
+    // elsewhere in the session, and surface the onboarding popover.
     if (newGroupIds.has(id)) {
       resetChargingRulesToDisabled()
       newGroupIds.delete(id)
+      newGroupTipOpen.value = true
     }
     isLoading.value = true
     loadingTimer = setTimeout(() => {
