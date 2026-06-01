@@ -3027,7 +3027,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               />
             </div>
             <div class="flex flex-col gap-[4px]">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+              <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
                 {{ budgetForm.draftOrigin === 'custom' ? 'Règle personnalisée' : 'Règle héritée de la BU' }}
               </p>
               <p v-if="budgetForm.draftOrigin === 'custom'" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -3050,7 +3050,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                is something to show below the header. -->
           <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
             <div class="p-[16px] flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              <span class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Budget
               </span>
               <Toggle
@@ -3092,12 +3092,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                     État
                   </span>
-                  <span
-                    :class="[
-                      'font-sans text-[16px] leading-[1.5] tracking-[-0.48px]',
-                      budgetForm.active ? 'font-medium text-text-neutral' : 'font-normal text-text-neutral-secondary',
-                    ]"
-                  >
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
                     {{ budgetForm.active ? 'Activé' : 'Désactivé' }}
                   </span>
                 </div>
@@ -3107,7 +3102,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                       Budget mensuel
                     </span>
-                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                    <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right tabular-nums">
                       {{ budgetForm.amount }} Eur
                     </span>
                   </div>
@@ -3119,7 +3114,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           <!-- Alerte section — same shape as Budget. -->
           <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
             <div class="p-[16px] flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              <span class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Alerte
               </span>
               <Toggle
@@ -3176,12 +3171,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                     État
                   </span>
-                  <span
-                    :class="[
-                      'font-sans text-[16px] leading-[1.5] tracking-[-0.48px]',
-                      alerteForm.active ? 'font-medium text-text-neutral' : 'font-normal text-text-neutral-secondary',
-                    ]"
-                  >
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
                     {{ alerteForm.active ? 'Activé' : 'Désactivé' }}
                   </span>
                 </div>
@@ -3191,7 +3181,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                       Si le budget dépasse
                     </span>
-                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
+                    <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right tabular-nums">
                       {{ alerteForm.amount }}{{ alerteForm.type === 'percentage' ? '%' : ' Eur' }}
                     </span>
                   </div>
