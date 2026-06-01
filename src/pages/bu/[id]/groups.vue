@@ -1525,12 +1525,10 @@ function removeBadge(b: Badge) {
   closeMenus()
   showUndoToast('Badge retiré du groupe', b.identifier)
 }
-// Per-row "Transférer" stub — same shape as bulkTransferSelected, kept
-// as a separate handler so the toast can name the single badge being
-// transferred. Real flow wires up to a group picker later.
+// Per-row "Transférer" entry — routes to the same modal as the bulk
+// action with a single-badge id set.
 function transferBadge(b: Badge) {
-  closeMenus()
-  showSuccessToast('1 badge prêt à être transféré', b.identifier)
+  openTransferModal([b.id])
 }
 function bulkRemoveSelected() {
   if (!selectedGroup.value || selectedToRemove.size === 0) return
@@ -1590,16 +1588,52 @@ function runPillAction() {
     case 'remove': bulkRemoveSelected(); break
   }
 }
-// Transferring badges to another group is a sandbox stub for now — the
-// Figma exposes the affordance in the floating bulk-action bar but the
-// destination picker isn't designed yet, so we acknowledge via toast.
-function bulkTransferSelected() {
-  if (!selectedGroup.value || selectedToRemove.size === 0) return
-  const count = selectedToRemove.size
+// Transferring badges to another group of the same BU opens a small
+// picker dialog (Figma 6529-11525). The same dialog services the per-row
+// kebab "Transférer" entry and the floating bulk-action "Transférer"
+// CTA — only the badge id set changes.
+const transferModalOpen = ref(false)
+const transferTargetGroupId = ref<string>('')
+const transferBadgeIds = ref<string[]>([])
+const transferGroupItems = computed(() =>
+  groups
+    .filter(g => g.id !== selectedGroup.value?.id)
+    .map(g => ({ value: g.id, label: g.name })),
+)
+function openTransferModal(ids: string[]) {
+  if (ids.length === 0) return
+  transferBadgeIds.value = ids
+  transferTargetGroupId.value = ''
+  transferModalOpen.value = true
+  closeMenus()
+}
+function closeTransferModal() {
+  transferModalOpen.value = false
+  transferTargetGroupId.value = ''
+  transferBadgeIds.value = []
+}
+function confirmTransfer() {
+  const targetId = transferTargetGroupId.value
+  if (!targetId) return
+  const target = groups.find(g => g.id === targetId)
+  if (!target) return
+  const ids = [...transferBadgeIds.value]
+  ids.forEach(id => {
+    const badge = allBadges.find(b => b.id === id)
+    if (badge) badge.groupId = target.id
+  })
+  selectedToRemove.clear()
+  closeTransferModal()
   showSuccessToast(
-    count === 1 ? '1 badge prêt à être transféré' : `${count} badges prêts à être transférés`,
+    ids.length === 1
+      ? `Badge transféré vers ${target.name}`
+      : `${ids.length} badges transférés vers ${target.name}`,
     '',
   )
+}
+function bulkTransferSelected() {
+  if (!selectedGroup.value) return
+  openTransferModal(Array.from(selectedToRemove))
 }
 
 // ── Pill positioning ────────────────────────────────────────────────────────
@@ -4887,6 +4921,97 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <div class="flex items-center justify-end gap-[8px] px-[24px] py-[16px]">
               <Button type="secondary" size="sm" label="Annuler" @click="cancelConfirmRule" />
               <Button type="primary" size="sm" label="Appliquer" @click="applyConfirmRule" />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ── Transfer-badges modal (Figma 6529-11525) ──────────────────────
+         Compact picker fronting both transfer entry points (per-row
+         kebab + bulk pill). Lists the BU's other groups; on confirm,
+         the selected badge id set is reassigned and a toast acknowledges.
+         Backdrop / X = Annuler. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="transferModalOpen"
+          class="fixed inset-0 z-[70] bg-black/40"
+          aria-hidden="true"
+          @click="closeTransferModal"
+        />
+      </Transition>
+
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.96] translate-y-[8px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] translate-y-[6px]"
+      >
+        <div
+          v-if="transferModalOpen"
+          class="fixed inset-0 z-[71] flex items-center justify-center p-[24px] pointer-events-none"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="transfer-modal-title"
+          aria-describedby="transfer-modal-desc"
+        >
+          <div class="pointer-events-auto w-full max-w-[480px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
+            <!-- Header — title + X close, hairline below -->
+            <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
+              <p id="transfer-modal-title" class="flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Transférer des badges
+              </p>
+              <button
+                type="button"
+                class="shrink-0 flex items-center justify-center size-[24px] text-icon-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray rounded-[4px]"
+                aria-label="Fermer"
+                @click="closeTransferModal"
+              >
+                <Icon name="x-mark" variant="outline" :size="20" />
+              </button>
+            </div>
+
+            <!-- Body — description + field label + target group dropdown -->
+            <div class="px-[24px] py-[16px] flex flex-col gap-[16px] border-b border-border-neutral-secondary">
+              <p id="transfer-modal-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Transférer les badges vers un autre groupe de cette Business unit.
+              </p>
+              <div class="flex flex-col gap-[6px]">
+                <label class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                  Sélectionnez le groupe cible
+                </label>
+                <Dropdown
+                  v-model="transferTargetGroupId"
+                  :items="transferGroupItems"
+                  placeholder="Sélectionnez un groupe"
+                  :searchable="false"
+                  :show-label="false"
+                  :show-hint="false"
+                  :teleport="true"
+                />
+              </div>
+            </div>
+
+            <!-- Footer — Annuler + Transférer aligned right -->
+            <div class="flex items-center justify-end gap-[12px] px-[24px] py-[16px]">
+              <Button type="secondary" size="md" label="Annuler" @click="closeTransferModal" />
+              <Button
+                type="primary"
+                size="md"
+                label="Transférer"
+                :disabled="!transferTargetGroupId"
+                @click="confirmTransfer"
+              />
             </div>
           </div>
         </div>
