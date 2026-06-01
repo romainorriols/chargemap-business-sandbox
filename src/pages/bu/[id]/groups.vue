@@ -3360,12 +3360,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 v-for="day in autorisationsForm.days"
                 :key="day.id"
                 :class="[
-                  'rounded-[16px] border border-border-neutral-secondary overflow-clip flex flex-col gap-[16px] p-[16px] h-[125px] justify-center',
+                  'rounded-[16px] border border-border-neutral-secondary overflow-clip flex flex-col h-[125px] justify-center',
                   day.blocked ? 'bg-neutral-secondary' : 'bg-neutral',
                 ]"
               >
-                <!-- Header — day label + (custom only) red block toggle -->
-                <div class="flex items-center gap-[16px] w-full">
+                <!-- Header — padded block (px+py 16px). Day label + (custom only) red block toggle. -->
+                <div class="px-[16px] py-[16px] flex items-center gap-[16px]">
                   <p
                     :class="[
                       'flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]',
@@ -3395,15 +3395,16 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </button>
                 </div>
 
-                <!-- Separator — sits inside the 16px padded area, so it's
-                     inset on each side (matches the Figma component). The
-                     bg color goes through inline style after the arbitrary
-                     Tailwind class kept disappearing on rebuild. -->
-                <div class="h-px w-full" style="background-color: #e1e7ef" aria-hidden="true" />
+                <!-- Separator — empty div with a top border, inset 16px on
+                     each side. Using border-* utilities (which we know
+                     ship on the cards) instead of a bg-colored 1px row
+                     that kept being dropped on rebuild. -->
+                <div class="border-t border-border-neutral-secondary mx-[16px]" aria-hidden="true" />
 
-                <!-- Body — fixed 37px height keeps the card at 125px
-                     regardless of which variant renders. -->
-                <div class="flex items-center gap-[16px] w-full h-[37px]">
+                <!-- Body — padded block. Content (Modifier button / inputs
+                     / icons) naturally ~37px so total card height stays
+                     close to 125px with justify-center. -->
+                <div class="px-[16px] py-[16px] flex items-center gap-[16px]">
                   <!-- Variant 4: blocked -->
                   <template v-if="day.blocked">
                     <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled">
