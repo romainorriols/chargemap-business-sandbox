@@ -25,7 +25,7 @@ defineEmits<{ menu: [orgaId: string, event: MouseEvent]; click: [orgaId: string]
        header from the 3 info rows (BU count, manager, email). -->
   <article
     data-orga-card="true"
-    class="bg-neutral border border-border-neutral-secondary rounded-[8px] overflow-clip flex flex-col transition-[box-shadow,border-color] duration-200 ease-out motion-reduce:transition-none hover:border-border-neutral hover:shadow-md"
+    class="bg-neutral border border-border-neutral-secondary rounded-[8px] overflow-clip flex flex-col transition-colors duration-200 ease-out motion-reduce:transition-none hover:border-border-neutral"
   >
     <!-- Header -->
     <div class="border-b border-border-neutral-secondary flex items-center gap-[10px] p-[16px]">
