@@ -292,53 +292,21 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
           aria-label="Filtres"
           @mouseleave="hoveredCategory = null"
         >
-          <!-- Categories panel — always shown. -->
-          <div class="w-[200px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]">
-            <button
-              type="button"
-              :class="[
-                'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                hoveredCategory === 'statuts' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
-              ]"
-              @mouseenter="hoveredCategory = 'statuts'"
-              @focus="hoveredCategory = 'statuts'"
-              @click="hoveredCategory = 'statuts'"
-            >
-              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                Statuts
-              </span>
-              <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
-            </button>
-            <button
-              type="button"
-              :class="[
-                'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                hoveredCategory === 'package' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
-              ]"
-              @mouseenter="hoveredCategory = 'package'"
-              @focus="hoveredCategory = 'package'"
-              @click="hoveredCategory = 'package'"
-            >
-              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                Package
-              </span>
-              <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
-            </button>
-          </div>
-
-          <!-- Options panel — only when a category is in focus / hover. -->
+          <!-- Options panel — DOM-first so it visually sits on the LEFT
+               (Figma 6557-5010). Wrapper's right edge is pinned to the
+               trigger, so growing the wrapper pushes the options to the
+               left while the categories panel stays anchored. -->
           <Transition
             enter-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-            enter-from-class="opacity-0 -translate-x-[4px]"
+            enter-from-class="opacity-0 translate-x-[4px]"
             enter-to-class="opacity-100 translate-x-0"
             leave-active-class="transition-[opacity,transform] duration-[100ms] ease-out motion-reduce:transition-none"
             leave-from-class="opacity-100 translate-x-0"
-            leave-to-class="opacity-0 -translate-x-[4px]"
+            leave-to-class="opacity-0 translate-x-[4px]"
           >
             <div
               v-if="hoveredCategory"
               class="w-[220px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]"
-              @mouseenter="hoveredCategory = hoveredCategory"
             >
               <template v-if="hoveredCategory === 'statuts'">
                 <button
@@ -388,6 +356,41 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               </template>
             </div>
           </Transition>
+
+          <!-- Categories panel — pinned at the wrapper's right edge so
+               it never moves when the options panel opens to its left. -->
+          <div class="w-[200px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]">
+            <button
+              type="button"
+              :class="[
+                'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                hoveredCategory === 'statuts' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
+              ]"
+              @mouseenter="hoveredCategory = 'statuts'"
+              @focus="hoveredCategory = 'statuts'"
+              @click="hoveredCategory = 'statuts'"
+            >
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Statuts
+              </span>
+              <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+            </button>
+            <button
+              type="button"
+              :class="[
+                'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                hoveredCategory === 'package' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
+              ]"
+              @mouseenter="hoveredCategory = 'package'"
+              @focus="hoveredCategory = 'package'"
+              @click="hoveredCategory = 'package'"
+            >
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Package
+              </span>
+              <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+            </button>
+          </div>
         </div>
       </Transition>
     </Teleport>
