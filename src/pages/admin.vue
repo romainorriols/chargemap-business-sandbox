@@ -341,6 +341,7 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               v-for="(orga, i) in filtered"
               :key="orga.id"
               :orga="orga"
+              :disabled="!orga.active"
               :style="{ animationDelay: `${120 + i * 30}ms` }"
               class="anim-fade-up"
               @menu="(id, e) => onMenu(id, e)"

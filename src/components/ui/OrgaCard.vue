@@ -14,7 +14,7 @@ export interface Orga {
   managerEmail: string
 }
 
-defineProps<{ orga: Orga }>()
+withDefaults(defineProps<{ orga: Orga; disabled?: boolean }>(), { disabled: false })
 defineEmits<{ menu: [orgaId: string, event: MouseEvent]; click: [orgaId: string] }>()
 </script>
 
@@ -31,12 +31,12 @@ defineEmits<{ menu: [orgaId: string, event: MouseEvent]; click: [orgaId: string]
     <div class="border-b border-border-neutral-secondary flex items-center gap-[10px] p-[16px]">
       <div class="flex-1 min-w-0 flex flex-col gap-[8px] items-start">
         <div class="flex items-center gap-[8px]">
-          <Icon name="building-library" variant="outline" :size="24" class="shrink-0 text-icon-neutral-primary" />
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral whitespace-nowrap">
+          <Icon name="building-library" variant="outline" :size="24" :class="['shrink-0', disabled ? 'text-icon-neutral-disabled' : 'text-icon-neutral-primary']" />
+          <p :class="['font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] whitespace-nowrap', disabled ? 'text-text-neutral-disabled' : 'text-text-neutral']">
             {{ orga.name }}
           </p>
         </div>
-        <div class="flex items-center gap-[8px]">
+        <div :class="['flex items-center gap-[8px]', disabled && 'opacity-60']">
           <!-- Package badge — colour-coded per subscription tier. Classic
                uses a fully rounded pill; the other tiers use rounded-[8px]. -->
           <span
@@ -91,20 +91,20 @@ defineEmits<{ menu: [orgaId: string, event: MouseEvent]; click: [orgaId: string]
     <!-- Info rows -->
     <div class="p-[16px] flex flex-col gap-[16px]">
       <div class="flex items-center gap-[8px]">
-        <Icon name="building-office" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
-        <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+        <Icon name="building-office" variant="outline" :size="16" :class="['shrink-0', disabled ? 'text-icon-neutral-disabled' : 'text-icon-neutral-secondary']" />
+        <p :class="['flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate', disabled ? 'text-text-neutral-disabled' : 'text-text-neutral-secondary']">
           <span class="tabular-nums">{{ orga.businessUnitsCount }}</span> Business {{ orga.businessUnitsCount <= 1 ? 'unit' : 'units' }}
         </p>
       </div>
       <div class="flex items-center gap-[8px]">
-        <Icon name="user-circle" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
-        <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+        <Icon name="user-circle" variant="outline" :size="16" :class="['shrink-0', disabled ? 'text-icon-neutral-disabled' : 'text-icon-neutral-secondary']" />
+        <p :class="['flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate', disabled ? 'text-text-neutral-disabled' : 'text-text-neutral-secondary']">
           {{ orga.managerName }}
         </p>
       </div>
       <div class="flex items-center gap-[8px]">
-        <Icon name="envelope" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
-        <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+        <Icon name="envelope" variant="outline" :size="16" :class="['shrink-0', disabled ? 'text-icon-neutral-disabled' : 'text-icon-neutral-secondary']" />
+        <p :class="['flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate', disabled ? 'text-text-neutral-disabled' : 'text-text-neutral-secondary']">
           {{ orga.managerEmail }}
         </p>
       </div>
