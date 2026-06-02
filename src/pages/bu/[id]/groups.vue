@@ -4862,64 +4862,45 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="country-picker-modal-title"
         >
           <div
-            class="pointer-events-auto w-full h-full max-h-[800px] max-w-[800px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip"
+            class="pointer-events-auto w-full max-w-[720px] max-h-[840px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip"
           >
             <div class="flex-1 min-w-0 max-h-full flex flex-col overflow-hidden">
-              <!-- Header — title + subtitle on the left, X close on the right -->
-              <div class="flex items-center justify-between gap-[16px] px-[16px] py-[16px] border-b border-border-neutral-secondary shrink-0">
-                <div class="flex flex-col gap-[2px] min-w-0">
+              <!-- Header — icon tile on top-left, X close on top-right,
+                   title + subtitle below the icon (Figma 6529-25981). -->
+              <div class="px-[24px] pt-[24px] pb-[16px] border-b border-border-neutral-secondary shrink-0 flex flex-col gap-[16px]">
+                <div class="flex items-start justify-between gap-[16px]">
+                  <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+                    <Icon name="flag" variant="solid" :size="22" class="text-white" />
+                  </div>
+                  <button
+                    type="button"
+                    class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Fermer"
+                    @click="cancelCountryPicker"
+                  >
+                    <Icon name="x-mark" variant="outline" :size="20" />
+                  </button>
+                </div>
+                <div class="flex flex-col gap-[4px]">
                   <p id="country-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-                    {{ uiStore.networkPickerVariant === 'block-mode' ? 'Bloquer des pays' : 'Gérer les pays autorisés' }}
+                    Bloquer des pays
                   </p>
-                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                    {{ uiStore.networkPickerVariant === 'block-mode'
-                      ? 'Bloquez les pays dans lesquels la recharge ne doit pas être autorisée.'
-                      : 'Désactivez les pays dans lesquels la recharge ne doit pas être autorisée.' }}
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                    Désactivez les pays dans lesquels la recharge ne doit pas être autorisée.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                  aria-label="Fermer"
-                  @click="cancelCountryPicker"
-                >
-                  <Icon name="x-mark" variant="outline" :size="20" />
-                </button>
               </div>
 
-              <!-- Filters row -->
-              <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
-                <div class="flex items-center gap-[8px] min-w-0">
-                  <div class="w-[300px] min-w-[200px] max-w-full">
-                    <Input
-                      v-model="countryPicker.search"
-                      type="leadingIcon"
-                      icon="magnifying-glass"
-                      size="md"
-                      placeholder="Recherche"
-                      aria-label="Rechercher un pays"
-                    />
-                  </div>
-                </div>
-                <div class="shrink-0 flex items-center gap-[8px]">
-                  <button
-                    type="button"
-                    :disabled="allVisibleCountriesAuthorized"
-                    class="inline-flex items-center justify-center px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
-                    @click="authorizeAllVisibleCountries"
-                  >
-                    Tout autorisé
-                  </button>
-                  <div class="h-[24px] w-px bg-border-neutral-tertiary" aria-hidden="true" />
-                  <button
-                    type="button"
-                    :disabled="allVisibleCountriesBlocked"
-                    class="inline-flex items-center justify-center px-[12px] py-[8px] rounded-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary hover:text-text-neutral hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-neutral-secondary"
-                    @click="blockAllVisibleCountries"
-                  >
-                    Tout bloqué
-                  </button>
-                </div>
+              <!-- Search row — full-width search input. -->
+              <div class="px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
+                <Input
+                  v-model="countryPicker.search"
+                  type="leadingIcon"
+                  icon="magnifying-glass"
+                  size="md"
+                  placeholder="Recherche"
+                  aria-label="Rechercher un pays"
+                />
               </div>
 
               <!-- Scrollable list -->
@@ -4948,11 +4929,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         'cursor-pointer flex items-center justify-between p-[12px] rounded-[16px] overflow-clip',
                         'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                         'outline-none focus-visible:shadow-ring-gray',
-                        uiStore.networkPickerVariant === 'block-mode'
+                        isCountryAuthorized(c.id)
                           ? 'bg-neutral hover:bg-neutral-secondary'
-                          : isCountryAuthorized(c.id)
-                            ? 'bg-neutral hover:bg-neutral-secondary'
-                            : 'bg-neutral-secondary hover:bg-neutral-tertiary',
+                          : 'bg-neutral-secondary hover:bg-neutral-tertiary',
                       ]"
                       @click="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
                       @keydown.enter.prevent="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
@@ -4966,32 +4945,32 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           :class="[
                             'shrink-0 size-[32px] rounded-full object-cover',
                             'transition-[filter,opacity] duration-200 ease-out motion-reduce:transition-none',
-                            uiStore.networkPickerVariant === 'block-mode' && !isCountryAuthorized(c.id)
-                              ? 'grayscale opacity-60'
-                              : '',
+                            !isCountryAuthorized(c.id) ? 'grayscale opacity-60' : '',
                           ]"
                           loading="lazy"
                         />
                         <div class="w-[250px] flex flex-col">
-                          <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                          <p
+                            :class="[
+                              'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] truncate',
+                              isCountryAuthorized(c.id) ? 'text-text-neutral' : 'text-text-neutral-disabled',
+                            ]"
+                          >
                             {{ c.name }}
                           </p>
-                          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                            <template v-if="isCountryAuthorized(c.id)">
-                              <span class="text-text-neutral-secondary">Pays autorisé</span>
-                            </template>
-                            <template v-else>
-                              <span class="text-text-neutral-secondary">Pays </span>
-                              <span class="text-[#e21d48]">bloqué</span>
-                            </template>
+                          <p
+                            :class="[
+                              'font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate',
+                              isCountryAuthorized(c.id) ? 'text-text-neutral-secondary' : 'text-text-neutral-disabled',
+                            ]"
+                          >
+                            {{ isCountryAuthorized(c.id) ? 'Pays autorisé' : 'Pays bloqué' }}
                           </p>
                         </div>
                       </div>
-                      <!-- Toggle — lib component on default; a custom
-                           neutral↔rose track in block-mode, mirroring the
-                           network picker. -->
+                      <!-- Toggle — neutral track when autorisé, red
+                           track when bloqué (Figma 6123-13872). -->
                       <button
-                        v-if="uiStore.networkPickerVariant === 'block-mode'"
                         type="button"
                         role="switch"
                         :aria-checked="!isCountryAuthorized(c.id)"
@@ -5009,20 +4988,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           :style="{ transform: isCountryAuthorized(c.id) ? 'translateX(0)' : 'translateX(16px)' }"
                         />
                       </button>
-                      <Toggle
-                        v-else
-                        :model-value="isCountryAuthorized(c.id)"
-                        size="sm"
-                        :aria-label="`Autoriser ${c.name}`"
-                        @update:model-value="(v) => setCountryAuthorized(c.id, v)"
-                        @click.stop
-                      />
                     </article>
                   </template>
                 </template>
               </div>
 
-              <!-- Footer — count + Annuler / Valider -->
+              <!-- Footer — count on the left, Tout autorisé / Tout
+                   bloqué bulk actions + Valider on the right (Figma
+                   6529-25981). No Annuler — the X in the header closes
+                   the modal. -->
               <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
                 <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
                   <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
@@ -5032,8 +5006,21 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     Pays bloqués
                   </span>
                 </p>
-                <div class="shrink-0 flex items-center gap-[12px]">
-                  <Button type="secondary" size="md" label="Annuler" @click="cancelCountryPicker" />
+                <div class="shrink-0 flex items-center gap-[8px]">
+                  <Button
+                    type="secondary"
+                    size="md"
+                    label="Tout autorisé"
+                    :disabled="allVisibleCountriesAuthorized"
+                    @click="authorizeAllVisibleCountries"
+                  />
+                  <Button
+                    type="secondary"
+                    size="md"
+                    label="Tout bloqué"
+                    :disabled="allVisibleCountriesBlocked"
+                    @click="blockAllVisibleCountries"
+                  />
                   <Button type="primary" size="md" label="Valider" @click="confirmCountryPicker" />
                 </div>
               </div>
