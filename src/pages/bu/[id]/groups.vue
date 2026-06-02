@@ -3927,8 +3927,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   </div>
                 </Transition>
 
-                <!-- Always-visible empty CTA — opens the inline form -->
+                <!-- Empty CTA — only when the inline creation form is
+                     not showing (Figma 6529-30015). -->
                 <button
+                  v-if="!vacanceForm.creating"
                   type="button"
                   class="w-full h-[100px] flex items-center justify-center gap-[12px] px-[16px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral text-text-neutral-secondary hover:bg-neutral-hover hover:border-border-neutral transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand focus-visible:border-brand"
                   aria-label="Ajouter une nouvelle période de vacance"
