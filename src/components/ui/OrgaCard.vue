@@ -15,7 +15,7 @@ export interface Orga {
 }
 
 defineProps<{ orga: Orga }>()
-defineEmits<{ menu: [orgaId: string]; click: [orgaId: string] }>()
+defineEmits<{ menu: [orgaId: string, event: MouseEvent]; click: [orgaId: string] }>()
 </script>
 
 <template>
@@ -24,6 +24,7 @@ defineEmits<{ menu: [orgaId: string]; click: [orgaId: string] }>()
        Self service / Suspecte flags) + kebab. Border-b separates the
        header from the 3 info rows (BU count, manager, email). -->
   <article
+    data-orga-card="true"
     class="bg-neutral border border-border-neutral-secondary rounded-[8px] overflow-clip flex flex-col"
   >
     <!-- Header -->
@@ -81,7 +82,7 @@ defineEmits<{ menu: [orgaId: string]; click: [orgaId: string] }>()
         type="button"
         class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
         :aria-label="`Actions sur ${orga.name}`"
-        @click.stop="$emit('menu', orga.id)"
+        @click.stop="(e) => $emit('menu', orga.id, e)"
       >
         <Icon name="ellipsis-vertical" variant="outline" :size="20" />
       </button>

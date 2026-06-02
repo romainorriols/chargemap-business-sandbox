@@ -53,6 +53,10 @@ function togglePackage(p: OrgaPackage) {
   if (filters.package.has(p)) filters.package.delete(p)
   else filters.package.add(p)
 }
+function resetFilters() {
+  filters.statuts.clear()
+  filters.package.clear()
+}
 const PACKAGE_OPTIONS: OrgaPackage[] = ['Classic', 'Advanced', 'Entreprise', 'Legacy']
 
 const filterAnchor = ref<HTMLElement | null>(null)
@@ -134,7 +138,68 @@ const filtered = computed(() => {
   })
 })
 
-function onMenu(_id: string) { /* placeholder — no per-card actions wired yet */ }
+// ── Per-card kebab menu (Figma 6557-5026) ───────────────────────────────
+// Single shared dropdown rendered via Teleport; the page tracks which
+// card is open + the trigger's rect so the menu can be fixed-positioned
+// outside the cards' overflow / z-index context.
+const openOrgaMenuId = ref<string | null>(null)
+const orgaMenuPos = ref({ top: 0, right: 0 })
+const orgaMenuRef = ref<HTMLElement | null>(null)
+const currentOrgaForMenu = computed(() =>
+  openOrgaMenuId.value ? orgas.value.find(o => o.id === openOrgaMenuId.value) ?? null : null,
+)
+function onMenu(id: string, e: MouseEvent) {
+  if (openOrgaMenuId.value === id) {
+    openOrgaMenuId.value = null
+    return
+  }
+  const btn = e.currentTarget as HTMLElement
+  const rect = btn.getBoundingClientRect()
+  orgaMenuPos.value = {
+    top: rect.bottom + 4,
+    right: Math.max(8, window.innerWidth - rect.right),
+  }
+  openOrgaMenuId.value = id
+}
+function closeOrgaMenu() { openOrgaMenuId.value = null }
+function onViewClient() { closeOrgaMenu() }
+function onViewDetails() { closeOrgaMenu() }
+function onDeactivateOrga() {
+  const o = currentOrgaForMenu.value
+  if (o) o.active = false
+  closeOrgaMenu()
+}
+
+// Close the orga menu on outside pointerdown / scroll / Escape — same
+// pattern as the Filtres dropdown above.
+function onOrgaPointerDown(e: PointerEvent) {
+  if (!openOrgaMenuId.value) return
+  const t = e.target as Node
+  if (orgaMenuRef.value?.contains(t)) return
+  // The kebab button itself emits 'menu' which already toggles; avoid
+  // double-handling by ignoring clicks inside an OrgaCard.
+  if ((t as HTMLElement).closest?.('[data-orga-card="true"]')) return
+  closeOrgaMenu()
+}
+function onOrgaKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && openOrgaMenuId.value) closeOrgaMenu()
+}
+function onOrgaViewportChange() {
+  if (openOrgaMenuId.value) closeOrgaMenu()
+}
+onMounted(() => {
+  document.addEventListener('pointerdown', onOrgaPointerDown)
+  document.addEventListener('keydown', onOrgaKeydown)
+  window.addEventListener('scroll', onOrgaViewportChange, true)
+  window.addEventListener('resize', onOrgaViewportChange)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onOrgaPointerDown)
+  document.removeEventListener('keydown', onOrgaKeydown)
+  window.removeEventListener('scroll', onOrgaViewportChange, true)
+  window.removeEventListener('resize', onOrgaViewportChange)
+})
+
 function onCreateOrga() { /* placeholder — Nouvelle organisation flow not designed yet */ }
 </script>
 
@@ -188,15 +253,33 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               />
             </div>
             <div class="lg:ml-auto flex items-center gap-[8px]">
-              <!-- Filtres button — toggles the cascading menu teleported
-                   below. Anchor ref captures the rect on open. -->
+              <!-- Filtres button — toggles the cascading menu below. When
+                   filters are active, surfaces the count and a clickable
+                   X to reset (Figma 6581-3543). Custom inline so the X
+                   can carry its own click target without retriggering
+                   the menu toggle. -->
               <div ref="filterAnchor" class="shrink-0">
-                <Button
-                  type="secondary"
-                  size="md"
-                  :label="activeFilterCount ? `Filtres (${activeFilterCount})` : 'Filtres'"
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-[8px] min-h-[44px] py-[8px] px-[16px] bg-neutral border border-border-neutral rounded-md font-sans font-medium text-[16px] tracking-[-0.03em] text-text-neutral-secondary hover:bg-neutral-hover active:scale-[0.97] transition-[background-color,transform] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                   @click="toggleFilterMenu"
-                />
+                >
+                  <span class="whitespace-nowrap">
+                    Filtres<span v-if="activeFilterCount" class="tabular-nums"> ({{ activeFilterCount }})</span>
+                  </span>
+                  <span
+                    v-if="activeFilterCount"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Réinitialiser les filtres"
+                    class="flex items-center justify-center size-[20px] -mr-[4px] rounded-[4px] text-icon-neutral-secondary hover:text-icon-neutral-primary hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    @click.stop="resetFilters"
+                    @keydown.enter.stop="resetFilters"
+                    @keydown.space.stop.prevent="resetFilters"
+                  >
+                    <Icon name="x-mark" variant="outline" :size="14" />
+                  </span>
+                </button>
               </div>
               <!-- Segmented switch: Orga Actives / Orga désactivées
                    (Figma 6562-17021). Container is bg-neutral-tertiary
@@ -246,7 +329,7 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               :orga="orga"
               :style="{ animationDelay: `${120 + i * 30}ms` }"
               class="anim-fade-up"
-              @menu="onMenu"
+              @menu="(id, e) => onMenu(id, e)"
             />
           </div>
 
@@ -404,6 +487,62 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               </template>
             </div>
           </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Per-card kebab dropdown (Figma 6557-5026) — Détails / Paramètres
+         orga / Désactiver. Teleported and fixed-positioned at the clicked
+         kebab's rect so it escapes any card overflow. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+      >
+        <div
+          v-if="currentOrgaForMenu"
+          ref="orgaMenuRef"
+          :style="{ top: orgaMenuPos.top + 'px', right: orgaMenuPos.right + 'px' }"
+          class="fixed z-[60] w-[220px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]"
+          role="menu"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            @click="onViewDetails"
+          >
+            <Icon name="list-bullet" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              Détails
+            </span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            @click="onViewClient"
+          >
+            <Icon name="cog-6-tooth" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              Paramètres orga
+            </span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-danger-surface transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-error"
+            @click="onDeactivateOrga"
+          >
+            <Icon name="no-symbol" variant="outline" :size="18" class="shrink-0 text-icon-danger" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-danger-medium">
+              Désactiver
+            </span>
+          </button>
         </div>
       </Transition>
     </Teleport>
