@@ -811,9 +811,12 @@ const blockedNetworkDetails = computed(() =>
 // 6123-14165) reuses the réseau picker structure: search + Trier, Tout
 // autorisé / Tout bloqué bulk actions, list of country-card-inline rows.
 const paysDrawerOpen = ref(false)
-const paysForm = reactive<{ active: boolean; blockedCountries: string[] }>({
+function personalizePays() { paysForm.draftOrigin = 'custom' }
+function inheritPays() { paysForm.draftOrigin = 'inherited' }
+const paysForm = reactive<{ active: boolean; blockedCountries: string[]; draftOrigin: 'inherited' | 'custom' }>({
   active: false,
   blockedCountries: [],
+  draftOrigin: 'inherited',
 })
 // Mirror of blockedNetworksListExpanded for the country drawer (Figma
 // 6123-15711). Defaults to expanded.
@@ -1222,6 +1225,7 @@ function onRuleClick(rule: ChargingRule) {
   if (rule.id === 'pays') {
     selectedRuleId.value = rule.id
     paysForm.active = rule.statusIcon === 'check'
+    paysForm.draftOrigin = rule.origin
     paysDrawerOpen.value = true
     return
   }
@@ -1358,6 +1362,7 @@ function commitPays() {
   if (rule) {
     rule.statusIcon = paysForm.active ? 'check' : 'x-mark'
     rule.statusLabel = paysForm.active ? 'Activé' : 'Désactivé'
+    rule.origin = paysForm.draftOrigin
   }
   paysDrawerOpen.value = false
   countryPickerOpen.value = false
@@ -4293,80 +4298,137 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — header card + count card + collapsible list card
-             (Figma 6201-21445). -->
+        <!-- Body — origin banner + Bloquer des pays section card,
+             optionally followed by the collapsible "Liste des pays
+             bloqués" card (Figma 6529-24720 / 6529-24721). Mirrors
+             the réseau drawer's draftOrigin × active matrix. -->
         <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
-          <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <div class="flex flex-col gap-[4px]">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Gérer les pays autorisés
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Définissez pays par pays ceux dans lesquels la recharge est autorisée ou interdite
-              </p>
-            </div>
 
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <!-- Activé toggle row -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                Activé
-              </span>
-              <Toggle
-                v-model="paysForm.active"
-                size="md"
-                aria-label="Activer la gestion des pays autorisés"
+          <!-- Origin banner — read-only "Règle héritée de la BU" with a
+               Personnaliser CTA, or editable "Règle personnalisée" with a
+               Suivre les règles de la BU CTA. -->
+          <section class="bg-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+              <Icon
+                :name="paysForm.draftOrigin === 'custom' ? 'lock-open' : 'lock-closed'"
+                variant="solid"
+                :size="24"
+                class="text-white"
               />
             </div>
+            <div class="flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                {{ paysForm.draftOrigin === 'custom' ? 'Règle personnalisée' : 'Règle héritée de la BU' }}
+              </p>
+              <p v-if="paysForm.draftOrigin === 'custom'" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cette règle est propre à ce groupe, elle ne suivra plus les modifications de la <span class="text-text-brand-medium hover:underline cursor-pointer">règle BU</span>.
+              </p>
+              <p v-else class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cliquez sur personnaliser, pour définir une règle propre uniquement à ce groupe.
+              </p>
+            </div>
+            <Button
+              type="primary"
+              size="md"
+              :label="paysForm.draftOrigin === 'custom' ? 'Suivre les règles de la BU' : 'Personnaliser'"
+              @click="paysForm.draftOrigin === 'custom' ? inheritPays() : personalizePays()"
+            />
           </section>
 
-          <!-- Pays bloqués card + collapsible list — appears once the rule
-               is on. Mirrors the réseau drawer (Figma 6123-13732 / 6173-13372)
-               applied to pays (Figma 6123-15711). -->
-          <template v-if="paysForm.active">
-            <div class="flex items-center justify-between gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]">
-              <div class="flex-1 min-w-0 flex flex-col">
-                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate tabular-nums">
-                  {{ paysForm.blockedCountries.length }}
-                  {{ paysForm.blockedCountries.length <= 1 ? 'pays bloqué' : 'pays bloqués' }}
-                </p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
-                  Sur {{ countries.length }} compatibles
-                </p>
-              </div>
-              <template v-if="paysForm.blockedCountries.length > 0">
-                <div class="shrink-0 flex items-center gap-[16px]">
-                  <button
-                    type="button"
-                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                    aria-label="Modifier la liste de blocage"
-                    @click="openCountryPicker"
-                  >
-                    <Icon name="pencil" variant="outline" :size="18" />
-                  </button>
-                  <button
-                    type="button"
-                    class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                    aria-label="Vider la liste de blocage"
-                    @click="clearPaysBlocklist"
-                  >
-                    <Icon name="trash" variant="outline" :size="18" />
-                  </button>
-                </div>
-              </template>
-              <Button v-else type="secondary" size="md" label="Gérer les pays" @click="openCountryPicker" />
+          <!-- Bloquer des pays section — content swaps between editable
+               (custom) and read-only (inherited) layouts. -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <!-- Title row + control on the right. Custom shows the toggle,
+                 inherited shows nothing on the same line. -->
+            <div class="flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Bloquer des pays
+              </span>
+              <Toggle
+                v-if="paysForm.draftOrigin === 'custom'"
+                v-model="paysForm.active"
+                size="md"
+                aria-label="Activer le blocage de pays"
+              />
             </div>
 
-            <!-- Collapsible "Voir la liste des N pays bloqués" card -->
+            <!-- Custom + active: count row + "Gérer les pays" CTA when
+                 the blocklist is empty, otherwise edit/clear icons. -->
+            <template v-if="paysForm.draftOrigin === 'custom' && paysForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                  <span class="font-medium text-text-neutral tabular-nums">
+                    {{ paysForm.blockedCountries.length }}
+                  </span>
+                  <span class="text-text-neutral-secondary">
+                    {{ paysForm.blockedCountries.length <= 1 ? ' pays' : ' pays' }}
+                    <span class="text-[#e21d48]">{{ paysForm.blockedCountries.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
+                  </span>
+                </p>
+                <template v-if="paysForm.blockedCountries.length > 0">
+                  <div class="shrink-0 flex items-center gap-[8px]">
+                    <button
+                      type="button"
+                      class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                      aria-label="Modifier la liste de blocage"
+                      @click="openCountryPicker"
+                    >
+                      <Icon name="pencil" variant="outline" :size="18" />
+                    </button>
+                    <button
+                      type="button"
+                      class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                      aria-label="Vider la liste de blocage"
+                      @click="clearPaysBlocklist"
+                    >
+                      <Icon name="trash" variant="outline" :size="18" />
+                    </button>
+                  </div>
+                </template>
+                <Button v-else type="secondary" size="sm" label="Gérer les pays" @click="openCountryPicker" />
+              </div>
+            </template>
+
+            <!-- Inherited + inactive: read-only État/Désactivé row. -->
+            <template v-if="paysForm.draftOrigin === 'inherited' && !paysForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  État
+                </span>
+                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                  Désactivé
+                </span>
+              </div>
+            </template>
+
+            <!-- Inherited + active: read-only blocked count. -->
+            <template v-if="paysForm.draftOrigin === 'inherited' && paysForm.active">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="flex items-center justify-between gap-[16px]">
+                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                  <span class="font-medium text-text-neutral tabular-nums">
+                    {{ paysForm.blockedCountries.length }}
+                  </span>
+                  <span class="text-text-neutral-secondary">
+                    {{ paysForm.blockedCountries.length <= 1 ? ' pays' : ' pays' }}
+                    <span class="text-[#e21d48]">{{ paysForm.blockedCountries.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
+                  </span>
+                </p>
+              </div>
+            </template>
+          </section>
+
+          <!-- Collapsible "Liste des pays bloqués" card — shown whenever
+               the rule is on. -->
+          <template v-if="paysForm.active">
             <div
-              v-if="paysForm.blockedCountries.length > 0"
               class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
             >
               <div class="flex items-center justify-between gap-[16px]">
-                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
-                  Voir la liste des {{ paysForm.blockedCountries.length }} {{ paysForm.blockedCountries.length <= 1 ? 'pays bloqué' : 'pays bloqués' }}
+                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                  Liste des pays bloqués
                 </p>
                 <button
                   type="button"
@@ -4422,7 +4484,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Footer -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closePaysDrawer" />
-          <Button type="primary" size="md" label="Enregistrer" @click="savePays" />
+          <Button
+            type="primary"
+            size="md"
+            label="Enregistrer"
+            :disabled="paysForm.draftOrigin === 'inherited'"
+            @click="savePays"
+          />
         </div>
       </aside>
     </Transition>
