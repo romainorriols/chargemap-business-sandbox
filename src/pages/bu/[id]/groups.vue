@@ -534,12 +534,16 @@ const vacanceForm = reactive<{
   periods: VacancePeriod[]
   creating: boolean
   draft: { name: string; range: string }
+  draftOrigin: 'inherited' | 'custom'
 }>({
   active: false,
   periods: [],
   creating: false,
   draft: { name: '', range: '' },
+  draftOrigin: 'inherited',
 })
+function personalizeVacance() { vacanceForm.draftOrigin = 'custom' }
+function inheritVacance() { vacanceForm.draftOrigin = 'inherited' }
 let vacancePeriodSeq = 0
 function openVacanceCreate() {
   vacanceForm.draft.name = ''
@@ -1204,6 +1208,7 @@ function onRuleClick(rule: ChargingRule) {
   if (rule.id === 'vacance') {
     selectedRuleId.value = rule.id
     vacanceForm.active = rule.statusIcon === 'check'
+    vacanceForm.draftOrigin = rule.origin
     vacanceDrawerOpen.value = true
     return
   }
@@ -1371,6 +1376,7 @@ function commitVacance() {
   if (rule) {
     rule.statusIcon = vacanceForm.active ? 'check' : 'x-mark'
     rule.statusLabel = vacanceForm.active ? 'Activé' : 'Désactivé'
+    rule.origin = vacanceForm.draftOrigin
   }
   vacanceDrawerOpen.value = false
   vacanceForm.creating = false
@@ -3561,34 +3567,65 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </button>
         </div>
 
-        <!-- Body — header card + period list + creation form + empty CTA
-             (Figma 5980-31045). Single section so cards sit at the 12px
-             intra-section rhythm. -->
-        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[12px]">
-          <!-- Section header card — rule title + description + Activé toggle -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+        <!-- Body — origin banner + master "Blocage vacance" card + period
+             list / creation form (custom mode only). Figma 6529-29824 /
+             6529-29869. -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-[16px] py-[16px] flex flex-col gap-[16px]">
+
+          <!-- Origin banner — same shape as the other rule drawers. -->
+          <section class="bg-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
+            <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
+              <Icon
+                :name="vacanceForm.draftOrigin === 'custom' ? 'lock-open' : 'lock-closed'"
+                variant="solid"
+                :size="24"
+                class="text-white"
+              />
+            </div>
             <div class="flex flex-col gap-[4px]">
-              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
-                Blocage vacance
+              <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
+                {{ vacanceForm.draftOrigin === 'custom' ? 'Règle personnalisée' : 'Règle héritée de la BU' }}
               </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
+              <p v-if="vacanceForm.draftOrigin === 'custom'" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cette règle est propre à ce groupe, elle ne suivra plus les modifications de la <span class="text-text-brand-medium hover:underline cursor-pointer">règle BU</span>.
+              </p>
+              <p v-else class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Cliquez sur personnaliser, pour définir une règle propre uniquement à ce groupe.
               </p>
             </div>
+            <Button
+              type="primary"
+              size="md"
+              :label="vacanceForm.draftOrigin === 'custom' ? 'Suivre les règles de la BU' : 'Personnaliser'"
+              @click="vacanceForm.draftOrigin === 'custom' ? inheritVacance() : personalizeVacance()"
+            />
+          </section>
 
-            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <!-- Activé toggle row -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                Activé
+          <!-- Master Blocage vacance card — title + toggle in custom mode,
+               read-only État row in inherited. -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
+            <div class="p-[16px] flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Blocage vacance
               </span>
               <Toggle
+                v-if="vacanceForm.draftOrigin === 'custom'"
                 v-model="vacanceForm.active"
                 size="md"
                 aria-label="Activer le blocage vacance"
               />
             </div>
+            <template v-if="vacanceForm.draftOrigin === 'inherited'">
+              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+              <div class="p-[16px] flex items-center justify-between gap-[16px]">
+                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                  État
+                </span>
+                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
+                  {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
+                </span>
+              </div>
+            </template>
           </section>
 
           <!-- Period list + creation form + empty CTA — gated by master toggle -->
@@ -3600,7 +3637,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-[4px]"
           >
-            <div v-if="vacanceForm.active" class="flex flex-col gap-[12px]">
+            <div v-if="vacanceForm.active && vacanceForm.draftOrigin === 'custom'" class="flex flex-col gap-[12px]">
                 <!-- Saved period cards -->
                 <TransitionGroup
                   tag="div"
@@ -3892,7 +3929,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Footer -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeVacanceDrawer" />
-          <Button type="primary" size="md" label="Enregistrer" @click="saveVacance" />
+          <Button
+            type="primary"
+            size="md"
+            label="Enregistrer"
+            :disabled="vacanceForm.draftOrigin === 'inherited'"
+            @click="saveVacance"
+          />
         </div>
       </aside>
     </Transition>
