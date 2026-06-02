@@ -367,7 +367,7 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               <div ref="filterAnchor" class="shrink-0">
                 <button
                   type="button"
-                  class="inline-flex items-center gap-[8px] min-h-[44px] py-[8px] px-[16px] bg-neutral border border-border-neutral rounded-md font-sans font-medium text-[16px] tracking-[-0.03em] text-text-neutral-secondary hover:bg-neutral-hover active:scale-[0.97] transition-[background-color,transform] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  class="inline-flex items-center justify-center gap-[8px] min-h-[44px] py-[8px] px-[16px] bg-neutral border border-border-neutral rounded-[8px] font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary hover:bg-neutral-hover active:scale-[0.97] transition-[background-color,transform] duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                   @click="toggleFilterMenu"
                 >
                   <span class="whitespace-nowrap">
@@ -378,12 +378,12 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
                     role="button"
                     tabindex="0"
                     aria-label="Réinitialiser les filtres"
-                    class="flex items-center justify-center size-[20px] -mr-[4px] rounded-[4px] text-icon-neutral-secondary hover:text-icon-neutral-primary hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    class="flex items-center justify-center size-[20px] shrink-0 rounded-[4px] text-icon-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                     @click.stop="resetFilters"
                     @keydown.enter.stop="resetFilters"
                     @keydown.space.stop.prevent="resetFilters"
                   >
-                    <Icon name="x-mark" variant="outline" :size="14" />
+                    <Icon name="x-mark" variant="outline" :size="20" />
                   </span>
                 </button>
               </div>
