@@ -3602,10 +3602,27 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </section>
 
-          <!-- Master Blocage vacance card — title + description + hairline
-               + Activé/Désactivé row. Toggle in custom mode, read-only
-               État value in inherited mode. -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
+          <!-- Master Blocage vacance card. Custom mode (Figma 6529-29869):
+               single row, title left + toggle right, no description, no
+               hairline. Inherited mode: title + description + hairline +
+               read-only État row. -->
+          <section
+            v-if="vacanceForm.draftOrigin === 'custom'"
+            class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
+          >
+            <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
+              Blocage vacance
+            </p>
+            <Toggle
+              v-model="vacanceForm.active"
+              size="md"
+              aria-label="Activer le blocage vacance"
+            />
+          </section>
+          <section
+            v-else
+            class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col"
+          >
             <div class="p-[16px] flex flex-col gap-[4px]">
               <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
                 Blocage vacance
@@ -3614,25 +3631,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
               </p>
             </div>
-
             <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-
-            <div v-if="vacanceForm.draftOrigin === 'custom'" class="p-[16px] flex items-center justify-between gap-[16px]">
-              <span
-                :class="[
-                  'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
-                  vacanceForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
-                ]"
-              >
-                {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
-              </span>
-              <Toggle
-                v-model="vacanceForm.active"
-                size="md"
-                aria-label="Activer le blocage vacance"
-              />
-            </div>
-            <div v-else class="p-[16px] flex items-center justify-between gap-[16px]">
+            <div class="p-[16px] flex items-center justify-between gap-[16px]">
               <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                 État
               </span>
