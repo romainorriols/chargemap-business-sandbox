@@ -1,8 +1,9 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
-import { ref, computed, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, reactive, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import OrgaCard, { type Orga, type OrgaPackage } from '~/components/ui/OrgaCard.vue'
+import TableFooter from '~/components/ui/TableFooter.vue'
 
 // Seed list of orgas — varied subscription tiers and flags so the listing
 // shows every card variant out of the box.
@@ -133,6 +134,45 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', onViewportChange)
 })
 
+// ── Business units tab ────────────────────────────────────────────────
+// Seeded locally so the cross-orga view is independent of the per-orga
+// busStore. Each entry just needs a name + parent orga reference.
+interface AdminBu {
+  id: string
+  name: string
+  parentOrgaName: string
+  active: boolean
+}
+const adminBus = ref<AdminBu[]>([
+  { id: 'abu-1', name: 'Chargemap',         parentOrgaName: 'Brakson',         active: true },
+  { id: 'abu-2', name: 'Saabre Mobilité',   parentOrgaName: 'Saabre',          active: true },
+  { id: 'abu-3', name: 'Chargemap EU',      parentOrgaName: 'Chargemap',       active: true },
+  { id: 'abu-4', name: 'Fleet Pro',         parentOrgaName: 'Mister EV',       active: true },
+  { id: 'abu-5', name: 'Cleanrider B2B',    parentOrgaName: 'Cleanrider',      active: true },
+  { id: 'abu-6', name: 'Responsible Ads',   parentOrgaName: 'Responsible Ads', active: true },
+  { id: 'abu-7', name: 'Marketing',         parentOrgaName: 'Marketing',       active: true },
+])
+const filteredBus = computed(() => {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return adminBus.value
+  return adminBus.value.filter(b =>
+    b.name.toLowerCase().includes(q)
+    || b.parentOrgaName.toLowerCase().includes(q),
+  )
+})
+const buPage = ref(1)
+const buPerPage = 9
+const buPageCount = computed(() => Math.max(1, Math.ceil(filteredBus.value.length / buPerPage)))
+const buPaginated = computed(() => {
+  const start = (buPage.value - 1) * buPerPage
+  return filteredBus.value.slice(start, start + buPerPage)
+})
+const buRangeStart = computed(() => filteredBus.value.length === 0 ? 0 : (buPage.value - 1) * buPerPage + 1)
+const buRangeEnd = computed(() => Math.min(buPage.value * buPerPage, filteredBus.value.length))
+// Reset to page 1 whenever the filter/tab changes so the view doesn't
+// land on an empty page.
+watch([search, activeTab], () => { buPage.value = 1 })
+
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   return orgas.value.filter((o) => {
@@ -249,29 +289,20 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
         />
       </div>
 
-      <!-- Tab content -->
-      <Transition
-        mode="out-in"
-        enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-        enter-from-class="opacity-0 translate-y-[6px]"
-        enter-to-class="opacity-100 translate-y-0"
-        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-        leave-from-class="opacity-100 translate-y-0"
-        leave-to-class="opacity-0 -translate-y-[4px]"
-      >
-        <!-- Organisations tab -->
-        <div v-if="activeTab === 'organisations'" key="orgs" class="flex flex-col gap-[16px]">
-          <!-- Search + Filtres + segmented Actives/Désactivées -->
-          <div class="flex flex-col lg:flex-row lg:items-center gap-[8px] anim-fade-up" style="animation-delay: 80ms">
-            <div class="w-full lg:w-[400px]">
-              <Input
-                v-model="search"
-                type="leadingIcon"
-                icon="magnifying-glass"
-                placeholder="Rechercher"
-              />
-            </div>
-            <div class="lg:ml-auto flex items-center gap-[8px]">
+      <!-- Search row — shared across tabs so the typed query persists
+           when switching between Organisations and Business units. The
+           right-hand controls (Filtres / segmented Actives switch) only
+           render on the Organisations tab. -->
+      <div class="flex flex-col lg:flex-row lg:items-center gap-[8px] anim-fade-up" style="animation-delay: 80ms">
+        <div class="w-full lg:w-[400px]">
+          <Input
+            v-model="search"
+            type="leadingIcon"
+            icon="magnifying-glass"
+            placeholder="Rechercher"
+          />
+        </div>
+        <div v-if="activeTab === 'organisations'" class="lg:ml-auto flex items-center gap-[8px]">
               <!-- Filtres button — toggles the cascading menu below. When
                    filters are active, surfaces the count and a clickable
                    X to reset (Figma 6581-3543). Custom inline so the X
@@ -333,9 +364,22 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
                   Orga désactivées
                 </button>
               </div>
-            </div>
-          </div>
+        </div>
+      </div>
 
+      <!-- Tab content — only the grid swaps between tabs. The search
+           row above remains mounted so the user's query persists. -->
+      <Transition
+        mode="out-in"
+        enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 translate-y-[6px]"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-[4px]"
+      >
+        <!-- Organisations tab -->
+        <div v-if="activeTab === 'organisations'" key="orgs" class="flex flex-col gap-[16px]">
           <!-- Card grid — 3 columns on lg, 2 on md, 1 on small screens. -->
           <div
             v-if="filtered.length"
@@ -370,18 +414,78 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
           </div>
         </div>
 
-        <!-- Business units tab placeholder -->
-        <div
-          v-else
-          key="bus"
-          class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[24px] flex flex-col items-center justify-center gap-[8px] min-h-[200px] text-center"
-        >
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-            Business units
-          </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-            La liste cross-orga des Business units sera ajoutée ici.
-          </p>
+        <!-- Business units tab — cross-orga BU listing with shared
+             search + pagination (Figma 6581-3973). -->
+        <div v-else key="bus" class="flex flex-col gap-[16px]">
+          <div
+            v-if="buPaginated.length"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px] anim-fade-up"
+            style="animation-delay: 100ms"
+          >
+            <article
+              v-for="(bu, i) in buPaginated"
+              :key="bu.id"
+              :style="{ animationDelay: `${120 + i * 30}ms` }"
+              class="bg-neutral border border-border-neutral-secondary rounded-[8px] overflow-clip flex flex-col transition-colors duration-200 ease-out motion-reduce:transition-none hover:border-border-neutral anim-fade-up"
+            >
+              <!-- Header — BU name + kebab -->
+              <div class="border-b border-border-neutral-secondary flex items-center gap-[10px] p-[16px]">
+                <div class="flex-1 min-w-0 flex items-center gap-[8px]">
+                  <Icon name="building-office-2" variant="outline" :size="20" class="shrink-0 text-icon-neutral-primary" />
+                  <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                    {{ bu.name }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  :aria-label="`Actions sur ${bu.name}`"
+                >
+                  <Icon name="ellipsis-vertical" variant="outline" :size="20" />
+                </button>
+              </div>
+
+              <!-- Parent orga -->
+              <div class="p-[16px] flex items-center gap-[8px]">
+                <Icon name="building-library" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
+                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                  {{ bu.parentOrgaName }}
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <!-- Empty state -->
+          <div
+            v-else
+            class="bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-sm p-[24px] flex flex-col items-center justify-center gap-[8px] min-h-[200px] text-center anim-fade-up"
+            style="animation-delay: 100ms"
+          >
+            <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              {{ search ? 'Aucune business unit' : 'Aucune business unit' }}
+            </p>
+            <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+              {{ search
+                ? 'Aucune business unit ne correspond à votre recherche.'
+                : 'Aucune business unit n’est rattachée à vos organisations.' }}
+            </p>
+          </div>
+
+          <!-- Pagination — only when there's data to paginate. -->
+          <div
+            v-if="filteredBus.length > 0"
+            class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip anim-fade-up"
+            style="animation-delay: 140ms"
+          >
+            <TableFooter
+              :page="buPage"
+              :page-count="buPageCount"
+              :range-start="buRangeStart"
+              :range-end="buRangeEnd"
+              :total="filteredBus.length"
+              @update:page="(n) => (buPage = n)"
+            />
+          </div>
         </div>
       </Transition>
 
