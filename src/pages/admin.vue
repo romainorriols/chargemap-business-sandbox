@@ -183,6 +183,11 @@ function onDeactivateOrga() {
   if (o) o.active = false
   closeOrgaMenu()
 }
+function onReactivateOrga() {
+  const o = currentOrgaForMenu.value
+  if (o) o.active = true
+  closeOrgaMenu()
+}
 
 // Close the orga menu on outside pointerdown / scroll / Escape — same
 // pattern as the Filtres dropdown above.
@@ -551,7 +556,10 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               Paramètres orga
             </span>
           </button>
+          <!-- Désactiver / Réactiver — flips per orga state (Figma
+               6581-3846 covers the disabled-card variant). -->
           <button
+            v-if="currentOrgaForMenu.active"
             type="button"
             role="menuitem"
             class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-danger-surface transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-error"
@@ -560,6 +568,18 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
             <Icon name="no-symbol" variant="outline" :size="18" class="shrink-0 text-icon-danger" />
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-danger-medium">
               Désactiver
+            </span>
+          </button>
+          <button
+            v-else
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-success-surface transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            @click="onReactivateOrga"
+          >
+            <Icon name="check-circle" variant="outline" :size="18" class="shrink-0 text-icon-success" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-success-medium">
+              Réactiver
             </span>
           </button>
         </div>
