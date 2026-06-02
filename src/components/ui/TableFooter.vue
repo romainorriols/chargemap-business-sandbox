@@ -6,9 +6,12 @@ interface Props {
   rangeStart: number
   rangeEnd: number
   total: number
+  // When `true`, drops the bg / top border / padding so the footer
+  // can sit flush in a page-level row (e.g. the admin listing).
+  flush?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), { flush: false })
 const emit = defineEmits<{ 'update:page': [value: number] }>()
 
 function goto(n: number) {
@@ -41,7 +44,12 @@ const pageItems = computed<PageItem[]>(() => {
 </script>
 
 <template>
-  <div class="flex items-center justify-between px-[16px] py-[12px] border-t border-border-neutral-tertiary bg-neutral">
+  <div
+    :class="[
+      'flex items-center justify-between',
+      flush ? '' : 'px-[16px] py-[12px] border-t border-border-neutral-tertiary bg-neutral',
+    ]"
+  >
     <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
       Afficher&nbsp;: <span class="font-medium text-text-neutral">{{ rangeStart }}</span> à
       <span class="font-medium text-text-neutral">{{ rangeEnd }}</span> sur

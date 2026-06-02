@@ -192,6 +192,21 @@ const filtered = computed(() => {
   })
 })
 
+// Pagination on the Organisations tab — mirrors the BU pagination so
+// every grid view ships with the same per-page chip.
+const orgaPage = ref(1)
+const orgaPerPage = 9
+const orgaPageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / orgaPerPage)))
+const orgaPaginated = computed(() => {
+  const start = (orgaPage.value - 1) * orgaPerPage
+  return filtered.value.slice(start, start + orgaPerPage)
+})
+const orgaRangeStart = computed(() => filtered.value.length === 0 ? 0 : (orgaPage.value - 1) * orgaPerPage + 1)
+const orgaRangeEnd = computed(() => Math.min(orgaPage.value * orgaPerPage, filtered.value.length))
+watch([search, scope, activeTab, () => filters.statuts.size, () => filters.package.size], () => {
+  orgaPage.value = 1
+})
+
 // ── Per-card kebab menu (Figma 6557-5026) ───────────────────────────────
 // Single shared dropdown rendered via Teleport; the page tracks which
 // card is open + the trigger's rect so the menu can be fixed-positioned
@@ -382,12 +397,12 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
         <div v-if="activeTab === 'organisations'" key="orgs" class="flex flex-col gap-[16px]">
           <!-- Card grid — 3 columns on lg, 2 on md, 1 on small screens. -->
           <div
-            v-if="filtered.length"
+            v-if="orgaPaginated.length"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px] anim-fade-up"
             style="animation-delay: 100ms"
           >
             <OrgaCard
-              v-for="(orga, i) in filtered"
+              v-for="(orga, i) in orgaPaginated"
               :key="orga.id"
               :orga="orga"
               :disabled="!orga.active"
@@ -412,6 +427,20 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
                 : 'Créez votre première organisation pour commencer.' }}
             </p>
           </div>
+
+          <!-- Pagination — flush against the page bg. -->
+          <TableFooter
+            v-if="filtered.length > 0"
+            class="anim-fade-up"
+            style="animation-delay: 140ms"
+            flush
+            :page="orgaPage"
+            :page-count="orgaPageCount"
+            :range-start="orgaRangeStart"
+            :range-end="orgaRangeEnd"
+            :total="filtered.length"
+            @update:page="(n) => (orgaPage = n)"
+          />
         </div>
 
         <!-- Business units tab — cross-orga BU listing with shared
@@ -471,21 +500,19 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
             </p>
           </div>
 
-          <!-- Pagination — only when there's data to paginate. -->
-          <div
+          <!-- Pagination — flush against the page bg, no card wrapper. -->
+          <TableFooter
             v-if="filteredBus.length > 0"
-            class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip anim-fade-up"
+            class="anim-fade-up"
             style="animation-delay: 140ms"
-          >
-            <TableFooter
-              :page="buPage"
-              :page-count="buPageCount"
-              :range-start="buRangeStart"
-              :range-end="buRangeEnd"
-              :total="filteredBus.length"
-              @update:page="(n) => (buPage = n)"
-            />
-          </div>
+            flush
+            :page="buPage"
+            :page-count="buPageCount"
+            :range-start="buRangeStart"
+            :range-end="buRangeEnd"
+            :total="filteredBus.length"
+            @update:page="(n) => (buPage = n)"
+          />
         </div>
       </Transition>
 
