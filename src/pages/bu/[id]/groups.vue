@@ -572,7 +572,7 @@ function addVacancePeriod() {
   const period: VacancePeriod = {
     id: `vp-${++vacancePeriodSeq}`,
     name: /\d{4}$/.test(rawName) ? rawName : `${rawName} 2026`,
-    active: false,
+    active: true,
     start,
     end,
   }
@@ -3925,9 +3925,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </Transition>
 
                 <!-- Empty CTA — only when the inline creation form is
-                     not showing (Figma 6529-30015). -->
+                     not showing. Full label (Figma 6529-30015) when no
+                     periods yet; compact "+"-only card (Figma 6529-30180)
+                     once at least one period has been added. -->
                 <button
-                  v-if="!vacanceForm.creating"
+                  v-if="!vacanceForm.creating && vacanceForm.periods.length === 0"
                   type="button"
                   class="w-full h-[100px] flex items-center justify-center gap-[12px] px-[16px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral text-text-neutral-secondary hover:bg-neutral-hover hover:border-border-neutral transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand focus-visible:border-brand"
                   aria-label="Ajouter une nouvelle période de vacance"
@@ -3937,6 +3939,15 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px]">
                     Nouvelle période
                   </span>
+                </button>
+                <button
+                  v-else-if="!vacanceForm.creating"
+                  type="button"
+                  class="w-full h-[64px] flex items-center justify-center rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral text-text-neutral-secondary hover:bg-neutral-hover hover:border-border-neutral transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-brand focus-visible:border-brand"
+                  aria-label="Ajouter une nouvelle période de vacance"
+                  @click="openVacanceCreate"
+                >
+                  <Icon name="plus" variant="outline" :size="24" class="shrink-0" />
                 </button>
               </div>
             </Transition>
