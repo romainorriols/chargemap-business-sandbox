@@ -244,34 +244,75 @@ function onReactivateOrga() {
   closeOrgaMenu()
 }
 
-// Close the orga menu on outside pointerdown / scroll / Escape — same
-// pattern as the Filtres dropdown above.
-function onOrgaPointerDown(e: PointerEvent) {
-  if (!openOrgaMenuId.value) return
+// ── Per-BU kebab menu (Figma 6581-4684) ─────────────────────────────────
+const openBuMenuId = ref<string | null>(null)
+const buMenuPos = ref({ top: 0, right: 0 })
+const buMenuRef = ref<HTMLElement | null>(null)
+const currentBuForMenu = computed(() =>
+  openBuMenuId.value ? adminBus.value.find(b => b.id === openBuMenuId.value) ?? null : null,
+)
+function onBuMenu(id: string, e: MouseEvent) {
+  if (openBuMenuId.value === id) {
+    openBuMenuId.value = null
+    return
+  }
+  const btn = e.currentTarget as HTMLElement
+  const rect = btn.getBoundingClientRect()
+  buMenuPos.value = {
+    top: rect.bottom + 4,
+    right: Math.max(8, window.innerWidth - rect.right),
+  }
+  openBuMenuId.value = id
+}
+function closeBuMenu() { openBuMenuId.value = null }
+function onBuViewExploitation() { closeBuMenu() }
+function onBuSettings() { closeBuMenu() }
+function onDeactivateBu() {
+  const b = currentBuForMenu.value
+  if (b) b.active = false
+  closeBuMenu()
+}
+function onReactivateBu() {
+  const b = currentBuForMenu.value
+  if (b) b.active = true
+  closeBuMenu()
+}
+
+// Close the orga / BU kebab menus on outside pointerdown / scroll /
+// Escape — same pattern as the Filtres dropdown above.
+function onCardMenuPointerDown(e: PointerEvent) {
   const t = e.target as Node
-  if (orgaMenuRef.value?.contains(t)) return
-  // The kebab button itself emits 'menu' which already toggles; avoid
-  // double-handling by ignoring clicks inside an OrgaCard.
-  if ((t as HTMLElement).closest?.('[data-orga-card="true"]')) return
-  closeOrgaMenu()
+  if (openOrgaMenuId.value) {
+    const insideOrgaMenu = orgaMenuRef.value?.contains(t)
+    const insideOrgaCard = (t as HTMLElement).closest?.('[data-orga-card="true"]')
+    if (!insideOrgaMenu && !insideOrgaCard) closeOrgaMenu()
+  }
+  if (openBuMenuId.value) {
+    const insideBuMenu = buMenuRef.value?.contains(t)
+    const insideBuCard = (t as HTMLElement).closest?.('[data-bu-card="true"]')
+    if (!insideBuMenu && !insideBuCard) closeBuMenu()
+  }
 }
-function onOrgaKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && openOrgaMenuId.value) closeOrgaMenu()
-}
-function onOrgaViewportChange() {
+function onCardMenuKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Escape') return
   if (openOrgaMenuId.value) closeOrgaMenu()
+  if (openBuMenuId.value) closeBuMenu()
+}
+function onCardMenuViewportChange() {
+  if (openOrgaMenuId.value) closeOrgaMenu()
+  if (openBuMenuId.value) closeBuMenu()
 }
 onMounted(() => {
-  document.addEventListener('pointerdown', onOrgaPointerDown)
-  document.addEventListener('keydown', onOrgaKeydown)
-  window.addEventListener('scroll', onOrgaViewportChange, true)
-  window.addEventListener('resize', onOrgaViewportChange)
+  document.addEventListener('pointerdown', onCardMenuPointerDown)
+  document.addEventListener('keydown', onCardMenuKeydown)
+  window.addEventListener('scroll', onCardMenuViewportChange, true)
+  window.addEventListener('resize', onCardMenuViewportChange)
 })
 onBeforeUnmount(() => {
-  document.removeEventListener('pointerdown', onOrgaPointerDown)
-  document.removeEventListener('keydown', onOrgaKeydown)
-  window.removeEventListener('scroll', onOrgaViewportChange, true)
-  window.removeEventListener('resize', onOrgaViewportChange)
+  document.removeEventListener('pointerdown', onCardMenuPointerDown)
+  document.removeEventListener('keydown', onCardMenuKeydown)
+  window.removeEventListener('scroll', onCardMenuViewportChange, true)
+  window.removeEventListener('resize', onCardMenuViewportChange)
 })
 
 function onCreateOrga() { /* placeholder — Nouvelle organisation flow not designed yet */ }
@@ -454,14 +495,25 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
             <article
               v-for="(bu, i) in buPaginated"
               :key="bu.id"
+              data-bu-card="true"
               :style="{ animationDelay: `${120 + i * 30}ms` }"
               class="bg-neutral border border-border-neutral-secondary rounded-[8px] overflow-clip flex flex-col transition-colors duration-200 ease-out motion-reduce:transition-none hover:border-border-neutral anim-fade-up"
             >
               <!-- Header — BU name + kebab -->
               <div class="border-b border-border-neutral-secondary flex items-center gap-[10px] p-[16px]">
                 <div class="flex-1 min-w-0 flex items-center gap-[8px]">
-                  <Icon name="building-office-2" variant="outline" :size="20" class="shrink-0 text-icon-neutral-primary" />
-                  <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                  <Icon
+                    name="building-office-2"
+                    variant="outline"
+                    :size="20"
+                    :class="['shrink-0', !bu.active ? 'text-icon-neutral-disabled' : 'text-icon-neutral-primary']"
+                  />
+                  <p
+                    :class="[
+                      'font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] truncate',
+                      !bu.active ? 'text-text-neutral-disabled' : 'text-text-neutral',
+                    ]"
+                  >
                     {{ bu.name }}
                   </p>
                 </div>
@@ -469,6 +521,7 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
                   type="button"
                   class="shrink-0 flex items-center justify-center size-[44px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                   :aria-label="`Actions sur ${bu.name}`"
+                  @click.stop="(e) => onBuMenu(bu.id, e)"
                 >
                   <Icon name="ellipsis-vertical" variant="outline" :size="20" />
                 </button>
@@ -476,8 +529,18 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
 
               <!-- Parent orga -->
               <div class="p-[16px] flex items-center gap-[8px]">
-                <Icon name="building-library" variant="outline" :size="16" class="shrink-0 text-icon-neutral-secondary" />
-                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                <Icon
+                  name="building-library"
+                  variant="outline"
+                  :size="16"
+                  :class="['shrink-0', !bu.active ? 'text-icon-neutral-disabled' : 'text-icon-neutral-secondary']"
+                />
+                <p
+                  :class="[
+                    'flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate',
+                    !bu.active ? 'text-text-neutral-disabled' : 'text-text-neutral-secondary',
+                  ]"
+                >
                   {{ bu.parentOrgaName }}
                 </p>
               </div>
@@ -707,6 +770,74 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
             role="menuitem"
             class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-success-surface transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
             @click="onReactivateOrga"
+          >
+            <Icon name="check-circle" variant="outline" :size="18" class="shrink-0 text-icon-success" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-success-medium">
+              Réactiver
+            </span>
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Per-BU kebab dropdown (Figma 6581-4684) — Voir dans l'exploitation /
+         Paramètres BU / Désactiver, with Réactiver swap for disabled BUs. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+      >
+        <div
+          v-if="currentBuForMenu"
+          ref="buMenuRef"
+          :style="{ top: buMenuPos.top + 'px', right: buMenuPos.right + 'px' }"
+          class="fixed z-[60] w-[240px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]"
+          role="menu"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            @click="onBuViewExploitation"
+          >
+            <Icon name="arrow-top-right-on-square" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              Voir dans l'exploitation
+            </span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            @click="onBuSettings"
+          >
+            <Icon name="cog-6-tooth" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+              Paramètres BU
+            </span>
+          </button>
+          <button
+            v-if="currentBuForMenu.active"
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-danger-surface transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-error"
+            @click="onDeactivateBu"
+          >
+            <Icon name="no-symbol" variant="outline" :size="18" class="shrink-0 text-icon-danger" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-danger-medium">
+              Désactiver
+            </span>
+          </button>
+          <button
+            v-else
+            type="button"
+            role="menuitem"
+            class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-success-surface transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+            @click="onReactivateBu"
           >
             <Icon name="check-circle" variant="outline" :size="18" class="shrink-0 text-icon-success" />
             <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-success-medium">
