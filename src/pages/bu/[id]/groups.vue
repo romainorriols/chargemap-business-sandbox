@@ -3601,31 +3601,48 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </section>
 
-          <!-- Master Blocage vacance card — title + toggle in custom mode,
-               read-only État row in inherited. -->
+          <!-- Master Blocage vacance card — title + rule description + a
+               toggle row in custom mode, read-only État row in inherited.
+               Header padded block / hairline / body padded block so the
+               separator stays inside the card. -->
           <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col">
-            <div class="p-[16px] flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+            <div class="p-[16px] flex flex-col gap-[4px]">
+              <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Blocage vacance
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
+              </p>
+            </div>
+
+            <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
+
+            <!-- Custom mode: editable Activé toggle row -->
+            <div v-if="vacanceForm.draftOrigin === 'custom'" class="p-[16px] flex items-center justify-between gap-[16px]">
+              <span
+                :class="[
+                  'font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] transition-colors duration-150 ease-out motion-reduce:transition-none',
+                  vacanceForm.active ? 'text-text-neutral' : 'text-text-neutral-secondary',
+                ]"
+              >
+                {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
               </span>
               <Toggle
-                v-if="vacanceForm.draftOrigin === 'custom'"
                 v-model="vacanceForm.active"
                 size="md"
                 aria-label="Activer le blocage vacance"
               />
             </div>
-            <template v-if="vacanceForm.draftOrigin === 'inherited'">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="p-[16px] flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  État
-                </span>
-                <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
-                  {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
-                </span>
-              </div>
-            </template>
+
+            <!-- Inherited mode: read-only État / value row -->
+            <div v-else class="p-[16px] flex items-center justify-between gap-[16px]">
+              <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                État
+              </span>
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
+                {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
+              </span>
+            </div>
           </section>
 
           <!-- Period list + creation form + empty CTA — gated by master toggle -->
