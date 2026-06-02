@@ -4335,13 +4335,24 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </section>
 
-          <!-- Bloquer des pays section — content swaps between editable
-               (custom) and read-only (inherited) layouts. -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <!-- Title row + control on the right. Custom shows the toggle,
-                 inherited shows nothing on the same line. -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+          <!-- Bloquer des pays section — two stacked rows separated by
+               a bottom border on the header row (Figma 6529-24722 /
+               6529-24724 / 6586-65288). Header carries the title +
+               toggle (custom only); the body row swaps between count
+               + edit/trash (custom + active), Gérer les pays CTA
+               (custom + active + empty), read-only count (inherited
+               + active) or "État Désactivé" (inherited + inactive). -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip flex flex-col">
+            <!-- Header row -->
+            <div
+              :class="[
+                'h-[69px] px-[16px] flex items-center gap-[16px]',
+                (paysForm.draftOrigin === 'inherited' || paysForm.active)
+                  ? 'border-b border-border-neutral-secondary'
+                  : '',
+              ]"
+            >
+              <span class="flex-1 min-w-0 font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
                 Bloquer des pays
               </span>
               <Toggle
@@ -4352,89 +4363,87 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               />
             </div>
 
-            <!-- Custom + active: count row + "Gérer les pays" CTA when
-                 the blocklist is empty, otherwise edit/clear icons. -->
-            <template v-if="paysForm.draftOrigin === 'custom' && paysForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <p class="flex-1 min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                  <span class="font-medium text-text-neutral tabular-nums">{{ paysForm.blockedCountries.length }} pays</span>
-                  <span class="font-normal text-text-neutral-secondary">
-                    {{ paysForm.blockedCountries.length <= 1 ? ' bloqué' : ' bloqués' }}
-                  </span>
-                </p>
-                <template v-if="paysForm.blockedCountries.length > 0">
-                  <div class="shrink-0 flex items-center gap-[8px]">
-                    <button
-                      type="button"
-                      class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                      aria-label="Modifier la liste de blocage"
-                      @click="openCountryPicker"
-                    >
-                      <Icon name="pencil" variant="outline" :size="18" />
-                    </button>
-                    <button
-                      type="button"
-                      class="flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                      aria-label="Vider la liste de blocage"
-                      @click="clearPaysBlocklist"
-                    >
-                      <Icon name="trash" variant="outline" :size="18" />
-                    </button>
-                  </div>
-                </template>
-                <Button v-else type="secondary" size="sm" label="Gérer les pays" @click="openCountryPicker" />
-              </div>
-            </template>
-
-            <!-- Inherited + inactive: read-only État/Désactivé row. -->
-            <template v-if="paysForm.draftOrigin === 'inherited' && !paysForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  État
+            <!-- Custom + active body row -->
+            <div
+              v-if="paysForm.draftOrigin === 'custom' && paysForm.active"
+              class="h-[76px] px-[16px] flex items-center gap-[16px]"
+            >
+              <p class="flex-1 min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px] truncate">
+                <span class="font-medium text-text-neutral tabular-nums">{{ paysForm.blockedCountries.length }} pays</span>
+                <span class="font-normal text-text-neutral-secondary">
+                  {{ paysForm.blockedCountries.length <= 1 ? ' bloqué' : ' bloqués' }}
                 </span>
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  Désactivé
-                </span>
-              </div>
-            </template>
+              </p>
+              <template v-if="paysForm.blockedCountries.length > 0">
+                <div class="shrink-0 flex items-center gap-[8px]">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center p-[8px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Modifier la liste de blocage"
+                    @click="openCountryPicker"
+                  >
+                    <Icon name="pencil" variant="outline" :size="20" />
+                  </button>
+                  <button
+                    type="button"
+                    class="flex items-center justify-center p-[8px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Vider la liste de blocage"
+                    @click="clearPaysBlocklist"
+                  >
+                    <Icon name="trash" variant="outline" :size="20" />
+                  </button>
+                </div>
+              </template>
+              <Button v-else type="secondary" size="sm" label="Gérer les pays" @click="openCountryPicker" />
+            </div>
 
-            <!-- Inherited + active: read-only blocked count. -->
-            <template v-if="paysForm.draftOrigin === 'inherited' && paysForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <p class="flex-1 min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                  <span class="font-medium text-text-neutral tabular-nums">{{ paysForm.blockedCountries.length }} pays</span>
-                  <span class="font-normal text-text-neutral-secondary">
-                    {{ paysForm.blockedCountries.length <= 1 ? ' bloqué' : ' bloqués' }}
-                  </span>
-                </p>
-              </div>
-            </template>
+            <!-- Inherited + inactive body row: read-only État/Désactivé -->
+            <div
+              v-else-if="paysForm.draftOrigin === 'inherited' && !paysForm.active"
+              class="h-[76px] px-[16px] flex items-center justify-between gap-[16px]"
+            >
+              <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                État
+              </span>
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled">
+                Désactivé
+              </span>
+            </div>
+
+            <!-- Inherited + active body row: read-only blocked count -->
+            <div
+              v-else-if="paysForm.draftOrigin === 'inherited' && paysForm.active"
+              class="h-[76px] px-[16px] flex items-center gap-[16px]"
+            >
+              <p class="flex-1 min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px] truncate">
+                <span class="font-medium text-text-neutral tabular-nums">{{ paysForm.blockedCountries.length }} pays</span>
+                <span class="font-normal text-text-neutral-secondary">
+                  {{ paysForm.blockedCountries.length <= 1 ? ' bloqué' : ' bloqués' }}
+                </span>
+              </p>
+            </div>
           </section>
 
           <!-- Collapsible "Liste des pays bloqués" card — only when the
-               rule is on and at least one pays is blocked. -->
+               rule is on and at least one pays is blocked (Figma
+               6529-24722 / 6529-24724). -->
           <template v-if="paysForm.active && paysForm.blockedCountries.length > 0">
-            <div
-              class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
-            >
+            <div class="border border-border-neutral-secondary rounded-[16px] p-[16px] flex flex-col gap-[16px]">
               <div class="flex items-center justify-between gap-[16px]">
-                <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                <p class="flex-1 min-w-0 font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
                   Liste des pays bloqués
                 </p>
                 <button
                   type="button"
                   :aria-expanded="blockedCountriesListExpanded"
                   aria-label="Afficher ou masquer la liste"
-                  class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  class="shrink-0 flex items-center justify-center p-[8px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                   @click="blockedCountriesListExpanded = !blockedCountriesListExpanded"
                 >
                   <Icon
                     :name="blockedCountriesListExpanded ? 'chevron-up' : 'chevron-down'"
                     variant="outline"
-                    :size="18"
+                    :size="20"
                   />
                 </button>
               </div>
@@ -4447,23 +4456,23 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 leave-from-class="opacity-100 translate-y-0"
                 leave-to-class="opacity-0 -translate-y-[4px]"
               >
-                <div v-if="blockedCountriesListExpanded" class="flex flex-col gap-[8px]">
+                <div v-if="blockedCountriesListExpanded" class="flex flex-col gap-[16px]">
                   <div
                     v-for="c in blockedCountryDetails"
                     :key="c.id"
-                    class="flex items-center gap-[12px] p-[12px] rounded-[12px] bg-neutral-secondary"
+                    class="flex items-center gap-[12px] p-[12px] rounded-[16px] bg-neutral-secondary"
                   >
                     <img
                       :src="c.flagUrl"
                       :alt="`Drapeau ${c.name}`"
-                      class="shrink-0 size-[32px] rounded-full object-cover"
+                      class="shrink-0 size-[24px] rounded-full object-cover opacity-50"
                       loading="lazy"
                     />
                     <div class="min-w-0 flex flex-col">
-                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-disabled truncate">
                         {{ c.name }}
                       </p>
-                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled truncate">
                         Pays bloqué
                       </p>
                     </div>
