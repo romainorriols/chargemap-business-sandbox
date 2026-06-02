@@ -4862,27 +4862,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           aria-labelledby="country-picker-modal-title"
         >
           <div
-            class="pointer-events-auto w-full max-w-[720px] max-h-[840px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip"
+            class="pointer-events-auto w-full max-w-[800px] max-h-[840px] flex bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip"
           >
             <div class="flex-1 min-w-0 max-h-full flex flex-col overflow-hidden">
-              <!-- Header — icon tile on top-left, X close on top-right,
-                   title + subtitle below the icon (Figma 6529-25981). -->
-              <div class="px-[24px] pt-[24px] pb-[16px] border-b border-border-neutral-secondary shrink-0 flex flex-col gap-[16px]">
+              <!-- Header — icon tile (top-left) + X close (top-right),
+                   title + subtitle below (Figma 6529-25981). Padding is
+                   16px all around, the inner column gap is 16px, and
+                   the title sits 2px above its subtitle. -->
+              <div class="p-[16px] border-b border-border-neutral-secondary shrink-0 flex flex-col gap-[16px]">
                 <div class="flex items-start justify-between gap-[16px]">
                   <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
-                    <Icon name="flag" variant="solid" :size="22" class="text-white" />
+                    <Icon name="flag" variant="solid" :size="24" class="text-white" />
                   </div>
                   <button
                     type="button"
-                    class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    class="shrink-0 flex items-center justify-center p-[12px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
                     aria-label="Fermer"
                     @click="cancelCountryPicker"
                   >
                     <Icon name="x-mark" variant="outline" :size="20" />
                   </button>
                 </div>
-                <div class="flex flex-col gap-[4px]">
-                  <p id="country-picker-modal-title" class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+                <div class="flex flex-col gap-[2px]">
+                  <p id="country-picker-modal-title" class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                     Bloquer des pays
                   </p>
                   <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
@@ -4891,16 +4893,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </div>
               </div>
 
-              <!-- Search row — full-width search input. -->
+              <!-- Search row — full-width search input, p-[24px] per
+                   Figma 6529-25991. -->
               <div class="px-[24px] py-[16px] border-b border-border-neutral-secondary shrink-0">
-                <Input
-                  v-model="countryPicker.search"
-                  type="leadingIcon"
-                  icon="magnifying-glass"
-                  size="md"
-                  placeholder="Recherche"
-                  aria-label="Rechercher un pays"
-                />
+                <div class="w-[300px] min-w-[200px] max-w-full">
+                  <Input
+                    v-model="countryPicker.search"
+                    type="leadingIcon"
+                    icon="magnifying-glass"
+                    size="md"
+                    placeholder="Recherche"
+                    aria-label="Rechercher un pays"
+                  />
+                </div>
               </div>
 
               <!-- Scrollable list -->
@@ -4943,9 +4948,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           alt=""
                           aria-hidden="true"
                           :class="[
-                            'shrink-0 size-[32px] rounded-full object-cover',
-                            'transition-[filter,opacity] duration-200 ease-out motion-reduce:transition-none',
-                            !isCountryAuthorized(c.id) ? 'grayscale opacity-60' : '',
+                            'shrink-0 size-[24px] rounded-full object-cover',
+                            'transition-opacity duration-200 ease-out motion-reduce:transition-none',
+                            !isCountryAuthorized(c.id) ? 'opacity-50' : '',
                           ]"
                           loading="lazy"
                         />
@@ -4969,7 +4974,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         </div>
                       </div>
                       <!-- Toggle — neutral track when autorisé, red
-                           track when bloqué (Figma 6123-13872). -->
+                           (bg-danger) track when bloqué (Figma 6123-13872). -->
                       <button
                         type="button"
                         role="switch"
@@ -4979,7 +4984,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                           'relative shrink-0 inline-flex items-center w-[36px] h-[20px] rounded-[12px] p-[2px] outline-none',
                           'transition-[background-color] duration-200 ease-out motion-reduce:transition-none',
                           'focus-visible:shadow-ring-gray',
-                          isCountryAuthorized(c.id) ? 'bg-[var(--bg-neutral-tertiary)]' : 'bg-[#e11d48]',
+                          isCountryAuthorized(c.id) ? 'bg-neutral-tertiary' : 'bg-danger',
                         ]"
                         @click.stop="setCountryAuthorized(c.id, !isCountryAuthorized(c.id))"
                       >
@@ -4993,12 +4998,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </template>
               </div>
 
-              <!-- Footer — count on the left, Tout autorisé / Tout
-                   bloqué bulk actions + Valider on the right (Figma
-                   6529-25981). No Annuler — the X in the header closes
-                   the modal. -->
-              <div class="flex items-center justify-between gap-[16px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
-                <p class="flex items-center gap-[4px] min-w-0 whitespace-nowrap">
+              <!-- Footer — count grows to fill, Tout autorisé + Tout
+                   bloqué grouped, then Valider separated (Figma
+                   6529-25981 / 6580-56665). No Annuler — the X in the
+                   header closes the modal. -->
+              <div class="flex items-center gap-[8px] px-[24px] py-[16px] border-t border-border-neutral-secondary shrink-0">
+                <p class="flex flex-1 min-w-0 items-center gap-[4px] whitespace-nowrap">
                   <span class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral tabular-nums">
                     {{ draftBlockedCountriesCount }}/{{ countries.length }}
                   </span>
@@ -5021,8 +5026,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     :disabled="allVisibleCountriesBlocked"
                     @click="blockAllVisibleCountries"
                   />
-                  <Button type="primary" size="md" label="Valider" @click="confirmCountryPicker" />
                 </div>
+                <Button type="primary" size="md" label="Valider" @click="confirmCountryPicker" />
               </div>
             </div>
           </div>
