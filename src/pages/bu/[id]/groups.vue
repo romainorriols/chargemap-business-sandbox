@@ -4357,13 +4357,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <template v-if="paysForm.draftOrigin === 'custom' && paysForm.active">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="flex items-center justify-between gap-[16px]">
-                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                  <span class="font-medium text-text-neutral tabular-nums">
-                    {{ paysForm.blockedCountries.length }}
-                  </span>
-                  <span class="text-text-neutral-secondary">
-                    {{ paysForm.blockedCountries.length <= 1 ? ' pays' : ' pays' }}
-                    <span class="text-[#e21d48]">{{ paysForm.blockedCountries.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
+                <p class="flex-1 min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                  <span class="font-medium text-text-neutral tabular-nums">{{ paysForm.blockedCountries.length }} pays</span>
+                  <span class="font-normal text-text-neutral-secondary">
+                    {{ paysForm.blockedCountries.length <= 1 ? ' bloqué' : ' bloqués' }}
                   </span>
                 </p>
                 <template v-if="paysForm.blockedCountries.length > 0">
@@ -4407,22 +4404,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             <template v-if="paysForm.draftOrigin === 'inherited' && paysForm.active">
               <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
               <div class="flex items-center justify-between gap-[16px]">
-                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                  <span class="font-medium text-text-neutral tabular-nums">
-                    {{ paysForm.blockedCountries.length }}
-                  </span>
-                  <span class="text-text-neutral-secondary">
-                    {{ paysForm.blockedCountries.length <= 1 ? ' pays' : ' pays' }}
-                    <span class="text-[#e21d48]">{{ paysForm.blockedCountries.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
+                <p class="flex-1 min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
+                  <span class="font-medium text-text-neutral tabular-nums">{{ paysForm.blockedCountries.length }} pays</span>
+                  <span class="font-normal text-text-neutral-secondary">
+                    {{ paysForm.blockedCountries.length <= 1 ? ' bloqué' : ' bloqués' }}
                   </span>
                 </p>
               </div>
             </template>
           </section>
 
-          <!-- Collapsible "Liste des pays bloqués" card — shown whenever
-               the rule is on. -->
-          <template v-if="paysForm.active">
+          <!-- Collapsible "Liste des pays bloqués" card — only when the
+               rule is on and at least one pays is blocked. -->
+          <template v-if="paysForm.active && paysForm.blockedCountries.length > 0">
             <div
               class="flex flex-col gap-[16px] p-[16px] bg-neutral border border-border-neutral-secondary rounded-[12px]"
             >
@@ -4469,9 +4463,8 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
                         {{ c.name }}
                       </p>
-                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                        <span class="text-text-neutral-secondary">Pays </span>
-                        <span class="text-[#e21d48]">bloqué</span>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                        Pays bloqué
                       </p>
                     </div>
                   </div>
