@@ -38,28 +38,30 @@ defineEmits<{ menu: [orgaId: string, event: MouseEvent]; click: [orgaId: string]
         </div>
         <div :class="['flex items-center gap-[8px]', disabled && 'opacity-60']">
           <!-- Package badge — colour-coded per subscription tier. Classic
-               uses a fully rounded pill; the other tiers use rounded-[8px]. -->
+               uses a fully rounded pill with a neutral stroke; the other
+               tiers use rounded-[8px] with the brand-accent stroke
+               (Figma 6548-10535). -->
           <span
             v-if="orga.package === 'Classic'"
-            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[16px] bg-[#f0fbff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#0080c5] whitespace-nowrap"
+            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[16px] border border-[#e4e4e7] bg-[#f0fbff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#0080c5] whitespace-nowrap"
           >
             Classic
           </span>
           <span
             v-else-if="orga.package === 'Advanced'"
-            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[8px] bg-[#f6f5ff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#7c3bed] whitespace-nowrap"
+            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[8px] border border-[#c3b4fd] bg-[#f6f5ff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#7c3bed] whitespace-nowrap"
           >
             Advanced
           </span>
           <span
             v-else-if="orga.package === 'Entreprise'"
-            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[8px] bg-[#f0f6ff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#1e3b8a] whitespace-nowrap"
+            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[8px] border border-[#c3b4fd] bg-[#f0f6ff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#1e3b8a] whitespace-nowrap"
           >
             Entreprise
           </span>
           <span
             v-else
-            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[8px] bg-[#f0f3ff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#5048e5] whitespace-nowrap"
+            class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[8px] border border-[#c3b4fd] bg-[#f0f3ff] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#5048e5] whitespace-nowrap"
           >
             Legacy
           </span>
