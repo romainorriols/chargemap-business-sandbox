@@ -3610,7 +3610,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             v-if="vacanceForm.draftOrigin === 'custom'"
             class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
           >
-            <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
+            <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
               Blocage vacance
             </p>
             <Toggle
@@ -3624,7 +3624,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col"
           >
             <div class="p-[16px]">
-              <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
+              <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Blocage vacance
               </p>
             </div>
@@ -3644,16 +3644,44 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             </div>
           </section>
 
-          <!-- Inherited + active: read-only "Pas de période définie"
-               placeholder card (Figma 6529-30382). -->
-          <section
-            v-if="vacanceForm.draftOrigin === 'inherited' && vacanceForm.active"
-            class="bg-neutral border border-border-neutral-secondary rounded-[12px] h-[80px] flex items-center justify-center px-[16px]"
-          >
-            <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-              Pas de période définie
-            </p>
-          </section>
+          <!-- Inherited + active: read-only period cards (Figma
+               6529-30451) when periods exist, else "Pas de période
+               définie" placeholder (Figma 6529-30382). -->
+          <template v-if="vacanceForm.draftOrigin === 'inherited' && vacanceForm.active">
+            <div
+              v-if="vacanceForm.periods.length"
+              class="flex flex-col gap-[12px]"
+            >
+              <div
+                v-for="period in vacanceForm.periods"
+                :key="period.id"
+                class="bg-neutral border border-border-neutral-secondary rounded-[16px] p-[16px] flex items-center gap-[16px]"
+              >
+                <Toggle
+                  :model-value="period.active"
+                  size="sm"
+                  disabled
+                  :aria-label="`${period.name} (lecture seule)`"
+                />
+                <div class="flex-1 min-w-0 flex flex-col">
+                  <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
+                    {{ period.name }}
+                  </p>
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">
+                    {{ period.start }} - {{ period.end }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <section
+              v-else
+              class="bg-neutral border border-border-neutral-secondary rounded-[12px] h-[80px] flex items-center justify-center px-[16px]"
+            >
+              <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                Pas de période définie
+              </p>
+            </section>
+          </template>
 
           <!-- Period list + creation form + empty CTA — gated by master toggle -->
           <Transition
