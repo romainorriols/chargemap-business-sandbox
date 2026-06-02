@@ -81,9 +81,9 @@ function openFilterMenu() {
     }
   }
   filterMenuOpen.value = true
-  // Auto-highlight the first category so the second panel surfaces as
-  // soon as the menu opens (Figma 6557-5010).
-  nextTick(() => hoverCategory('statuts'))
+  // No auto-highlight on open — the options panel only surfaces when
+  // the user actively hovers/focuses a category.
+  hoveredCategory.value = null
 }
 function closeFilterMenu() {
   filterMenuOpen.value = false
