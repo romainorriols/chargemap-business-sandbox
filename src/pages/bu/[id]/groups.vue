@@ -3552,10 +3552,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         aria-modal="true"
         aria-label="Blocage vacance"
       >
-        <!-- Header -->
+        <!-- Header — same "Configuration" label as the other rule
+             drawers (Figma 6529-29869). -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[68px] border-b border-border-neutral-tertiary shrink-0">
           <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
-            Blocage vacance
+            Configuration
           </p>
           <button
             type="button"
