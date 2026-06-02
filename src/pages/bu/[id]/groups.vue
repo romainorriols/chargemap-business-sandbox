@@ -3602,10 +3602,10 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </section>
 
-          <!-- Master Blocage vacance card. Custom mode (Figma 6529-29869):
-               single row, title left + toggle right, no description, no
-               hairline. Inherited mode: title + description + hairline +
-               read-only État row. -->
+          <!-- Master Blocage vacance card. Custom (Figma 6529-29869):
+               single row, title left + toggle right. Inherited (Figma
+               6529-30309 / 6529-30382): title + hairline + read-only
+               État row, no description. -->
           <section
             v-if="vacanceForm.draftOrigin === 'custom'"
             class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex items-center justify-between gap-[16px]"
@@ -3623,12 +3623,9 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             v-else
             class="bg-neutral border border-border-neutral-secondary rounded-[12px] overflow-clip flex flex-col"
           >
-            <div class="p-[16px] flex flex-col gap-[4px]">
+            <div class="p-[16px]">
               <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
                 Blocage vacance
-              </p>
-              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                Activez le blocage vacances si vous souhaitez désactiver la recharge de vos conducteurs pendant une période donnée
               </p>
             </div>
             <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
@@ -3636,10 +3633,26 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
                 État
               </span>
-              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
+              <span
+                :class="[
+                  'font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-right',
+                  vacanceForm.active ? 'text-text-neutral' : 'text-text-neutral-disabled',
+                ]"
+              >
                 {{ vacanceForm.active ? 'Activé' : 'Désactivé' }}
               </span>
             </div>
+          </section>
+
+          <!-- Inherited + active: read-only "Pas de période définie"
+               placeholder card (Figma 6529-30382). -->
+          <section
+            v-if="vacanceForm.draftOrigin === 'inherited' && vacanceForm.active"
+            class="bg-neutral border border-border-neutral-secondary rounded-[12px] h-[80px] flex items-center justify-center px-[16px]"
+          >
+            <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+              Pas de période définie
+            </p>
           </section>
 
           <!-- Period list + creation form + empty CTA — gated by master toggle -->
