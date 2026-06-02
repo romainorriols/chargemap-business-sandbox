@@ -65,12 +65,26 @@ const statutsBtnRef = ref<HTMLElement | null>(null)
 const packageBtnRef = ref<HTMLElement | null>(null)
 const optionsPanelTop = ref(0)
 function hoverCategory(cat: FilterCategory) {
+  cancelClearHoveredCategory()
   hoveredCategory.value = cat
   const btn = cat === 'statuts' ? statutsBtnRef.value : packageBtnRef.value
   // offsetTop is relative to the nearest positioned ancestor — the
   // fixed-positioned wrapper. Falls back to a sensible default so the
   // options panel never lands at top 0 unexpectedly.
   optionsPanelTop.value = btn?.offsetTop ?? 4
+}
+// Debounce the options-panel close so moving the cursor through the
+// 8px gap between the two panels doesn't accidentally dismiss it.
+let clearHoverTimer: ReturnType<typeof setTimeout> | null = null
+function scheduleClearHoveredCategory() {
+  if (clearHoverTimer) clearTimeout(clearHoverTimer)
+  clearHoverTimer = setTimeout(() => {
+    hoveredCategory.value = null
+    clearHoverTimer = null
+  }, 100)
+}
+function cancelClearHoveredCategory() {
+  if (clearHoverTimer) { clearTimeout(clearHoverTimer); clearHoverTimer = null }
 }
 function openFilterMenu() {
   if (filterAnchor.value) {
@@ -386,6 +400,8 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
           class="fixed z-[60] w-[200px]"
           role="dialog"
           aria-label="Filtres"
+          @mouseenter="cancelClearHoveredCategory"
+          @mouseleave="scheduleClearHoveredCategory"
         >
           <!-- Categories panel — pinned at the wrapper position. -->
           <div class="bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]">
@@ -438,6 +454,8 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               v-if="hoveredCategory"
               :style="{ top: optionsPanelTop + 'px' }"
               class="absolute right-[calc(100%+8px)] w-[220px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]"
+              @mouseenter="cancelClearHoveredCategory"
+              @mouseleave="scheduleClearHoveredCategory"
             >
               <template v-if="hoveredCategory === 'statuts'">
                 <button
