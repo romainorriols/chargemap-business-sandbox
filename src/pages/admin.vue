@@ -30,13 +30,16 @@ const search = ref('')
 type Scope = 'actives' | 'disabled'
 const scope = ref<Scope>('actives')
 
-// Filters dropdown — two-level menu (Figma 6568-2760). Left panel lists
-// the categories, right panel reveals checkboxes for the active one.
-// Inside a category: OR (union of matches). Across categories: AND.
+// Filters dropdown — cascading menu (Figma 6568-2760). First panel
+// lists the categories; the second panel surfaces on hover/focus of a
+// category and reveals the checkboxes. Teleported to <body> with a
+// position captured from the trigger's rect so it escapes the page's
+// overflow / z-index context.
 type FilterCategory = 'statuts' | 'package'
 type StatusFilter = 'suspecte' | 'self-service'
 const filterMenuOpen = ref(false)
-const filterCategory = ref<FilterCategory>('statuts')
+const hoveredCategory = ref<FilterCategory | null>(null)
+const filterMenuPos = ref({ top: 0, right: 0 })
 const filters = reactive({
   statuts: new Set<StatusFilter>(),
   package: new Set<OrgaPackage>(),
@@ -53,21 +56,50 @@ function togglePackage(p: OrgaPackage) {
 const PACKAGE_OPTIONS: OrgaPackage[] = ['Classic', 'Advanced', 'Entreprise', 'Legacy']
 
 const filterAnchor = ref<HTMLElement | null>(null)
-function onPointerDown(e: PointerEvent) {
-  if (filterMenuOpen.value && filterAnchor.value && !filterAnchor.value.contains(e.target as Node)) {
-    filterMenuOpen.value = false
+const filterMenuRef = ref<HTMLElement | null>(null)
+function openFilterMenu() {
+  if (filterAnchor.value) {
+    const rect = filterAnchor.value.getBoundingClientRect()
+    filterMenuPos.value = {
+      top: rect.bottom + 8,
+      right: Math.max(8, window.innerWidth - rect.right),
+    }
   }
+  filterMenuOpen.value = true
+  hoveredCategory.value = null
+}
+function closeFilterMenu() {
+  filterMenuOpen.value = false
+  hoveredCategory.value = null
+}
+function toggleFilterMenu() {
+  if (filterMenuOpen.value) closeFilterMenu()
+  else openFilterMenu()
+}
+function onPointerDown(e: PointerEvent) {
+  if (!filterMenuOpen.value) return
+  const t = e.target as Node
+  if (filterAnchor.value?.contains(t)) return
+  if (filterMenuRef.value?.contains(t)) return
+  closeFilterMenu()
 }
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && filterMenuOpen.value) filterMenuOpen.value = false
+  if (e.key === 'Escape' && filterMenuOpen.value) closeFilterMenu()
+}
+function onViewportChange() {
+  if (filterMenuOpen.value) closeFilterMenu()
 }
 onMounted(() => {
   document.addEventListener('pointerdown', onPointerDown)
   document.addEventListener('keydown', onKeydown)
+  window.addEventListener('scroll', onViewportChange, true)
+  window.addEventListener('resize', onViewportChange)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onPointerDown)
   document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('scroll', onViewportChange, true)
+  window.removeEventListener('resize', onViewportChange)
 })
 
 const filtered = computed(() => {
@@ -143,111 +175,15 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
               />
             </div>
             <div class="lg:ml-auto flex items-center gap-[8px]">
-              <!-- Filtres button — opens a two-level dropdown (Figma
-                   6568-2760). Categories on the left, options on the
-                   right. Closes on outside click / Escape. -->
-              <div ref="filterAnchor" class="relative">
+              <!-- Filtres button — toggles the cascading menu teleported
+                   below. Anchor ref captures the rect on open. -->
+              <div ref="filterAnchor" class="shrink-0">
                 <Button
                   type="secondary"
                   size="md"
                   :label="activeFilterCount ? `Filtres (${activeFilterCount})` : 'Filtres'"
-                  @click="filterMenuOpen = !filterMenuOpen"
+                  @click="toggleFilterMenu"
                 />
-                <Transition
-                  enter-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-                  enter-from-class="opacity-0 scale-[0.97] -translate-y-[4px]"
-                  enter-to-class="opacity-100 scale-100 translate-y-0"
-                  leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
-                  leave-from-class="opacity-100 scale-100 translate-y-0"
-                  leave-to-class="opacity-0 scale-[0.97] -translate-y-[4px]"
-                >
-                  <div
-                    v-if="filterMenuOpen"
-                    class="absolute top-[calc(100%+8px)] right-0 z-30 flex gap-[8px]"
-                    role="dialog"
-                    aria-label="Filtres"
-                  >
-                    <!-- Left panel — categories -->
-                    <div class="w-[200px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]">
-                      <button
-                        type="button"
-                        :class="[
-                          'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                          filterCategory === 'statuts' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
-                        ]"
-                        @click="filterCategory = 'statuts'"
-                      >
-                        <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                          Statuts
-                        </span>
-                        <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
-                      </button>
-                      <button
-                        type="button"
-                        :class="[
-                          'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
-                          filterCategory === 'package' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
-                        ]"
-                        @click="filterCategory = 'package'"
-                      >
-                        <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
-                          Package
-                        </span>
-                        <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
-                      </button>
-                    </div>
-
-                    <!-- Right panel — options for the active category -->
-                    <div class="w-[220px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]">
-                      <template v-if="filterCategory === 'statuts'">
-                        <button
-                          v-for="opt in [{ value: 'suspecte', label: 'Suspecte' }, { value: 'self-service', label: 'Self service' }]"
-                          :key="opt.value"
-                          type="button"
-                          class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                          @click="toggleStatus(opt.value as StatusFilter)"
-                        >
-                          <span
-                            :class="[
-                              'shrink-0 size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
-                              filters.statuts.has(opt.value as StatusFilter)
-                                ? 'bg-brand border-brand'
-                                : 'bg-neutral border-border-neutral-secondary',
-                            ]"
-                          >
-                            <Icon v-if="filters.statuts.has(opt.value as StatusFilter)" name="check" variant="solid" :size="12" class="text-white" />
-                          </span>
-                          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                            {{ opt.label }}
-                          </span>
-                        </button>
-                      </template>
-                      <template v-else>
-                        <button
-                          v-for="pkg in PACKAGE_OPTIONS"
-                          :key="pkg"
-                          type="button"
-                          class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                          @click="togglePackage(pkg)"
-                        >
-                          <span
-                            :class="[
-                              'shrink-0 size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
-                              filters.package.has(pkg)
-                                ? 'bg-brand border-brand'
-                                : 'bg-neutral border-border-neutral-secondary',
-                            ]"
-                          >
-                            <Icon v-if="filters.package.has(pkg)" name="check" variant="solid" :size="12" class="text-white" />
-                          </span>
-                          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-                            {{ pkg }}
-                          </span>
-                        </button>
-                      </template>
-                    </div>
-                  </div>
-                </Transition>
               </div>
               <!-- Segmented switch: Orga Actives / Orga désactivées
                    (Figma 6562-17021). Container is bg-neutral-tertiary
@@ -334,5 +270,126 @@ function onCreateOrga() { /* placeholder — Nouvelle organisation flow not desi
       </Transition>
 
     </div>
+
+    <!-- Filtres dropdown (teleported) — categories panel always; the
+         options panel appears next to it once a category is hovered
+         or focused. Closes on outside click / Escape / scroll. -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-[opacity,transform] duration-[120ms] ease-out motion-reduce:transition-none"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-[0.97] -translate-y-[4px]"
+      >
+        <div
+          v-if="filterMenuOpen"
+          ref="filterMenuRef"
+          :style="{ top: filterMenuPos.top + 'px', right: filterMenuPos.right + 'px' }"
+          class="fixed z-[60] flex items-start gap-[8px]"
+          role="dialog"
+          aria-label="Filtres"
+          @mouseleave="hoveredCategory = null"
+        >
+          <!-- Categories panel — always shown. -->
+          <div class="w-[200px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]">
+            <button
+              type="button"
+              :class="[
+                'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                hoveredCategory === 'statuts' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
+              ]"
+              @mouseenter="hoveredCategory = 'statuts'"
+              @focus="hoveredCategory = 'statuts'"
+              @click="hoveredCategory = 'statuts'"
+            >
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Statuts
+              </span>
+              <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+            </button>
+            <button
+              type="button"
+              :class="[
+                'flex items-center justify-between gap-[8px] px-[12px] py-[10px] rounded-[6px] text-left transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray',
+                hoveredCategory === 'package' ? 'bg-neutral-secondary' : 'hover:bg-neutral-secondary',
+              ]"
+              @mouseenter="hoveredCategory = 'package'"
+              @focus="hoveredCategory = 'package'"
+              @click="hoveredCategory = 'package'"
+            >
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+                Package
+              </span>
+              <Icon name="chevron-right" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+            </button>
+          </div>
+
+          <!-- Options panel — only when a category is in focus / hover. -->
+          <Transition
+            enter-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+            enter-from-class="opacity-0 -translate-x-[4px]"
+            enter-to-class="opacity-100 translate-x-0"
+            leave-active-class="transition-[opacity,transform] duration-[100ms] ease-out motion-reduce:transition-none"
+            leave-from-class="opacity-100 translate-x-0"
+            leave-to-class="opacity-0 -translate-x-[4px]"
+          >
+            <div
+              v-if="hoveredCategory"
+              class="w-[220px] bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-lg p-[4px] flex flex-col gap-[2px]"
+              @mouseenter="hoveredCategory = hoveredCategory"
+            >
+              <template v-if="hoveredCategory === 'statuts'">
+                <button
+                  v-for="opt in [{ value: 'suspecte', label: 'Suspecte' }, { value: 'self-service', label: 'Self service' }]"
+                  :key="opt.value"
+                  type="button"
+                  class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  @click="toggleStatus(opt.value as StatusFilter)"
+                >
+                  <span
+                    :class="[
+                      'shrink-0 size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
+                      filters.statuts.has(opt.value as StatusFilter)
+                        ? 'bg-brand border-brand'
+                        : 'bg-neutral border-border-neutral-secondary',
+                    ]"
+                  >
+                    <Icon v-if="filters.statuts.has(opt.value as StatusFilter)" name="check" variant="solid" :size="12" class="text-white" />
+                  </span>
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                    {{ opt.label }}
+                  </span>
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  v-for="pkg in PACKAGE_OPTIONS"
+                  :key="pkg"
+                  type="button"
+                  class="flex items-center gap-[12px] px-[12px] py-[10px] rounded-[6px] text-left hover:bg-neutral-secondary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  @click="togglePackage(pkg)"
+                >
+                  <span
+                    :class="[
+                      'shrink-0 size-[16px] rounded-[4px] border flex items-center justify-center transition-colors duration-150 ease-out',
+                      filters.package.has(pkg)
+                        ? 'bg-brand border-brand'
+                        : 'bg-neutral border-border-neutral-secondary',
+                    ]"
+                  >
+                    <Icon v-if="filters.package.has(pkg)" name="check" variant="solid" :size="12" class="text-white" />
+                  </span>
+                  <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                    {{ pkg }}
+                  </span>
+                </button>
+              </template>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
