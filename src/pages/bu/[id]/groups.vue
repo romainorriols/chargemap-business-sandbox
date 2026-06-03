@@ -2949,14 +2949,14 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
              flips to the brand purple when the rule is on and to a flat
              gray when off. Same inherited↔custom principle as the
              per-badge cards (badges-cmb.vue). -->
-        <div v-else key="charging-rules" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[16px]">
+        <div v-else key="charging-rules" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-[16px]">
           <button
             v-for="(rule, i) in rules"
             :key="rule.id"
             type="button"
             :style="{ animationDelay: `${40 + i * 30}ms` }"
             :class="[
-              'group relative text-left flex flex-col gap-[16px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer h-full',
+              'group relative text-left flex flex-col gap-[24px] pt-[16px] px-[16px] pb-[24px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer h-full',
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
               'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
               selectedRuleId === rule.id
@@ -3001,7 +3001,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               </div>
             </div>
             <div class="relative flex flex-col gap-[8px] w-full">
-              <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+              <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 {{ rule.title }}
               </p>
               <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
