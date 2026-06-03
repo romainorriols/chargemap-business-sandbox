@@ -2995,7 +2995,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               'text-left flex flex-col gap-[24px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer min-h-[201px]',
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
               'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
-              'bg-neutral border-border-neutral-tertiary hover:bg-neutral-secondary focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+              'bg-neutral border-border-neutral-tertiary hover:bg-brand-surface hover:border-brand-medium focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
             @click="onRuleClick(rule)"
           >
