@@ -4680,7 +4680,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     </div>
                   </Transition>
                 </div>
-              </div>
             </div>
 
             <!-- Scrollable list of network-card-inline rows with hairline separators -->
