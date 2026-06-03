@@ -2557,29 +2557,29 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           >
             <!-- VIEW MODE -->
             <div v-if="!isAddingBadges" key="view" class="flex flex-col gap-[16px]">
-              <!-- Filter row — Figma 5931-23391: search + Ajouter, no extra filters -->
-              <div class="flex flex-col lg:flex-row lg:items-center gap-[8px] anim-fade-up" style="animation-delay: 80ms">
-                <div class="w-full lg:w-[300px]">
-                  <Input
-                    v-model="badgeSearch"
-                    type="leadingIcon"
-                    icon="magnifying-glass"
-                    placeholder="Recherche"
-                  />
-                </div>
-                <div class="lg:ml-auto shrink-0">
-                  <Button
-                    type="primary"
-                    size="md"
-                    icon-left="plus"
-                    label="Ajouter des badges"
-                    @click="enterAddMode"
-                  />
-                </div>
-              </div>
-
               <!-- Table card -->
               <section ref="tableBlockRef" class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 100ms">
+                <!-- Table header — search + Ajouter des badges, sits inside the
+                     card with a hairline bottom border (Figma 6622-10793) -->
+                <div class="flex items-center justify-between gap-[16px] p-[16px] border-b border-border-neutral-secondary">
+                  <div class="flex-1 min-w-0 max-w-[256px]">
+                    <Input
+                      v-model="badgeSearch"
+                      type="leadingIcon"
+                      icon="magnifying-glass"
+                      placeholder="Recherche"
+                    />
+                  </div>
+                  <div class="shrink-0">
+                    <Button
+                      type="primary"
+                      size="md"
+                      icon-left="plus"
+                      label="Ajouter des badges"
+                      @click="enterAddMode"
+                    />
+                  </div>
+                </div>
                 <Transition mode="out-in" name="tab-fade">
 
                 <!-- SKELETON (initial load — 600ms simulated) -->
