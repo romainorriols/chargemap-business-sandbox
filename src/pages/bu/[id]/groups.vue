@@ -2985,12 +2985,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 />
               </div>
               <div class="shrink-0 flex items-center gap-[8px]">
-                <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] border border-[#e4e4e7] bg-[#fafafa] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#48566a] whitespace-nowrap">
+                <span class="inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border border-[#e4e4e7] bg-[#fafafa] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#48566a] whitespace-nowrap">
                   {{ rule.origin === 'inherited' ? 'Hérité de la BU' : 'Personnalisé' }}
                 </span>
                 <span
                   :class="[
-                    'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
+                    'inline-flex items-center justify-center px-[10px] py-[2px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
                     rule.statusIcon === 'check'
                       ? 'bg-[var(--bg-accent-brand)] border-[var(--border-brand-medium)] text-[var(--text-accent-brand)]'
                       : 'bg-[#fafafa] border-[#e4e4e7] text-[#48566a]',
