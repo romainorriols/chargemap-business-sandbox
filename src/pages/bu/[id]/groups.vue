@@ -6,6 +6,7 @@ import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
 import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
 import newGroupTipIllustration from '@/assets/illustrations/new-group-tip.png'
+import groupHeaderIllustration from '@/assets/illustrations/group-header.svg'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -1924,21 +1925,30 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
     >
 
-      <!-- Header: ← Retour back + page title (matches group detail header) -->
-      <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
-        <button
-          type="button"
-          class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-          @click="exitSettings"
-        >
-          <Icon name="arrow-left" variant="outline" :size="16" />
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-            Retour
-          </span>
-        </button>
-        <h1 class="font-sans font-medium text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral truncate max-w-full">
-          Paramètres de {{ selectedSettingsGroup.name }}
-        </h1>
+      <!-- Header: illustration + ← Retour back + page title (matches group detail header) -->
+      <div class="flex items-center gap-[12px] anim-fade-up" style="animation-delay: 0ms">
+        <img
+          :src="groupHeaderIllustration"
+          alt=""
+          aria-hidden="true"
+          class="shrink-0 w-[96px] h-[88px] select-none pointer-events-none"
+          draggable="false"
+        />
+        <div class="flex flex-col items-start min-w-0 flex-1">
+          <button
+            type="button"
+            class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+            @click="exitSettings"
+          >
+            <Icon name="arrow-left" variant="outline" :size="16" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+              Retour
+            </span>
+          </button>
+          <h1 class="font-sans font-medium text-[24px] leading-[1.5] tracking-[-0.72px] text-text-neutral truncate max-w-full">
+            Paramètres de {{ selectedSettingsGroup.name }}
+          </h1>
+        </div>
       </div>
 
       <!-- Informations section + Date / Supprimer card + footer actions -->
@@ -2009,21 +2019,30 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       v-else-if="isCreatingGroup"
       class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]"
     >
-      <!-- Header: Retour back + page title -->
-      <div class="flex flex-col items-start anim-fade-up" style="animation-delay: 0ms">
-        <button
-          type="button"
-          class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-          @click="cancelCreateGroup"
-        >
-          <Icon name="arrow-left" variant="outline" :size="16" />
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-            Retour
-          </span>
-        </button>
-        <h1 :class="headingClass">
-          Nouveau groupe
-        </h1>
+      <!-- Header: illustration + Retour back + page title -->
+      <div class="flex items-center gap-[12px] anim-fade-up" style="animation-delay: 0ms">
+        <img
+          :src="groupHeaderIllustration"
+          alt=""
+          aria-hidden="true"
+          class="shrink-0 w-[96px] h-[88px] select-none pointer-events-none"
+          draggable="false"
+        />
+        <div class="flex flex-col items-start min-w-0 flex-1">
+          <button
+            type="button"
+            class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+            @click="cancelCreateGroup"
+          >
+            <Icon name="arrow-left" variant="outline" :size="16" />
+            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+              Retour
+            </span>
+          </button>
+          <h1 :class="headingClass">
+            Nouveau groupe
+          </h1>
+        </div>
       </div>
 
       <!-- Informations card -->
@@ -2138,10 +2157,19 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
     >
 
       <!-- Page header -->
-      <div class="flex items-center justify-between h-[48px] anim-fade-up" style="animation-delay: 0ms">
-        <h1 :class="headingClass">
-          Groupes
-        </h1>
+      <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
+        <div class="flex items-center gap-[12px] min-w-0">
+          <img
+            :src="groupHeaderIllustration"
+            alt=""
+            aria-hidden="true"
+            class="shrink-0 w-[96px] h-[88px] select-none pointer-events-none"
+            draggable="false"
+          />
+          <h1 :class="[headingClass, 'truncate']">
+            Groupes
+          </h1>
+        </div>
         <Button
           type="primary"
           size="md"
@@ -2411,24 +2439,33 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       :style="{ maxWidth: uiStore.getMaxWidth('/bu/groups') + 'px' }"
     >
 
-      <!-- Header: back + title (left), Paramètres (right) -->
-      <div class="flex items-start justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
-        <div class="flex flex-col items-start min-w-0 flex-1">
-          <button
-            type="button"
-            class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
-            @click="backToList"
-          >
-            <Icon name="arrow-left" variant="outline" :size="16" />
-            <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-              Retour
-            </span>
-          </button>
-          <h1 :class="[headingClass, 'truncate max-w-full']">
-            {{ selectedGroup.name }}
-          </h1>
+      <!-- Header: illustration + back + title (left), Paramètres (right) -->
+      <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
+        <div class="flex items-center gap-[12px] min-w-0 flex-1">
+          <img
+            :src="groupHeaderIllustration"
+            alt=""
+            aria-hidden="true"
+            class="shrink-0 w-[96px] h-[88px] select-none pointer-events-none"
+            draggable="false"
+          />
+          <div class="flex flex-col items-start min-w-0 flex-1">
+            <button
+              type="button"
+              class="flex items-center gap-[8px] px-[4px] py-[4px] rounded-[4px] text-text-neutral-secondary hover:text-text-neutral transition-colors duration-150 ease-out outline-none focus-visible:shadow-ring-gray"
+              @click="backToList"
+            >
+              <Icon name="arrow-left" variant="outline" :size="16" />
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                Retour
+              </span>
+            </button>
+            <h1 :class="[headingClass, 'truncate max-w-full']">
+              {{ selectedGroup.name }}
+            </h1>
+          </div>
         </div>
-        <div class="shrink-0 pt-[24px]">
+        <div class="shrink-0">
           <Button
             type="secondary"
             size="md"
