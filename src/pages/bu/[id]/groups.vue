@@ -1250,24 +1250,12 @@ function closeBudgetDrawer() {
   selectedRuleId.value = null
 }
 
-// Apply-rule confirmation modal. Saving a group-level rule overwrites every
-// badge's inherited (BU) or custom rule, so each drawer's Enregistrer routes
-// through this single confirmation before committing. Validation (Budget) runs
-// first so the user can't reach the dialog with an invalid amount.
-type PendingRuleId = 'budget' | 'autorisations' | 'vacance' | 'reseau' | 'pays'
-const confirmRuleOpen = ref(false)
-const pendingRuleId = ref<PendingRuleId | null>(null)
-const pendingRule = computed(() =>
-  pendingRuleId.value ? rules.find(r => r.id === pendingRuleId.value) ?? null : null,
-)
-
 function saveBudget() {
   if (budgetForm.active && isBudgetAmountInvalid.value) {
     budgetError.value = true
     return
   }
-  pendingRuleId.value = 'budget'
-  confirmRuleOpen.value = true
+  commitBudget()
 }
 
 function commitBudget() {
@@ -1290,8 +1278,7 @@ function closeAutorisationsDrawer() {
 }
 
 function saveAutorisations() {
-  pendingRuleId.value = 'autorisations'
-  confirmRuleOpen.value = true
+  commitAutorisations()
 }
 
 function commitAutorisations() {
@@ -1333,8 +1320,7 @@ function clearReseauBlocklist() {
 }
 
 function saveReseau() {
-  pendingRuleId.value = 'reseau'
-  confirmRuleOpen.value = true
+  commitReseau()
 }
 
 function commitReseau() {
@@ -1365,8 +1351,7 @@ function clearPaysBlocklist() {
 }
 
 function savePays() {
-  pendingRuleId.value = 'pays'
-  confirmRuleOpen.value = true
+  commitPays()
 }
 
 function commitPays() {
@@ -1384,8 +1369,7 @@ function commitPays() {
 }
 
 function saveVacance() {
-  pendingRuleId.value = 'vacance'
-  confirmRuleOpen.value = true
+  commitVacance()
 }
 
 function commitVacance() {
@@ -1402,37 +1386,6 @@ function commitVacance() {
   selectedRuleId.value = null
   showSuccessToast('Blocage vacance mis à jour', '')
 }
-
-function cancelConfirmRule() {
-  confirmRuleOpen.value = false
-  pendingRuleId.value = null
-}
-
-function applyConfirmRule() {
-  switch (pendingRuleId.value) {
-    case 'budget':        commitBudget(); break
-    case 'autorisations': commitAutorisations(); break
-    case 'vacance':       commitVacance(); break
-    case 'reseau':        commitReseau(); break
-    case 'pays':          commitPays(); break
-  }
-  confirmRuleOpen.value = false
-  pendingRuleId.value = null
-}
-
-function onConfirmRuleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape' && confirmRuleOpen.value) {
-    e.stopPropagation()
-    cancelConfirmRule()
-  }
-}
-if (import.meta.client) {
-  watch(confirmRuleOpen, (open) => {
-    if (open) window.addEventListener('keydown', onConfirmRuleKeydown)
-    else window.removeEventListener('keydown', onConfirmRuleKeydown)
-  })
-}
-
 
 // Filters scoped to the selected group's badges.
 type ItineranceFilter = 'all' | 'on' | 'off'
@@ -5327,85 +5280,6 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       </Transition>
     </Teleport>
 
-    <!-- ── Apply-rule confirmation modal (Figma 6211-29867) ──────────────
-         Compact decision dialog fronting every group-level rule save:
-         title + close X in the header, hairline, paragraph body with the
-         badge count + group name in medium, footer with Annuler /
-         Appliquer aligned right. Drawer stays mounted underneath so the
-         user keeps context. Backdrop / ESC = Annuler. -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition-opacity duration-[200ms] ease-out motion-reduce:transition-none"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition-opacity duration-[160ms] ease-out motion-reduce:transition-none"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="confirmRuleOpen"
-          class="fixed inset-0 z-[70] bg-black/40"
-          aria-hidden="true"
-          @click="cancelConfirmRule"
-        />
-      </Transition>
-
-      <Transition
-        enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-        enter-from-class="opacity-0 scale-[0.96] translate-y-[8px]"
-        enter-to-class="opacity-100 scale-100 translate-y-0"
-        leave-active-class="transition-[opacity,transform] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-        leave-from-class="opacity-100 scale-100 translate-y-0"
-        leave-to-class="opacity-0 scale-[0.97] translate-y-[6px]"
-      >
-        <div
-          v-if="confirmRuleOpen"
-          class="fixed inset-0 z-[71] flex items-center justify-center p-[24px] pointer-events-none"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="confirm-rule-title"
-          aria-describedby="confirm-rule-desc"
-        >
-          <div class="pointer-events-auto w-full max-w-[480px] bg-neutral border border-border-neutral-secondary rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip">
-            <!-- Header — title + X close on the same row, hairline below -->
-            <div class="flex items-center gap-[16px] px-[24px] py-[16px] border-b border-border-neutral-secondary">
-              <p id="confirm-rule-title" class="flex-1 min-w-0 font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                Appliquer cette règle à tous les badges ?
-              </p>
-              <button
-                type="button"
-                class="shrink-0 flex items-center justify-center size-[24px] text-icon-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray rounded-[4px]"
-                aria-label="Fermer"
-                @click="cancelConfirmRule"
-              >
-                <Icon name="x-mark" variant="outline" :size="20" />
-              </button>
-            </div>
-
-            <!-- Body — paragraph with group name in Medium (47 stays regular,
-                 per Figma 6211-29867). 16px padding on all sides. -->
-            <div class="p-[16px] border-b border-border-neutral-secondary">
-              <p id="confirm-rule-desc" class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                <template v-if="selectedGroup">
-                  Les {{ badgesInGroup.length }} badges de
-                  <span class="font-medium text-text-neutral-secondary">{{ selectedGroup.name }}</span> suivront désormais la règle du groupe.
-                  Toute règle personnalisée ou héritée de la BU sera remplacée.
-                </template>
-                <template v-else>
-                  Les badges du groupe suivront désormais cette règle. Toute règle personnalisée ou héritée de la BU sera remplacée.
-                </template>
-              </p>
-            </div>
-
-            <!-- Footer — Annuler / Appliquer aligned right -->
-            <div class="flex items-center justify-end gap-[8px] px-[24px] py-[16px]">
-              <Button type="secondary" size="sm" label="Annuler" @click="cancelConfirmRule" />
-              <Button type="primary" size="sm" label="Appliquer" @click="applyConfirmRule" />
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
 
     <!-- ── Badge row kebab menu (teleported) ─────────────────────────────
          The table card uses overflow-clip for its rounded corners, so the
