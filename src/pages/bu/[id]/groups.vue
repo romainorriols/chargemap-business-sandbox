@@ -4246,20 +4246,24 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                   <div
                     v-for="net in blockedNetworkDetails"
                     :key="net.id"
-                    class="flex items-center gap-[12px] p-[12px] rounded-[16px] bg-neutral-secondary"
+                    class="flex items-center justify-between gap-[12px] p-[12px] rounded-[16px] bg-neutral-secondary"
                   >
-                    <div class="shrink-0 size-[38px] rounded-[12px] bg-[#f1f5f9] border border-[#f1f5f9] flex items-center justify-center">
-                      <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-[#94a3b8]">
-                        {{ initialsFor(net.name) }}
-                      </p>
-                    </div>
                     <div class="min-w-0 flex flex-col">
                       <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-disabled truncate">
                         {{ net.name }}
                       </p>
                       <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled truncate">
-                        Réseau bloqué
+                        {{ fmtStations(net.stations) }} stations bloquées
                       </p>
+                    </div>
+                    <div
+                      v-if="net.superPartner"
+                      class="shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
+                    >
+                      <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[12px] shrink-0" />
+                      <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#9234ea] whitespace-nowrap">
+                        Super Partners
+                      </span>
                     </div>
                   </div>
                 </div>
