@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
 const uiStore = useUiStore()
+const navStore = useNavStore()
 import { ref, computed, reactive, watch, onUnmounted, nextTick } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
@@ -1892,6 +1893,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       <!-- Header: illustration + ← Retour back + page title (matches group detail header) -->
       <div class="flex items-center gap-[12px] anim-fade-up" style="animation-delay: 0ms">
         <img
+          v-if="!navStore.isNavV2"
           :src="groupHeaderIllustration"
           alt=""
           aria-hidden="true"
@@ -1986,6 +1988,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       <!-- Header: illustration + Retour back + page title -->
       <div class="flex items-center gap-[12px] anim-fade-up" style="animation-delay: 0ms">
         <img
+          v-if="!navStore.isNavV2"
           :src="groupHeaderIllustration"
           alt=""
           aria-hidden="true"
@@ -2124,6 +2127,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <div class="flex items-center gap-[12px] min-w-0">
           <img
+            v-if="!navStore.isNavV2"
             :src="groupHeaderIllustration"
             alt=""
             aria-hidden="true"
@@ -2407,6 +2411,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <div class="flex items-center gap-[12px] min-w-0 flex-1">
           <img
+            v-if="!navStore.isNavV2"
             :src="groupHeaderIllustration"
             alt=""
             aria-hidden="true"
