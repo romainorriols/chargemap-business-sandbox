@@ -3023,12 +3023,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               style="background: radial-gradient(360px circle at var(--card-mx, 50%) var(--card-my, 50%), rgba(145, 195, 253, 0.28), transparent 60%);"
             />
             <div class="relative flex items-center justify-between gap-[8px] w-full">
-              <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand-lighter">
+              <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
                 <Icon
                   :name="rule.icon"
                   :variant="rule.iconVariant"
                   :size="24"
-                  class="text-text-brand-medium"
+                  class="text-white"
                 />
               </div>
               <div class="shrink-0 flex items-center gap-[8px]">
