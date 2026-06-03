@@ -4115,13 +4115,25 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             />
           </section>
 
-          <!-- Bloquer des réseaux section — content swaps between editable
-               (custom) and read-only (inherited) layouts. -->
-          <section class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]">
-            <!-- Title row + control on the right. Custom shows the toggle,
-                 inherited shows the read-only count/state on the same line. -->
-            <div class="flex items-center justify-between gap-[16px]">
-              <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+          <!-- Bloquer des réseaux section — two stacked rows separated by a
+               bottom border on the header row (Figma 6467-22576 /
+               6467-22877). Mirrors the pays drawer's draftOrigin × active
+               matrix. Header carries the title + toggle (custom only); the
+               body row swaps between count + edit/trash (custom + active +
+               filled), "Gérer les réseaux" CTA (custom + active + empty),
+               read-only "État Désactivé" (inherited + inactive), or
+               read-only count (inherited + active). -->
+          <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip flex flex-col">
+            <!-- Header row -->
+            <div
+              :class="[
+                'h-[69px] px-[16px] flex items-center gap-[16px]',
+                (reseauForm.draftOrigin === 'inherited' || reseauForm.active)
+                  ? 'border-b border-border-neutral-secondary'
+                  : '',
+              ]"
+            >
+              <span class="flex-1 min-w-0 font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
                 Bloquer des réseaux
               </span>
               <Toggle
@@ -4132,125 +4144,123 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               />
             </div>
 
-            <!-- Custom + active: count row with a single "Tout autoriser"
-                 secondary CTA (Figma 6467-22877), or the picker CTA when
-                 the blocklist is still empty. -->
-            <template v-if="reseauForm.draftOrigin === 'custom' && reseauForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                  <span class="font-medium text-text-neutral tabular-nums">
-                    {{ reseauForm.blockedNetworks.length }}
-                  </span>
-                  <span class="text-text-neutral-secondary">
-                    {{ reseauForm.blockedNetworks.length <= 1 ? ' réseau' : ' réseaux' }}
-                    <span class="text-[#e21d48]">{{ reseauForm.blockedNetworks.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
-                  </span>
-                </p>
-                <Button
-                  v-if="reseauForm.blockedNetworks.length > 0"
-                  type="secondary"
-                  size="sm"
-                  label="Tout autoriser"
-                  @click="clearReseauBlocklist"
-                />
-                <Button
-                  v-else
-                  type="secondary"
-                  size="sm"
-                  label="Bloquer des réseaux"
-                  @click="openNetworkPicker"
-                />
-              </div>
-            </template>
-
-            <!-- Inherited + inactive: read-only État/Désactivé row. -->
-            <template v-if="reseauForm.draftOrigin === 'inherited' && !reseauForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
-                  État
+            <!-- Custom + active body row -->
+            <div
+              v-if="reseauForm.draftOrigin === 'custom' && reseauForm.active"
+              class="h-[76px] px-[16px] flex items-center gap-[16px]"
+            >
+              <p class="flex-1 min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px] truncate">
+                <span class="font-medium text-text-neutral tabular-nums">{{ reseauForm.blockedNetworks.length }} {{ reseauForm.blockedNetworks.length <= 1 ? 'réseau' : 'réseaux' }}</span>
+                <span class="font-normal text-text-neutral-secondary">
+                  {{ reseauForm.blockedNetworks.length <= 1 ? ' bloqué' : ' bloqués' }}
                 </span>
-                <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                  Désactivé
-                </span>
-              </div>
-            </template>
-
-            <!-- Inherited + active: read-only blocked count. -->
-            <template v-if="reseauForm.draftOrigin === 'inherited' && reseauForm.active">
-              <div class="h-px bg-border-neutral-tertiary" aria-hidden="true" />
-              <div class="flex items-center justify-between gap-[16px]">
-                <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                  <span class="font-medium text-text-neutral tabular-nums">
-                    {{ reseauForm.blockedNetworks.length }}
-                  </span>
-                  <span class="text-text-neutral-secondary">
-                    {{ reseauForm.blockedNetworks.length <= 1 ? ' réseau' : ' réseaux' }}
-                    <span class="text-[#e21d48]">{{ reseauForm.blockedNetworks.length <= 1 ? 'bloqué' : 'bloqués' }}</span>
-                  </span>
-                </p>
-              </div>
-            </template>
-          </section>
-
-          <!-- Collapsible "Liste des réseaux bloqués" card — shown whenever
-               the rule is on and at least one network is blocked. -->
-          <section
-            v-if="reseauForm.active && reseauForm.blockedNetworks.length > 0"
-            class="bg-neutral border border-border-neutral-secondary rounded-[12px] p-[16px] flex flex-col gap-[16px]"
-          >
-            <div class="flex items-center justify-between gap-[16px]">
-              <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                Liste des réseaux bloqués
               </p>
-              <button
-                type="button"
-                :aria-expanded="blockedNetworksListExpanded"
-                aria-label="Afficher ou masquer la liste"
-                class="shrink-0 flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
-                @click="blockedNetworksListExpanded = !blockedNetworksListExpanded"
-              >
-                <Icon
-                  :name="blockedNetworksListExpanded ? 'chevron-up' : 'chevron-down'"
-                  variant="outline"
-                  :size="18"
-                />
-              </button>
+              <template v-if="reseauForm.blockedNetworks.length > 0">
+                <div class="shrink-0 flex items-center gap-[8px]">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center p-[8px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Modifier la liste de blocage"
+                    @click="openNetworkPicker"
+                  >
+                    <Icon name="pencil" variant="outline" :size="20" />
+                  </button>
+                  <button
+                    type="button"
+                    class="flex items-center justify-center p-[8px] rounded-[8px] text-icon-neutral-secondary hover:bg-danger-surface hover:text-icon-danger transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                    aria-label="Vider la liste de blocage"
+                    @click="clearReseauBlocklist"
+                  >
+                    <Icon name="trash" variant="outline" :size="20" />
+                  </button>
+                </div>
+              </template>
+              <Button v-else type="secondary" size="sm" label="Gérer les réseaux" @click="openNetworkPicker" />
             </div>
 
-            <Transition
-              enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              enter-from-class="opacity-0 -translate-y-[4px]"
-              enter-to-class="opacity-100 translate-y-0"
-              leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
-              leave-from-class="opacity-100 translate-y-0"
-              leave-to-class="opacity-0 -translate-y-[4px]"
+            <!-- Inherited + inactive body row: read-only État/Désactivé -->
+            <div
+              v-else-if="reseauForm.draftOrigin === 'inherited' && !reseauForm.active"
+              class="h-[76px] px-[16px] flex items-center justify-between gap-[16px]"
             >
-              <div v-if="blockedNetworksListExpanded" class="flex flex-col gap-[8px]">
-                <div
-                  v-for="net in blockedNetworkDetails"
-                  :key="net.id"
-                  class="flex items-center gap-[12px] p-[12px] rounded-[12px] bg-neutral-secondary"
+              <span class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">
+                État
+              </span>
+              <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled">
+                Désactivé
+              </span>
+            </div>
+
+            <!-- Inherited + active body row: read-only blocked count -->
+            <div
+              v-else-if="reseauForm.draftOrigin === 'inherited' && reseauForm.active"
+              class="h-[76px] px-[16px] flex items-center gap-[16px]"
+            >
+              <p class="flex-1 min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px] truncate">
+                <span class="font-medium text-text-neutral tabular-nums">{{ reseauForm.blockedNetworks.length }} {{ reseauForm.blockedNetworks.length <= 1 ? 'réseau' : 'réseaux' }}</span>
+                <span class="font-normal text-text-neutral-secondary">
+                  {{ reseauForm.blockedNetworks.length <= 1 ? ' bloqué' : ' bloqués' }}
+                </span>
+              </p>
+            </div>
+          </section>
+
+          <!-- Collapsible "Liste des réseaux bloqués" card — only when the
+               rule is on and at least one network is blocked. Same shape as
+               the pays drawer accordion (rounded-16, title 18px, p-8 chevron). -->
+          <template v-if="reseauForm.active && reseauForm.blockedNetworks.length > 0">
+            <div class="border border-border-neutral-secondary rounded-[16px] p-[16px] flex flex-col gap-[16px]">
+              <div class="flex items-center justify-between gap-[16px]">
+                <p class="flex-1 min-w-0 font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral truncate">
+                  Liste des réseaux bloqués
+                </p>
+                <button
+                  type="button"
+                  :aria-expanded="blockedNetworksListExpanded"
+                  aria-label="Afficher ou masquer la liste"
+                  class="shrink-0 flex items-center justify-center p-[8px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+                  @click="blockedNetworksListExpanded = !blockedNetworksListExpanded"
                 >
-                  <div class="shrink-0 size-[38px] rounded-[12px] bg-[#f1f5f9] border border-[#f1f5f9] flex items-center justify-center">
-                    <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-[#94a3b8]">
-                      {{ initialsFor(net.name) }}
-                    </p>
-                  </div>
-                  <div class="min-w-0 flex flex-col">
-                    <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">
-                      {{ net.name }}
-                    </p>
-                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                      <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
-                      <span class="text-[#e21d48]">bloquées</span>
-                    </p>
+                  <Icon
+                    :name="blockedNetworksListExpanded ? 'chevron-up' : 'chevron-down'"
+                    variant="outline"
+                    :size="20"
+                  />
+                </button>
+              </div>
+
+              <Transition
+                enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                enter-from-class="opacity-0 -translate-y-[4px]"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition-[opacity,transform] duration-[140ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-[4px]"
+              >
+                <div v-if="blockedNetworksListExpanded" class="flex flex-col gap-[16px]">
+                  <div
+                    v-for="net in blockedNetworkDetails"
+                    :key="net.id"
+                    class="flex items-center gap-[12px] p-[12px] rounded-[16px] bg-neutral-secondary"
+                  >
+                    <div class="shrink-0 size-[38px] rounded-[12px] bg-[#f1f5f9] border border-[#f1f5f9] flex items-center justify-center">
+                      <p class="font-sans font-normal text-[16px] leading-[1.5] tracking-[-0.48px] text-[#94a3b8]">
+                        {{ initialsFor(net.name) }}
+                      </p>
+                    </div>
+                    <div class="min-w-0 flex flex-col">
+                      <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-disabled truncate">
+                        {{ net.name }}
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-disabled truncate">
+                        Réseau bloqué
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Transition>
-          </section>
+              </Transition>
+            </div>
+          </template>
         </div>
 
         <!-- Footer -->
