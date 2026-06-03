@@ -1162,6 +1162,17 @@ function resetChargingRulesToDisabled() {
   paysForm.blockedCountries.splice(0, paysForm.blockedCountries.length)
 }
 
+// Track the cursor position over a rule card and expose it as CSS vars so the
+// spotlight overlay (rendered as the first child of the button) can centre its
+// radial-gradient on the pointer — same effect as the Vercel marketplace cards.
+function onRuleCardMove(e: MouseEvent) {
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  el.style.setProperty('--card-mx', `${e.clientX - rect.left}px`)
+  el.style.setProperty('--card-my', `${e.clientY - rect.top}px`)
+}
+
 function onRuleClick(rule: ChargingRule) {
   // Re-clicking the already-active card toggles the drawer off and clears the
   // active state — same affordance as clicking the header X.
@@ -2992,16 +3003,26 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
             type="button"
             :style="{ animationDelay: `${40 + i * 30}ms` }"
             :class="[
-              'text-left flex flex-col gap-[24px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer min-h-[201px]',
+              'group relative text-left flex flex-col gap-[24px] p-[16px] rounded-[16px] overflow-clip anim-fade-up border outline-none cursor-pointer min-h-[201px]',
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
               'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
               selectedRuleId === rule.id
                 ? 'bg-brand-surface border-border-brand-medium focus-visible:shadow-ring-brand'
-                : 'bg-neutral border-border-neutral-tertiary hover:bg-brand-surface hover:border-border-brand-medium focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+                : 'bg-neutral border-border-neutral-tertiary focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
             @click="onRuleClick(rule)"
+            @mousemove="onRuleCardMove"
           >
-            <div class="flex items-center justify-between gap-[8px] w-full">
+            <!-- Mouse-tracking spotlight (Vercel-style). Sits behind the
+                 content; opacity fades in on hover. Hidden once the card is
+                 selected so the solid blue background isn't muddied. -->
+            <span
+              v-if="selectedRuleId !== rule.id"
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out motion-reduce:transition-none"
+              style="background: radial-gradient(360px circle at var(--card-mx, 50%) var(--card-my, 50%), rgba(145, 195, 253, 0.28), transparent 60%);"
+            />
+            <div class="relative flex items-center justify-between gap-[8px] w-full">
               <div class="flex items-center justify-center shrink-0 size-[37px] rounded-[12px] bg-brand">
                 <Icon
                   :name="rule.icon"
@@ -3026,7 +3047,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 </span>
               </div>
             </div>
-            <div class="flex flex-col gap-[4px] w-full">
+            <div class="relative flex flex-col gap-[4px] w-full">
               <p class="font-sans font-medium text-[20px] leading-[1.5] tracking-[-0.6px] text-text-neutral">
                 {{ rule.title }}
               </p>
