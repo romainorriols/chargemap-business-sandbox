@@ -4725,14 +4725,13 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       >
                         {{ net.name }}
                       </p>
-                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate">
-                        <template v-if="isNetworkAuthorized(net.id)">
-                          <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations autorisées</span>
-                        </template>
-                        <template v-else>
-                          <span class="text-text-neutral-secondary">{{ fmtStations(net.stations) }} stations </span>
-                          <span class="text-[#e21d48]">bloquées</span>
-                        </template>
+                      <p
+                        :class="[
+                          'font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] truncate',
+                          isNetworkAuthorized(net.id) ? 'text-text-neutral-secondary' : 'text-text-neutral-disabled',
+                        ]"
+                      >
+                        {{ fmtStations(net.stations) }} stations {{ isNetworkAuthorized(net.id) ? 'autorisées' : 'bloquées' }}
                       </p>
                     </div>
                     <div
