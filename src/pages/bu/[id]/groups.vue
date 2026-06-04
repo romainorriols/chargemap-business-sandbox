@@ -4,7 +4,6 @@ const uiStore = useUiStore()
 const navStore = useNavStore()
 import { ref, computed, reactive, watch, onUnmounted, nextTick } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
-import superPartnersIcon from '@/assets/logos/chargemap-cm-badge.svg'
 import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
 import newGroupTipIllustration from '@/assets/illustrations/new-group-tip.png'
 import groupHeaderIllustration from '@/assets/illustrations/group-header.svg'
@@ -4235,15 +4234,12 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                         {{ fmtStations(net.stations) }} stations bloquées
                       </p>
                     </div>
-                    <div
+                    <span
                       v-if="net.superPartner"
-                      class="shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]"
+                      class="shrink-0 inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] bg-[#faf5ff] border border-[#ead6ff] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap"
                     >
-                      <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[12px] shrink-0" />
-                      <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#9234ea] whitespace-nowrap">
-                        Super Partners
-                      </span>
-                    </div>
+                      Super Partners
+                    </span>
                   </div>
                 </div>
               </Transition>
@@ -4720,7 +4716,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                     <div
                       v-if="net.superPartner"
                       :class="[
-                        'shrink-0 inline-flex items-center gap-[4px] pl-[6px] pr-[8px] py-[2px] rounded-[16px] bg-[#faf5ff] border border-[#ead6ff]',
+                        'shrink-0 inline-flex items-center justify-center px-[10px] py-[2px] rounded-[8px] bg-[#faf5ff] border border-[#ead6ff] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-[#9234ea] whitespace-nowrap',
                         uiStore.networkPickerVariant === 'super-partners'
                           ? ''
                           : 'relative group/sp cursor-default',
@@ -4732,10 +4728,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                       @keydown.enter.stop
                       @keydown.space.stop
                     >
-                      <img :src="superPartnersIcon" alt="" aria-hidden="true" class="size-[12px] shrink-0" />
-                      <span class="font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[#9234ea] whitespace-nowrap">
-                        Super Partners
-                      </span>
+                      Super Partners
                       <!-- Hover/focus tooltip — hidden in the super-partners variant
                            since the left card already explains the label. -->
                       <span
