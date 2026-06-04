@@ -2966,7 +2966,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               'shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]',
               selectedRuleId === rule.id
                 ? 'bg-brand-surface border-border-brand-medium focus-visible:shadow-ring-brand'
-                : 'bg-neutral border-border-neutral-tertiary focus-visible:shadow-ring-brand focus-visible:border-border-brand',
+                : 'bg-neutral border-border-neutral-secondary focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
             @click="onRuleClick(rule)"
             @mousemove="onRuleCardMove"
