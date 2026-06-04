@@ -2954,7 +2954,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
               'transition-[background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
               'shadow-sm',
               selectedRuleId === rule.id
-                ? 'bg-brand-surface border-border-brand-medium focus-visible:shadow-ring-brand'
+                ? 'bg-neutral border-border-neutral focus-visible:shadow-ring-brand'
                 : 'bg-neutral border-border-neutral-secondary hover:shadow-md focus-visible:shadow-ring-brand focus-visible:border-border-brand',
             ]"
             @click="onRuleClick(rule)"
