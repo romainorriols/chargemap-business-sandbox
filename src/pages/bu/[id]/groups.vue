@@ -2002,11 +2002,11 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
       <!-- Informations card -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 40ms">
-        <div class="p-[16px] flex flex-col gap-[4px]">
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+        <div class="p-[16px] flex flex-col gap-[2px]">
+          <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
             Informations
           </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+          <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Le responsable du groupe recevra toutes les notifications liées à ce groupe
           </p>
         </div>
@@ -2039,26 +2039,28 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
 
       <!-- Composition card — Figma 6156-15134 (empty) / 6156-15364 (filled) -->
       <section class="bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-clip anim-fade-up" style="animation-delay: 80ms">
-        <div class="p-[16px] flex flex-col gap-[4px]">
-          <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+        <div class="p-[16px] flex flex-col gap-[2px]">
+          <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
             Composition
           </p>
-          <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+          <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Ajoutez les badges à associer à ce groupe
           </p>
         </div>
         <div class="h-px w-full bg-border-neutral-tertiary" aria-hidden="true" />
         <div class="px-[16px] pt-[16px] pb-[16px] flex items-center justify-between gap-[16px]">
-          <p class="min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px]">
-            <template v-if="createSelected.size === 0">
-              <span class="font-medium text-text-neutral tabular-nums">0</span>
-              <span class="text-text-neutral-secondary"> badge ajouté</span>
-            </template>
-            <template v-else>
-              <span class="font-semibold text-text-neutral tabular-nums">{{ createSelected.size }} {{ createSelected.size === 1 ? 'badge' : 'badges' }}</span>
-              <span class="text-text-neutral-secondary"> dans le groupe</span>
-            </template>
-          </p>
+          <template v-if="createSelected.size === 0">
+            <p class="min-w-0 font-sans text-[14px] leading-[1.5] tracking-[-0.42px]">
+              <span class="font-medium text-text-neutral tabular-nums">0 badge</span>
+              <span class="font-normal text-text-neutral-secondary"> ajouté</span>
+            </p>
+          </template>
+          <template v-else>
+            <p class="min-w-0 font-sans text-[16px] leading-[1.5] tracking-[-0.48px]">
+              <span class="font-medium text-text-neutral tabular-nums">{{ createSelected.size }} {{ createSelected.size === 1 ? 'badge' : 'badges' }}</span>
+              <span class="font-normal text-text-neutral-secondary"> dans le groupe</span>
+            </p>
+          </template>
           <div class="shrink-0 flex items-center gap-[12px]">
             <Button
               type="secondary"
