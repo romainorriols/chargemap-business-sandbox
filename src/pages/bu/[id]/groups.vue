@@ -8,6 +8,7 @@ import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
 import newGroupTipIllustration from '@/assets/illustrations/new-group-tip.png'
 import groupHeaderIllustration from '@/assets/illustrations/group-header.svg'
 import groupEmptyIllustration from '@/assets/illustrations/group-empty.svg'
+import badgeEmptyIllustration from '@/assets/illustrations/badge-empty.svg'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -1397,11 +1398,14 @@ const rattachementItems = [
   { value: 'none',    label: 'Non rattaché' },
 ]
 
-const badgesInGroup = computed(() =>
-  selectedGroup.value
+const badgesInGroup = computed(() => {
+  // Admin "Empty state" toggle empties the open group too: KPIs fall to 0 and
+  // the badge table shows the no-badge illustration (Figma 6815-12972).
+  if (uiStore.showEmptyState) return []
+  return selectedGroup.value
     ? allBadges.filter(b => b.groupId === selectedGroup.value!.id)
-    : [],
-)
+    : []
+})
 
 // KPI counts — denominator is the group total so 45/50 reads as "45 of 50".
 const kpis = computed(() => {
@@ -2656,16 +2660,35 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
                 <!-- Empty state -->
                 <div
                   v-if="badgePaginated.length === 0"
-                  class="px-[24px] py-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
+                  class="min-h-[400px] px-[24px] py-[48px] flex flex-col items-center justify-center gap-[16px] text-center"
                 >
-                  <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
-                    {{ badgeSearch ? 'Aucun badge' : 'Aucun badge dans ce groupe' }}
-                  </p>
-                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
-                    {{ badgeSearch
-                      ? 'Aucun badge ne correspond à votre recherche.'
-                      : 'Ajoutez un badge pour commencer.' }}
-                  </p>
+                  <!-- Group has no badge (Figma 6815-12972): badge illustration + copy -->
+                  <div v-if="!badgeSearch" class="flex flex-col items-center">
+                    <img
+                      :src="badgeEmptyIllustration"
+                      alt=""
+                      class="size-[200px] -mb-[16px] select-none pointer-events-none"
+                      draggable="false"
+                    />
+                    <div class="flex flex-col items-center gap-[4px]">
+                      <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                        Aucun badge pour le moment
+                      </p>
+                      <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                        Les badges ajoutés à ce groupe s'afficheront ici
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Search yielded no match -->
+                  <template v-else>
+                    <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                      Aucun badge
+                    </p>
+                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                      Aucun badge ne correspond à votre recherche.
+                    </p>
+                  </template>
                 </div>
 
                 <!-- Rows — billing-style anim-fade-up cascade (key on b.id so
