@@ -7,6 +7,7 @@ import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import superPartnersSide from '@/assets/illustrations/super-partners-side.png'
 import newGroupTipIllustration from '@/assets/illustrations/new-group-tip.png'
 import groupHeaderIllustration from '@/assets/illustrations/group-header.svg'
+import groupEmptyIllustration from '@/assets/illustrations/group-empty.svg'
 
 interface BadgeDriver { name: string; initials: string }
 interface BadgeVehicle { model: string; plate: string }
@@ -117,6 +118,8 @@ function groupStats(groupId: string) {
 // ── Listing state ──────────────────────────────────────────────────────────
 const search = ref('')
 const filtered = computed(() => {
+  // Admin "Empty state" toggle wipes the list so we can demo the no-group screen.
+  if (uiStore.showEmptyState) return []
   const q = search.value.trim().toLowerCase()
   if (!q) return groups
   return groups.filter(g => g.name.toLowerCase().includes(q))
@@ -2329,6 +2332,32 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </article>
         </div>
 
+        <!-- Admin "Empty state" toggle — no group at all (Figma 6815-12600).
+             Borderless full-height area; illustration + copy centered. -->
+        <div
+          v-else-if="uiStore.showEmptyState"
+          class="anim-fade-up flex flex-col items-center justify-center gap-[16px] min-h-[520px] text-center"
+          style="animation-delay: 100ms"
+        >
+          <div class="flex flex-col items-center">
+            <img
+              :src="groupEmptyIllustration"
+              alt=""
+              class="size-[200px] -mb-[16px] select-none pointer-events-none"
+              draggable="false"
+            />
+            <div class="flex flex-col items-center gap-[4px]">
+              <p class="font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+                Aucun groupe pour le moment
+              </p>
+              <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                Visualisez tous les nouveaux groupes créés ici.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search yielded no match -->
         <div
           v-else
           class="anim-fade-up bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm p-[48px] flex flex-col items-center justify-center gap-[8px] text-center"
@@ -2342,7 +2371,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
           </p>
         </div>
 
-        <div class="flex items-center justify-between pt-[8px] anim-fade-up" style="animation-delay: 200ms">
+        <div v-if="!uiStore.showEmptyState" class="flex items-center justify-between pt-[8px] anim-fade-up" style="animation-delay: 200ms">
           <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Afficher&nbsp;: <span class="font-medium text-text-neutral">{{ rangeStart }}</span> à
             <span class="font-medium text-text-neutral">{{ rangeEnd }}</span> sur
