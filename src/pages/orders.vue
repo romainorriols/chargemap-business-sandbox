@@ -506,9 +506,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                   <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
                     <div class="flex items-start justify-between gap-[12px]">
                       <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ step.title }}</p>
-                      <p class="shrink-0 font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary tabular-nums">{{ stepDateLabel(si) }}</p>
+                      <p class="shrink-0 font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary tabular-nums">{{ stepDateLabel(si) }}</p>
                     </div>
-                    <p class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">{{ step.description }}</p>
+                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ step.description }}</p>
                   </div>
                 </li>
               </ol>
