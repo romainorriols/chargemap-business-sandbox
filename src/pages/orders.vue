@@ -436,7 +436,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div v-if="selectedOrder" class="fixed inset-0 z-[60] bg-black/30" @click="closeDrawer" />
+        <div v-if="selectedOrder" class="fixed inset-0 z-[60] bg-black/40" @click="closeDrawer" />
       </Transition>
 
       <Transition
@@ -449,7 +449,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       >
         <aside
           v-if="selectedOrder"
-          class="fixed top-0 right-0 z-[61] h-full w-[500px] max-w-[92vw] bg-neutral shadow-2xl flex flex-col"
+          class="fixed right-[8px] top-[8px] bottom-[8px] z-[61] w-[500px] max-w-[calc(100%-16px)] bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] flex flex-col overflow-clip"
           role="dialog"
           aria-modal="true"
           aria-label="Détails de la commande"
