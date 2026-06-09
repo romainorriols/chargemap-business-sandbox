@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { usePageHeadingClass } from '../utils/typography'
 
 const uiStore = useUiStore()
@@ -178,6 +178,55 @@ watch([search, statusFilter, typeFilter], () => { page.value = 1 })
 const isLoading = ref(true)
 onMounted(() => { setTimeout(() => { isLoading.value = false }, 600) })
 const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
+
+// ── Order detail drawer (Figma 6914-10993) ────────────────────────────────
+// The 4-step journey shown in the "Étapes de la commande" card. Reached
+// steps get a green check + a date, upcoming ones a gray clock + "--".
+const STEPS = [
+  { title: 'Paiement en attente', description: 'Validation du paiement, cela peut prendre quelques jours' },
+  { title: 'Commande validée',    description: 'La commande est prête à être préparée par nos équipes' },
+  { title: 'Commande prête',      description: 'Commande préparée, badges visibles sur l’interface' },
+  { title: 'Expédition',          description: 'Commande expédiée, lien de suivi disponible' },
+] as const
+
+const stepReached: Record<OrderStatus, number> = {
+  'paiement-attente': 0,
+  'validee':          1,
+  'prete':            2,
+  'expediee':         3,
+  'terminee':         3,
+}
+
+// Drawer status pill colour per status. Only "validee → turquoise" is fixed
+// by the Figma; the others use sensible accents from the design tokens.
+const STATUS_ACCENT: Record<OrderStatus, string> = {
+  'paiement-attente': 'yellow',
+  'validee':          'turquoise',
+  'prete':            'cyan',
+  'expediee':         'brand',
+  'terminee':         'gray',
+}
+
+const MONTHS_FR = ['Janv', 'Févr', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc']
+
+const selectedId = ref<string | null>(null)
+const selectedOrder = computed<Order | null>(() => orders.find(o => o.id === selectedId.value) ?? null)
+const openOrder = (id: string) => { selectedId.value = id }
+const closeDrawer = () => { selectedId.value = null }
+
+// Per-step date derived from the order date so the timeline stays raccord
+// with the order (a few days between each reached step). "--" once upcoming.
+const stepDateLabel = (si: number): string => {
+  const order = selectedOrder.value
+  if (!order || si > stepReached[order.status]) return '--'
+  const [d, m, y] = order.date.split('/').map(Number)
+  const dt = new Date(y, m - 1, d + si * 3)
+  return `${dt.getDate()} ${MONTHS_FR[dt.getMonth()]} ${dt.getFullYear()}`
+}
+
+const onKeydown = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDrawer() }
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
@@ -334,7 +383,13 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
           <div
             v-for="order in paginated"
             :key="order.id"
-            class="flex items-stretch w-full min-h-[64px] border-t border-border-neutral-tertiary transition-colors duration-150 ease-out motion-reduce:transition-none hover:bg-neutral-secondary"
+            role="button"
+            tabindex="0"
+            :aria-label="`Voir la commande ${order.number}`"
+            class="flex items-stretch w-full min-h-[64px] border-t border-border-neutral-tertiary cursor-pointer outline-none transition-colors duration-150 ease-out motion-reduce:transition-none hover:bg-neutral-secondary focus-visible:bg-neutral-secondary focus-visible:shadow-ring-gray"
+            @click="openOrder(order.id)"
+            @keydown.enter="openOrder(order.id)"
+            @keydown.space.prevent="openOrder(order.id)"
           >
             <div class="flex-1 min-w-0 px-[16px] py-[12px] flex items-center font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">
               {{ order.number }}
@@ -370,5 +425,179 @@ const skeletonRows = Array.from({ length: 7 }, (_, i) => i)
       </section>
 
     </div>
+
+    <!-- ── Order detail drawer (Figma 6914-10993) ───────────────────────── -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200 ease-out motion-reduce:transition-none"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-150 ease-in motion-reduce:transition-none"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="selectedOrder" class="fixed inset-0 z-[60] bg-black/30" @click="closeDrawer" />
+      </Transition>
+
+      <Transition
+        enter-active-class="transition-transform duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="translate-x-full"
+        enter-to-class="translate-x-0"
+        leave-active-class="transition-transform duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        leave-from-class="translate-x-0"
+        leave-to-class="translate-x-full"
+      >
+        <aside
+          v-if="selectedOrder"
+          class="fixed top-0 right-0 z-[61] h-full w-[500px] max-w-[92vw] bg-neutral shadow-2xl flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Détails de la commande"
+        >
+          <!-- Header -->
+          <div class="shrink-0 border-b border-border-neutral-secondary p-[16px] flex items-start gap-[16px]">
+            <div class="flex-1 min-w-0 flex flex-col gap-[4px]">
+              <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
+                Détails de la commande
+              </p>
+              <div class="flex items-center gap-[8px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+                <span class="truncate">#{{ selectedOrder.number }}</span>
+                <span aria-hidden="true">·</span>
+                <span class="shrink-0">{{ VARIANTS[selectedOrder.status].label }}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 -mr-[4px] flex items-center justify-center size-[36px] rounded-[8px] text-icon-neutral-secondary hover:bg-neutral-secondary hover:text-icon-neutral-primary transition-colors duration-150 ease-out motion-reduce:transition-none outline-none focus-visible:shadow-ring-gray"
+              aria-label="Fermer"
+              @click="closeDrawer"
+            >
+              <Icon name="x-mark" variant="outline" :size="20" />
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="flex-1 min-h-0 overflow-y-auto p-[16px] flex flex-col gap-[24px]">
+
+            <!-- Étapes de la commande -->
+            <article class="bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip">
+              <header class="border-b border-border-neutral-secondary p-[16px]">
+                <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Étapes de la commande</p>
+              </header>
+              <ol class="p-[16px] flex flex-col">
+                <li
+                  v-for="(step, si) in STEPS"
+                  :key="si"
+                  :class="['relative flex gap-[12px]', si < STEPS.length - 1 ? 'pb-[24px]' : '']"
+                >
+                  <span
+                    v-if="si < STEPS.length - 1"
+                    aria-hidden="true"
+                    class="absolute left-[11.5px] top-[28px] bottom-[4px] w-px bg-border-neutral-secondary"
+                  />
+                  <div class="relative z-10 shrink-0 size-[24px] flex items-center justify-center bg-neutral">
+                    <Icon
+                      :name="si <= stepReached[selectedOrder.status] ? 'check-circle' : 'clock'"
+                      variant="outline"
+                      :size="24"
+                      :class="si <= stepReached[selectedOrder.status] ? 'text-[var(--text-accent-turquoise)]' : 'text-icon-neutral-secondary'"
+                    />
+                  </div>
+                  <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
+                    <div class="flex items-start justify-between gap-[12px]">
+                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ step.title }}</p>
+                      <p class="shrink-0 font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary tabular-nums">{{ stepDateLabel(si) }}</p>
+                    </div>
+                    <p class="font-sans font-normal text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary">{{ step.description }}</p>
+                  </div>
+                </li>
+              </ol>
+            </article>
+
+            <!-- Panier -->
+            <article class="bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip">
+              <header class="border-b border-border-neutral-secondary p-[16px]">
+                <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Panier</p>
+              </header>
+              <div class="p-[16px] flex flex-col">
+                <template v-for="(item, ii) in selectedOrder.items" :key="ii">
+                  <div v-if="ii > 0" class="h-px w-full bg-border-neutral-tertiary my-[16px]" />
+                  <div class="flex items-center gap-[16px] w-full">
+                    <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">{{ item.label }}</p>
+                    <p class="shrink-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary whitespace-nowrap">Quantité {{ item.qty }}</p>
+                    <p class="shrink-0 w-[80px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right whitespace-nowrap tabular-nums">{{ fmtAmount(item.price) }} €</p>
+                  </div>
+                </template>
+              </div>
+            </article>
+
+            <!-- Informations -->
+            <article class="bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip">
+              <header class="border-b border-border-neutral-secondary p-[16px]">
+                <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Informations</p>
+              </header>
+              <div class="p-[16px] flex flex-col">
+                <div class="flex items-center justify-between py-[2px] gap-[16px]">
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Statut</p>
+                  <span
+                    class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-[16px] border font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap"
+                    :style="{
+                      backgroundColor: `var(--bg-accent-${STATUS_ACCENT[selectedOrder.status]})`,
+                      borderColor: `var(--border-accent-${STATUS_ACCENT[selectedOrder.status]})`,
+                      color: `var(--text-accent-${STATUS_ACCENT[selectedOrder.status]})`,
+                    }"
+                  >{{ VARIANTS[selectedOrder.status].label }}</span>
+                </div>
+                <div class="h-px w-full bg-border-neutral-tertiary my-[16px]" />
+                <div class="flex items-center justify-between py-[2px] gap-[16px]">
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Numéro de commande</p>
+                  <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right truncate">{{ selectedOrder.number }}</p>
+                </div>
+                <div class="h-px w-full bg-border-neutral-tertiary my-[16px]" />
+                <div class="flex items-center justify-between py-[2px] gap-[16px]">
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Moyen de paiement</p>
+                  <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right truncate">{{ selectedOrder.paymentMethod }}</p>
+                </div>
+                <div class="h-px w-full bg-border-neutral-tertiary my-[16px]" />
+                <div class="flex items-center justify-between py-[2px] gap-[16px]">
+                  <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Business unit</p>
+                  <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right truncate">{{ selectedOrder.bu }}</p>
+                </div>
+              </div>
+            </article>
+
+            <!-- Livraison / facturation -->
+            <article class="bg-neutral border border-border-neutral-secondary rounded-[16px] overflow-clip">
+              <header class="border-b border-border-neutral-secondary p-[16px]">
+                <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Livraison / facturation</p>
+              </header>
+              <div class="p-[16px]">
+                <div class="flex items-center gap-[16px] w-full">
+                  <div class="size-[40px] shrink-0 rounded-full bg-neutral-secondary border border-border-neutral flex items-center justify-center">
+                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">{{ selectedOrder.recipient.initials }}</span>
+                  </div>
+                  <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
+                    <p class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral truncate">{{ selectedOrder.recipient.name }}</p>
+                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary truncate">{{ selectedOrder.recipient.bu }}</p>
+                  </div>
+                  <div class="flex-1 min-w-0 flex flex-col font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right">
+                    <p class="truncate">{{ selectedOrder.recipient.address1 }}</p>
+                    <p class="truncate">{{ selectedOrder.recipient.address2 }}</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+          <!-- Footer -->
+          <div class="shrink-0 border-t border-border-neutral-secondary p-[16px] flex items-center gap-[16px]">
+            <Button class="flex-1" type="secondary" size="md" label="Télécharger la facture" />
+            <Button class="flex-1" type="primary" size="md" label="Suivre la commande" :disabled="selectedOrder.status !== 'expediee'" />
+          </div>
+        </aside>
+      </Transition>
+    </Teleport>
+
   </div>
 </template>
