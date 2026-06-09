@@ -3327,7 +3327,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Footer -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeBudgetDrawer" />
-          <Button type="primary" size="md" label="Enregistrer" @click="saveBudget" />
+          <Button type="primary" size="md" label="Enregistrer" :disabled="budgetForm.draftOrigin === 'inherited'" @click="saveBudget" />
         </div>
       </aside>
     </Transition>
@@ -4344,7 +4344,7 @@ const fmtCount = (n: number) => n.toLocaleString('fr-FR')
         <!-- Footer -->
         <div class="flex items-center justify-between gap-[16px] px-[16px] h-[69px] border-t border-border-neutral-tertiary shrink-0">
           <Button type="secondary" size="md" label="Annuler" @click="closeReseauDrawer" />
-          <Button type="primary" size="md" label="Enregistrer" @click="saveReseau" />
+          <Button type="primary" size="md" label="Enregistrer" :disabled="reseauForm.draftOrigin === 'inherited'" @click="saveReseau" />
         </div>
       </aside>
     </Transition>
