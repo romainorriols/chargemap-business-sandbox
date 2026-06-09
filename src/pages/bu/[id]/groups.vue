@@ -500,7 +500,18 @@ const budgetDrawerOpen = ref(false)
 // (editable). Both sub-toggles share the same origin since they live in
 // the same rule.
 function personalizeBudget() { budgetForm.draftOrigin = 'custom' }
-function inheritBudget() { budgetForm.draftOrigin = 'inherited' }
+// "Suivre les règles de la BU" must restore the BU ruleset, not freeze the
+// current custom draft read-only. Reset the budget+alerte fields to the BU
+// baseline before flipping back to inherited.
+function inheritBudget() {
+  budgetForm.active = true
+  budgetForm.amount = '230,00'
+  alerteForm.active = true
+  alerteForm.type = 'percentage'
+  alerteForm.amount = '50'
+  budgetError.value = false
+  budgetForm.draftOrigin = 'inherited'
+}
 const budgetForm = reactive<{ active: boolean; amount: string; draftOrigin: 'inherited' | 'custom' }>({
   active: true,
   amount: '230,00',
@@ -548,7 +559,15 @@ const vacanceForm = reactive<{
   draftOrigin: 'inherited',
 })
 function personalizeVacance() { vacanceForm.draftOrigin = 'custom' }
-function inheritVacance() { vacanceForm.draftOrigin = 'inherited' }
+// Restore the BU ruleset: active with no blocking period.
+function inheritVacance() {
+  vacanceForm.active = true
+  vacanceForm.periods.splice(0, vacanceForm.periods.length)
+  vacanceForm.creating = false
+  vacanceForm.draft.name = ''
+  vacanceForm.draft.range = ''
+  vacanceForm.draftOrigin = 'inherited'
+}
 let vacancePeriodSeq = 0
 function openVacanceCreate() {
   vacanceForm.draft.name = ''
@@ -764,7 +783,18 @@ const autorisationsForm = reactive<{ active: boolean; days: DayRule[]; draftOrig
   ],
 })
 function personalizeAutorisations() { autorisationsForm.draftOrigin = 'custom' }
-function inheritAutorisations() { autorisationsForm.draftOrigin = 'inherited' }
+// Restore the BU ruleset: active with every day allowed (no custom hours).
+function inheritAutorisations() {
+  autorisationsForm.active = true
+  autorisationsForm.days.forEach((d) => {
+    d.blocked = false
+    d.customHours = false
+    d.editing = false
+    d.start = ''
+    d.end = ''
+  })
+  autorisationsForm.draftOrigin = 'inherited'
+}
 function startEditingDay(day: DayRule) {
   if (!day.customHours) { day.start = ''; day.end = '' }
   day.editing = true
@@ -798,7 +828,12 @@ const reseauDrawerOpen = ref(false)
 // Inherited ↔ Custom drafts mirror the badges-cmb pattern. The drawer opens
 // with the rule's current origin and only commits the change on Enregistrer.
 function personalizeReseau() { reseauForm.draftOrigin = 'custom' }
-function inheritReseau() { reseauForm.draftOrigin = 'inherited' }
+// Restore the BU ruleset: active with no blocked network.
+function inheritReseau() {
+  reseauForm.active = true
+  reseauForm.blockedNetworks.splice(0, reseauForm.blockedNetworks.length)
+  reseauForm.draftOrigin = 'inherited'
+}
 const reseauForm = reactive<{ active: boolean; blockedNetworks: string[]; draftOrigin: 'inherited' | 'custom' }>({
   active: false,
   blockedNetworks: [],
@@ -817,7 +852,12 @@ const blockedNetworkDetails = computed(() =>
 // autorisé / Tout bloqué bulk actions, list of country-card-inline rows.
 const paysDrawerOpen = ref(false)
 function personalizePays() { paysForm.draftOrigin = 'custom' }
-function inheritPays() { paysForm.draftOrigin = 'inherited' }
+// Restore the BU ruleset: active with no blocked country.
+function inheritPays() {
+  paysForm.active = true
+  paysForm.blockedCountries.splice(0, paysForm.blockedCountries.length)
+  paysForm.draftOrigin = 'inherited'
+}
 const paysForm = reactive<{ active: boolean; blockedCountries: string[]; draftOrigin: 'inherited' | 'custom' }>({
   active: false,
   blockedCountries: [],
