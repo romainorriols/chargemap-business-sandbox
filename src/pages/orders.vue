@@ -462,7 +462,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           aria-label="Détails de la commande"
         >
           <!-- Header -->
-          <div class="shrink-0 border-b border-border-neutral-secondary p-[16px] flex items-start gap-[16px]">
+          <div class="shrink-0 border-b border-border-neutral-secondary p-[16px] flex items-center gap-[16px]">
             <div class="flex-1 min-w-0 flex flex-col gap-[4px]">
               <p class="font-sans font-semibold text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">
                 Détails de la commande
@@ -491,31 +491,34 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               <header class="border-b border-border-neutral-secondary p-[16px]">
                 <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Étapes de la commande</p>
               </header>
-              <ol class="p-[16px] flex flex-col">
+              <ol class="p-[16px] flex flex-col gap-[24px]">
                 <li
                   v-for="(step, si) in STEPS"
                   :key="si"
-                  :class="['relative flex gap-[12px]', si < STEPS.length - 1 ? 'pb-[24px]' : '']"
+                  class="relative flex gap-[12px]"
                 >
+                  <!-- Connector runs from the icon bottom (24px) down 48px to the next icon -->
                   <span
                     v-if="si < STEPS.length - 1"
                     aria-hidden="true"
-                    class="absolute left-[11.5px] top-[28px] bottom-[4px] w-px bg-border-neutral-secondary"
+                    class="absolute left-[11.5px] top-[24px] h-[48px] w-px bg-border-neutral-secondary"
                   />
                   <div class="relative z-10 shrink-0 size-[24px] flex items-center justify-center bg-neutral">
                     <Icon
                       :name="si <= stepReached[selectedOrder.status] ? 'check-circle' : 'clock'"
                       variant="outline"
                       :size="24"
-                      :class="si <= stepReached[selectedOrder.status] ? 'text-[var(--text-accent-turquoise)]' : 'text-icon-neutral-secondary'"
+                      :class="si <= stepReached[selectedOrder.status] ? 'text-[var(--text-accent-turquoise)]' : 'text-icon-neutral-disabled'"
                     />
                   </div>
-                  <div class="flex-1 min-w-0 flex flex-col gap-[2px]">
-                    <div class="flex items-start justify-between gap-[12px]">
-                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ step.title }}</p>
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <div class="h-[24px] flex items-center justify-between gap-[12px]">
+                      <p class="min-w-0 truncate font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ step.title }}</p>
                       <p class="shrink-0 font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-text-neutral-secondary tabular-nums">{{ stepDateLabel(si) }}</p>
                     </div>
-                    <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ step.description }}</p>
+                    <div class="h-[24px] flex items-center">
+                      <p class="min-w-0 truncate font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ step.description }}</p>
+                    </div>
                   </div>
                 </li>
               </ol>
@@ -529,10 +532,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               <div class="p-[16px] flex flex-col">
                 <template v-for="(item, ii) in selectedOrder.items" :key="ii">
                   <div v-if="ii > 0" class="h-px w-full bg-border-neutral-tertiary my-[16px]" />
-                  <div class="flex items-center gap-[16px] w-full">
+                  <div class="flex items-center gap-[24px] w-full">
                     <p class="flex-1 min-w-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral truncate">{{ item.label }}</p>
                     <p class="shrink-0 font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary whitespace-nowrap">Quantité {{ item.qty }}</p>
-                    <p class="shrink-0 w-[80px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right whitespace-nowrap tabular-nums">{{ fmtAmount(item.price) }} €</p>
+                    <p class="shrink-0 font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral text-right whitespace-nowrap tabular-nums">{{ fmtAmount(item.price) }} €</p>
                   </div>
                 </template>
               </div>
