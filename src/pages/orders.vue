@@ -401,7 +401,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
               {{ fmtAmount(order.amountTtc) }} €
             </div>
             <div class="flex-1 min-w-0 px-[16px] py-[12px] flex items-center">
-              <span class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[16px] border bg-[var(--bg-accent-gray)] border-[var(--border-accent-gray)] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] text-[var(--text-accent-gray)] whitespace-nowrap">
+              <span
+                class="inline-flex items-center justify-center px-[8px] py-[2px] rounded-[16px] border font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] whitespace-nowrap"
+                :style="{
+                  backgroundColor: `var(--bg-accent-${STATUS_ACCENT[order.status]})`,
+                  borderColor: `var(--border-accent-${STATUS_ACCENT[order.status]})`,
+                  color: `var(--text-accent-${STATUS_ACCENT[order.status]})`,
+                }"
+              >
                 {{ VARIANTS[order.status].label }}
               </span>
             </div>
