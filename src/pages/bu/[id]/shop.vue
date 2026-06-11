@@ -88,7 +88,7 @@ const goBack = (): void => {
 
       <!-- Page header -->
       <header
-        class="anim-fade-up mx-auto flex w-[858px] max-w-full items-center gap-[12px]"
+        class="anim-fade-up flex w-full items-center gap-[12px]"
         style="animation-delay: 0ms"
       >
         <!-- Illustration (Figma 8955:2511 — Business charging card, right hand) -->
