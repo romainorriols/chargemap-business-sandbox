@@ -45,11 +45,17 @@ const methodLabel = computed<string>(() =>
   selectedMethod.value === 'prelevement' ? 'prélévement' : 'carte bancaire',
 )
 
+// The two payment methods shown as the selector cards. Prélèvement is the
+// mandate on file, flagged as the default.
+const paymentMethods = [
+  { id: 'prelevement', icon: 'building-library', title: 'Prélévement', subtitle: '15 jours de délais de paiement', isDefault: true },
+  { id: 'cb', icon: 'credit-card', title: 'Carte bancaire', subtitle: '3 jours de délais de paiement', isDefault: false },
+] as const
+
 // Prélèvement: the SEPA mandate on file.
 const prelevementDetails: { label: string; value: string }[] = [
   { label: 'Délai de paiement', value: '15 jours' },
   { label: 'Banque', value: 'Crédit Agricole' },
-  { label: 'Code pays', value: 'FR' },
 ]
 
 // Carte bancaire: the saved cards, one selectable as the active method.
@@ -198,47 +204,31 @@ const goBack = (): void => {
             <div class="h-px w-full bg-border-neutral-tertiary" />
 
             <div class="flex flex-col gap-[24px]">
-              <div class="flex flex-col gap-[16px]">
-                <Alert
-                  type="brand"
-                  leading-text-only
-                  :dismissable="false"
-                  title="Delais de paiement 2x plus rapide avec la carte bancaire."
-                />
-
-                <div class="flex items-stretch gap-[14px]">
-                  <button
-                    type="button"
-                    :class="[
-                      'flex flex-1 min-w-0 flex-col gap-[12px] rounded-[12px] bg-neutral p-[16px] text-left outline-none transition-[border-color,box-shadow,transform] duration-200 ease-out focus-visible:shadow-ring-brand active:scale-[0.99] motion-reduce:transition-none',
-                      selectedMethod === 'prelevement'
-                        ? 'border-2 border-brand'
-                        : 'border border-border-neutral-secondary hover:border-border-neutral',
-                    ]"
-                    @click="selectedMethod = 'prelevement'"
-                  >
-                    <div class="flex w-full items-center">
-                      <Icon name="building-library" variant="outline" :size="24" class="text-icon-neutral-primary" />
-                    </div>
-                    <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Prélévement</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    :class="[
-                      'flex flex-1 min-w-0 flex-col gap-[12px] rounded-[12px] bg-neutral p-[16px] text-left outline-none transition-[border-color,box-shadow,transform] duration-200 ease-out focus-visible:shadow-ring-brand active:scale-[0.99] motion-reduce:transition-none',
-                      selectedMethod === 'cb'
-                        ? 'border-2 border-brand'
-                        : 'border border-border-neutral-secondary hover:border-border-neutral',
-                    ]"
-                    @click="selectedMethod = 'cb'"
-                  >
-                    <div class="flex w-full items-center">
-                      <Icon name="credit-card" variant="outline" :size="24" class="text-icon-neutral-primary" />
-                    </div>
-                    <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Carte bancaire</p>
-                  </button>
-                </div>
+              <div class="flex items-stretch gap-[16px]">
+                <button
+                  v-for="method in paymentMethods"
+                  :key="method.id"
+                  type="button"
+                  :class="[
+                    'flex flex-1 min-w-0 flex-col gap-[12px] rounded-[12px] bg-neutral p-[16px] text-left outline-none transition-[border-color,box-shadow,transform] duration-200 ease-out focus-visible:shadow-ring-brand active:scale-[0.99] motion-reduce:transition-none',
+                    selectedMethod === method.id
+                      ? 'border border-brand'
+                      : 'border border-border-neutral-secondary hover:border-border-neutral',
+                  ]"
+                  @click="selectedMethod = method.id"
+                >
+                  <div class="flex w-full items-center justify-between gap-[8px]">
+                    <Icon :name="method.icon" variant="outline" :size="24" class="shrink-0 text-icon-neutral-primary" />
+                    <span
+                      v-if="method.isDefault"
+                      class="inline-flex shrink-0 items-center justify-center rounded-[16px] border border-border-brand-medium bg-brand-surface px-[10px] py-[2px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-medium"
+                    >Par défaut</span>
+                  </div>
+                  <div class="flex w-full flex-col gap-[2px]">
+                    <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">{{ method.title }}</p>
+                    <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ method.subtitle }}</p>
+                  </div>
+                </button>
               </div>
 
               <div class="flex flex-col gap-[16px]">
