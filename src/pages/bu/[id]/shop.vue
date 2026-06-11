@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
+import mastercardLogo from '@/assets/illustrations/checkout/mastercard.svg'
+import visaLogo from '@/assets/illustrations/checkout/visa.svg'
 
 const headingClass = usePageHeadingClass()
 
@@ -42,19 +44,20 @@ const totalHT = computed<string>(() =>
 const methodLabel = computed<string>(() =>
   selectedMethod.value === 'prelevement' ? 'prélévement' : 'carte bancaire',
 )
-const methodDetails = computed<{ label: string; value: string }[]>(() =>
-  selectedMethod.value === 'prelevement'
-    ? [
-        { label: 'Délai de paiement', value: '15 jours' },
-        { label: 'Banque', value: 'Crédit Agricole' },
-        { label: 'Code pays', value: 'FR' },
-      ]
-    : [
-        { label: 'Type de carte', value: 'Visa' },
-        { label: 'Numéro', value: '•••• 4242' },
-        { label: 'Expiration', value: '12/27' },
-      ],
-)
+
+// Prélèvement: the SEPA mandate on file.
+const prelevementDetails: { label: string; value: string }[] = [
+  { label: 'Délai de paiement', value: '15 jours' },
+  { label: 'Banque', value: 'Crédit Agricole' },
+  { label: 'Code pays', value: 'FR' },
+]
+
+// Carte bancaire: the saved cards, one selectable as the active method.
+const cards = reactive([
+  { id: 'mastercard', label: 'Mastercard ** 1234', expires: 'Expire le 06/12', logo: mastercardLogo, logoClass: 'h-[14px]' },
+  { id: 'visa', label: 'Visa ** 1234', expires: 'Expire le 06/12', logo: visaLogo, logoClass: 'h-[8px]' },
+])
+const selectedCardId = ref('mastercard')
 
 const showSuccessToast = (title: string, description: string): void => {
   if (toastTimer) clearTimeout(toastTimer)
@@ -91,28 +94,28 @@ const goBack = (): void => {
         <!-- Illustration (Figma 8955:2511 — Business charging card, right hand) -->
         <div class="relative h-[88px] w-[96px] shrink-0 overflow-hidden rounded-[24px]">
           <div class="absolute inset-[4.71%_8.33%]">
-            <img src="~/assets/illustrations/checkout-header/background.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
+            <img src="~/assets/illustrations/checkout/background.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
           </div>
           <div class="absolute inset-[41.22%_-1.13%_6.64%_52.15%]">
-            <img src="~/assets/illustrations/checkout-header/vector62.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
+            <img src="~/assets/illustrations/checkout/vector62.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
           </div>
           <div class="absolute inset-[17.03%_26.33%_36.59%_13.67%]">
-            <img src="~/assets/illustrations/checkout-header/card.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
+            <img src="~/assets/illustrations/checkout/card.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
             <div class="absolute inset-[18.78%_25.3%_16.47%_27.71%]">
-              <img src="~/assets/illustrations/checkout-header/circle.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
+              <img src="~/assets/illustrations/checkout/circle.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
             </div>
             <div class="absolute inset-[33.64%_36.09%_31.15%_38.46%]">
               <div class="absolute inset-[0.98%_-0.06%_0.96%_0]">
-                <img src="~/assets/illustrations/checkout-header/logo.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
+                <img src="~/assets/illustrations/checkout/logo.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
               </div>
             </div>
           </div>
           <div class="absolute inset-[53.26%_26.33%_36.59%_58.33%]">
-            <img src="~/assets/illustrations/checkout-header/vector75.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
+            <img src="~/assets/illustrations/checkout/vector75.svg" alt="" class="absolute inset-0 block size-full max-w-none" />
           </div>
           <div class="absolute inset-[38.09%_6.77%_5.41%_40.98%] flex items-center justify-center">
             <div class="h-[35.17px] w-[36.36px] flex-none -scale-x-100 rotate-[35.86deg]">
-              <img src="~/assets/illustrations/checkout-header/thumb.svg" alt="" class="block size-full max-w-none" />
+              <img src="~/assets/illustrations/checkout/thumb.svg" alt="" class="block size-full max-w-none" />
             </div>
           </div>
         </div>
@@ -240,14 +243,76 @@ const goBack = (): void => {
 
               <div class="flex flex-col gap-[16px]">
                 <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Paiement par {{ methodLabel }}</p>
-                <div class="flex flex-col gap-[16px]">
-                  <template v-for="(detail, i) in methodDetails" :key="detail.label">
+
+                <!-- Prélèvement: the SEPA mandate -->
+                <div v-if="selectedMethod === 'prelevement'" class="flex flex-col gap-[16px]">
+                  <template v-for="(detail, i) in prelevementDetails" :key="detail.label">
                     <div v-if="i > 0" class="h-px w-full bg-border-neutral-tertiary" />
                     <div class="flex items-center gap-[16px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
                       <p class="whitespace-nowrap text-text-neutral-secondary">{{ detail.label }}</p>
                       <p class="flex-1 min-w-0 text-right text-text-neutral">{{ detail.value }}</p>
                     </div>
                   </template>
+                </div>
+
+                <!-- Carte bancaire: the saved cards -->
+                <div v-else class="flex flex-col gap-[16px]">
+                  <div
+                    v-for="card in cards"
+                    :key="card.id"
+                    role="radio"
+                    :aria-checked="selectedCardId === card.id"
+                    tabindex="0"
+                    :class="[
+                      'flex flex-col gap-[8px] rounded-[16px] bg-neutral p-[16px] cursor-pointer outline-none transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none',
+                      selectedCardId === card.id
+                        ? 'border border-brand shadow-ring-brand'
+                        : 'border border-border-neutral-secondary hover:border-border-neutral focus-visible:shadow-ring-brand',
+                    ]"
+                    @click="selectedCardId = card.id"
+                    @keydown.enter="selectedCardId = card.id"
+                    @keydown.space.prevent="selectedCardId = card.id"
+                  >
+                    <div class="flex items-center justify-between gap-[16px]">
+                      <div class="flex flex-1 min-w-0 items-center gap-[8px]">
+                        <span class="flex h-[24px] w-[34px] shrink-0 items-center justify-center rounded-[4px] border border-border-neutral-secondary bg-neutral">
+                          <img :src="card.logo" alt="" :class="['block w-auto', card.logoClass]" />
+                        </span>
+                        <p class="flex-1 min-w-0 truncate font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ card.label }}</p>
+                      </div>
+                      <span
+                        v-if="selectedCardId === card.id"
+                        class="flex size-[20px] shrink-0 items-center justify-center rounded-full bg-brand"
+                      >
+                        <span class="size-[7px] rounded-full bg-white" />
+                      </span>
+                      <span v-else class="size-[20px] shrink-0 rounded-full border border-border-neutral bg-neutral" />
+                    </div>
+
+                    <div class="flex items-center justify-between gap-[16px]">
+                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ card.expires }}</p>
+                      <div class="flex shrink-0 items-center gap-[12px]">
+                        <button
+                          type="button"
+                          class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-medium outline-none rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80 focus-visible:shadow-ring-brand"
+                          @click.stop
+                        >Editer</button>
+                        <button
+                          type="button"
+                          class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary outline-none rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80 focus-visible:shadow-ring-gray"
+                          @click.stop
+                        >Supprimer</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="flex h-[100px] w-full items-center justify-center gap-[12px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral outline-none transition-[border-color,background-color] duration-150 ease-out hover:border-border-neutral hover:bg-neutral-secondary focus-visible:shadow-ring-gray motion-reduce:transition-none"
+                  >
+                    <Icon name="plus" variant="outline" :size="24" class="text-icon-neutral-secondary" />
+                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">Nouvelle carte</span>
+                  </button>
                 </div>
               </div>
             </div>
