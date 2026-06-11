@@ -84,7 +84,7 @@ const goBack = (): void => {
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
-    <div class="mx-auto w-full max-w-[1080px] flex flex-col gap-[32px]">
+    <div class="mx-auto w-full max-w-[1500px] flex flex-col gap-[32px]">
 
       <!-- Page header -->
       <header
