@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
-import mastercardLogo from '@/assets/illustrations/checkout/mastercard.svg'
-import visaLogo from '@/assets/illustrations/checkout/visa.svg'
+import mastercardLogo from '@/assets/illustrations/checkout/mastercard.png'
+import visaLogo from '@/assets/illustrations/checkout/visa.png'
 
 const headingClass = usePageHeadingClass()
 
@@ -54,8 +54,8 @@ const prelevementDetails: { label: string; value: string }[] = [
 
 // Carte bancaire: the saved cards, one selectable as the active method.
 const cards = reactive([
-  { id: 'mastercard', label: 'Mastercard ** 1234', expires: 'Expire le 06/12', logo: mastercardLogo, logoClass: 'h-[14px]' },
-  { id: 'visa', label: 'Visa ** 1234', expires: 'Expire le 06/12', logo: visaLogo, logoClass: 'h-[8px]' },
+  { id: 'mastercard', label: 'Mastercard ** 1234', expires: 'Expire le 06/12', logo: mastercardLogo },
+  { id: 'visa', label: 'Visa ** 1234', expires: 'Expire le 06/12', logo: visaLogo },
 ])
 const selectedCardId = ref('mastercard')
 
@@ -275,9 +275,7 @@ const goBack = (): void => {
                   >
                     <div class="flex items-center justify-between gap-[16px]">
                       <div class="flex flex-1 min-w-0 items-center gap-[8px]">
-                        <span class="flex h-[24px] w-[34px] shrink-0 items-center justify-center rounded-[4px] border border-border-neutral-secondary bg-neutral">
-                          <img :src="card.logo" alt="" :class="['block w-auto', card.logoClass]" />
-                        </span>
+                        <img :src="card.logo" alt="" class="block h-[24px] w-[34px] shrink-0 rounded-[4px]" />
                         <p class="flex-1 min-w-0 truncate font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ card.label }}</p>
                       </div>
                       <span
