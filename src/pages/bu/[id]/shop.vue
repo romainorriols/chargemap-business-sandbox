@@ -147,6 +147,7 @@ const goBack = (): void => {
               </div>
               <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Votre panier</p>
             </div>
+            <div class="h-px w-full bg-border-neutral-tertiary" />
 
             <div class="flex flex-col gap-[16px]">
               <template v-for="(line, i) in cart" :key="line.id">
