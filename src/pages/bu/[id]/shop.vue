@@ -76,7 +76,7 @@ const cardFormValid = computed<boolean>(() => isNumberValid.value && isExpiryVal
 
 // Once added, the form is replaced by the saved card; "Supprimer" brings it back.
 const cardSubmitting = ref(false)
-const addedCard = ref<{ label: string; expiry: string; logo: string } | null>(null)
+const addedCard = ref<{ number: string; expiry: string; logo: string } | null>(null)
 
 const showSuccessToast = (title: string, description: string): void => {
   if (toastTimer) clearTimeout(toastTimer)
@@ -135,11 +135,10 @@ const submitCard = (): void => {
   if (!cardFormValid.value || cardSubmitting.value) return
   cardSubmitting.value = true
   const number = cardForm.number.replace(/\s/g, '')
-  const isVisa = number.startsWith('4')
   const card = {
-    label: `${isVisa ? 'Visa' : 'Mastercard'} ** ${number.slice(-4)}`,
-    expiry: `Expire le ${cardForm.expiry}`,
-    logo: isVisa ? visaLogo : mastercardLogo,
+    number: `•••• •••• •••• ${number.slice(-4)}`,
+    expiry: cardForm.expiry,
+    logo: number.startsWith('4') ? visaLogo : mastercardLogo,
   }
   setTimeout(() => {
     addedCard.value = card
@@ -323,26 +322,22 @@ const goBack = (): void => {
                 <div v-else class="flex flex-col gap-[16px] rounded-[16px] border border-border-neutral-secondary bg-neutral p-[16px]">
                   <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Paiement par {{ methodLabel }}</p>
 
-                  <!-- A card was added: show it with a "Supprimer" link back to the form -->
-                  <div v-if="addedCard" class="flex flex-col gap-[8px] rounded-[16px] border border-brand bg-neutral p-[16px] shadow-ring-brand">
-                    <div class="flex items-start justify-between gap-[16px]">
-                      <div class="flex min-w-0 flex-1 items-center gap-[8px]">
-                        <img :src="addedCard.logo" alt="" class="block h-[24px] w-[34px] shrink-0 rounded-[4px]" />
-                        <p class="min-w-0 flex-1 truncate font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ addedCard.label }}</p>
-                      </div>
-                      <span class="flex size-[20px] shrink-0 items-center justify-center rounded-full bg-brand">
-                        <span class="size-[7px] rounded-full bg-white" />
-                      </span>
-                    </div>
+                  <!-- A card was added: its details + a "Supprimer cette carte" button -->
+                  <template v-if="addedCard">
                     <div class="flex items-center justify-between gap-[16px]">
-                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ addedCard.expiry }}</p>
-                      <button
-                        type="button"
-                        class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary outline-none rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80 focus-visible:shadow-ring-gray"
-                        @click="removeCard"
-                      >Supprimer</button>
+                      <p class="whitespace-nowrap font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Numéro de carte</p>
+                      <div class="flex shrink-0 items-center gap-[8px]">
+                        <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ addedCard.number }}</p>
+                        <img :src="addedCard.logo" alt="" class="block h-[24px] w-[34px] shrink-0 rounded-[4px]" />
+                      </div>
                     </div>
-                  </div>
+                    <div class="h-[2px] w-full bg-border-neutral-tertiary" />
+                    <div class="flex items-center gap-[16px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                      <p class="whitespace-nowrap text-text-neutral-secondary">Date d'expiration</p>
+                      <p class="flex-1 min-w-0 text-right text-text-neutral">{{ addedCard.expiry }}</p>
+                    </div>
+                    <Button type="secondary" size="md" label="Supprimer cette carte" class="w-full" @click="removeCard" />
+                  </template>
 
                   <!-- No card yet: the new-card form -->
                   <template v-else>
