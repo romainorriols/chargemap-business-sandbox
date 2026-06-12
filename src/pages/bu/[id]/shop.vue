@@ -227,7 +227,7 @@ const goBack = (): void => {
           >
             <div class="flex items-center gap-[12px]">
               <div class="flex size-[32px] shrink-0 items-center justify-center rounded-[8px] border border-border-neutral-secondary bg-neutral-secondary shadow-sm">
-                <Icon name="shopping-bag" variant="solid" :size="16" class="text-icon-neutral-primary" />
+                <Icon name="shopping-bag" variant="solid" :size="16" class="text-icon-neutral-secondary" />
               </div>
               <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Votre panier</p>
             </div>
@@ -272,7 +272,7 @@ const goBack = (): void => {
           >
             <div class="flex items-center gap-[12px]">
               <div class="flex size-[32px] shrink-0 items-center justify-center rounded-[8px] border border-border-neutral-secondary bg-neutral-secondary shadow-sm">
-                <Icon name="credit-card" variant="solid" :size="16" class="text-icon-neutral-primary" />
+                <Icon name="credit-card" variant="solid" :size="16" class="text-icon-neutral-secondary" />
               </div>
               <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Moyen de paiement</p>
             </div>
@@ -410,7 +410,7 @@ const goBack = (): void => {
           >
             <div class="flex items-center gap-[12px]">
               <div class="flex size-[32px] shrink-0 items-center justify-center rounded-[8px] border border-border-neutral-secondary bg-neutral-secondary shadow-sm">
-                <Icon name="receipt-tax" variant="solid" :size="16" class="text-icon-neutral-primary" />
+                <Icon name="receipt-tax" variant="solid" :size="16" class="text-icon-neutral-secondary" />
               </div>
               <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Numéro de commande</p>
               <Icon name="information-circle" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
@@ -434,7 +434,7 @@ const goBack = (): void => {
           >
             <div class="flex items-center gap-[12px]">
               <div class="flex size-[32px] shrink-0 items-center justify-center rounded-[8px] border border-border-neutral-secondary bg-neutral-secondary shadow-sm">
-                <Icon name="map-pin" variant="solid" :size="16" class="text-icon-neutral-primary" />
+                <Icon name="map-pin" variant="solid" :size="16" class="text-icon-neutral-secondary" />
               </div>
               <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Adresse de livraison</p>
             </div>
@@ -454,7 +454,7 @@ const goBack = (): void => {
             <div class="flex flex-col gap-[16px] p-[24px]">
               <div class="flex items-center gap-[12px]">
                 <div class="flex size-[32px] shrink-0 items-center justify-center rounded-[8px] border border-border-neutral-secondary bg-neutral-secondary shadow-sm">
-                  <Icon name="shopping-bag" variant="solid" :size="16" class="text-icon-neutral-primary" />
+                  <Icon name="shopping-bag" variant="solid" :size="16" class="text-icon-neutral-secondary" />
                 </div>
                 <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Récapitulatif</p>
               </div>
