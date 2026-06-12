@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
-import mastercardLogo from '@/assets/illustrations/checkout/mastercard.png'
-import visaLogo from '@/assets/illustrations/checkout/visa.png'
 
 const headingClass = usePageHeadingClass()
 
@@ -58,12 +56,13 @@ const prelevementDetails: { label: string; value: string }[] = [
   { label: 'Banque', value: 'Crédit Agricole' },
 ]
 
-// Carte bancaire: the saved cards, one selectable as the active method.
-const cards = reactive([
-  { id: 'mastercard', label: 'Mastercard ** 1234', expires: 'Expire le 06/12', logo: mastercardLogo },
-  { id: 'visa', label: 'Visa ** 1234', expires: 'Expire le 06/12', logo: visaLogo },
-])
-const selectedCardId = ref('mastercard')
+// Carte bancaire: the "new card" form. Fields are masked as the user types;
+// regex validation runs on submit, the button enables once all three are filled.
+const cardForm = reactive({ number: '', expiry: '', cvc: '' })
+const cardErrors = reactive({ number: '', expiry: '', cvc: '' })
+const cardFormFilled = computed<boolean>(
+  () => cardForm.number.trim() !== '' && cardForm.expiry.trim() !== '' && cardForm.cvc.trim() !== '',
+)
 
 const showSuccessToast = (title: string, description: string): void => {
   if (toastTimer) clearTimeout(toastTimer)
@@ -82,6 +81,51 @@ const removeLine = (id: string): void => {
 
 const placeOrder = (): void =>
   showSuccessToast('Commande confirmée', 'Votre commande a bien été enregistrée.')
+
+// New-card field masks — keep only digits, group them per the printed format,
+// and clear that field's error as soon as the user edits it again.
+const onCardNumberInput = (value: string): void => {
+  cardForm.number = value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})(?=.)/g, '$1 ')
+  cardErrors.number = ''
+}
+const onExpiryInput = (value: string): void => {
+  const digits = value.replace(/\D/g, '').slice(0, 4)
+  cardForm.expiry = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits
+  cardErrors.expiry = ''
+}
+const onCvcInput = (value: string): void => {
+  cardForm.cvc = value.replace(/\D/g, '').slice(0, 4)
+  cardErrors.cvc = ''
+}
+
+const validateCardForm = (): boolean => {
+  cardErrors.number = /^\d{16}$/.test(cardForm.number.replace(/\s/g, ''))
+    ? ''
+    : 'Numéro de carte invalide'
+
+  const expiry = cardForm.expiry.match(/^(\d{2})\/(\d{2})$/)
+  if (!expiry || Number(expiry[1]) < 1 || Number(expiry[1]) > 12) {
+    cardErrors.expiry = "Date d'expiration invalide"
+  }
+  else {
+    const now = new Date()
+    const expired = (2000 + Number(expiry[2])) * 12 + (Number(expiry[1]) - 1)
+      < now.getFullYear() * 12 + now.getMonth()
+    cardErrors.expiry = expired ? "Date d'expiration dépassée" : ''
+  }
+
+  cardErrors.cvc = /^\d{3,4}$/.test(cardForm.cvc) ? '' : 'Code de sécurité invalide'
+
+  return !cardErrors.number && !cardErrors.expiry && !cardErrors.cvc
+}
+
+const submitCard = (): void => {
+  if (!cardFormFilled.value || !validateCardForm()) return
+  showSuccessToast('Carte ajoutée', '')
+  cardForm.number = ''
+  cardForm.expiry = ''
+  cardForm.cvc = ''
+}
 
 const goBack = (): void => {
   navigateTo(busStore.selectedBuId ? `/bu/${busStore.selectedBuId}/home` : '/')
@@ -203,7 +247,7 @@ const goBack = (): void => {
             </div>
             <div class="h-px w-full bg-border-neutral-tertiary" />
 
-            <div class="flex flex-col gap-[24px]">
+            <div class="flex flex-col gap-[16px]">
               <div class="flex items-stretch gap-[16px]">
                 <button
                   v-for="method in paymentMethods"
@@ -232,75 +276,69 @@ const goBack = (): void => {
               </div>
 
               <div class="flex flex-col gap-[16px]">
-                <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Paiement par {{ methodLabel }}</p>
-
-                <!-- Prélèvement: the SEPA mandate -->
-                <div v-if="selectedMethod === 'prelevement'" class="flex flex-col gap-[16px]">
+                <!-- Prélèvement: the SEPA mandate, in an inset panel -->
+                <div v-if="selectedMethod === 'prelevement'" class="flex flex-col gap-[16px] rounded-[16px] border border-border-neutral-secondary bg-neutral p-[16px]">
+                  <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Paiement par {{ methodLabel }}</p>
                   <template v-for="(detail, i) in prelevementDetails" :key="detail.label">
-                    <div v-if="i > 0" class="h-px w-full bg-border-neutral-tertiary" />
+                    <div v-if="i > 0" class="h-[2px] w-full bg-border-neutral-tertiary" />
                     <div class="flex items-center gap-[16px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
-                      <p class="whitespace-nowrap text-text-neutral-secondary">{{ detail.label }}</p>
+                      <p class="flex-1 min-w-0 text-text-neutral-secondary">{{ detail.label }}</p>
                       <p class="flex-1 min-w-0 text-right text-text-neutral">{{ detail.value }}</p>
                     </div>
                   </template>
                 </div>
 
-                <!-- Carte bancaire: the saved cards -->
-                <div v-else class="flex flex-col gap-[16px]">
-                  <div
-                    v-for="card in cards"
-                    :key="card.id"
-                    role="radio"
-                    :aria-checked="selectedCardId === card.id"
-                    tabindex="0"
-                    :class="[
-                      'flex flex-col gap-[8px] rounded-[16px] bg-neutral p-[16px] cursor-pointer outline-none transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none',
-                      selectedCardId === card.id
-                        ? 'border border-brand shadow-ring-brand'
-                        : 'border border-border-neutral-secondary hover:border-border-neutral focus-visible:shadow-ring-brand',
-                    ]"
-                    @click="selectedCardId = card.id"
-                    @keydown.enter="selectedCardId = card.id"
-                    @keydown.space.prevent="selectedCardId = card.id"
-                  >
-                    <div class="flex items-center justify-between gap-[16px]">
-                      <div class="flex flex-1 min-w-0 items-center gap-[8px]">
-                        <img :src="card.logo" alt="" class="block h-[24px] w-[34px] shrink-0 rounded-[4px]" />
-                        <p class="flex-1 min-w-0 truncate font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ card.label }}</p>
-                      </div>
-                      <span
-                        v-if="selectedCardId === card.id"
-                        class="flex size-[20px] shrink-0 items-center justify-center rounded-full bg-brand"
-                      >
-                        <span class="size-[7px] rounded-full bg-white" />
-                      </span>
-                      <span v-else class="size-[20px] shrink-0 rounded-full border border-border-neutral bg-neutral" />
-                    </div>
+                <!-- Carte bancaire: the new-card form -->
+                <div v-else class="flex flex-col gap-[16px] rounded-[16px] border border-border-neutral-secondary bg-neutral p-[16px]">
+                  <p class="font-sans font-medium text-[18px] leading-[1.5] tracking-[-0.54px] text-text-neutral">Nouvelle carte</p>
 
-                    <div class="flex items-center justify-between gap-[16px]">
-                      <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">{{ card.expires }}</p>
-                      <div class="flex shrink-0 items-center gap-[12px]">
-                        <button
-                          type="button"
-                          class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-brand-medium outline-none rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80 focus-visible:shadow-ring-brand"
-                          @click.stop
-                        >Editer</button>
-                        <button
-                          type="button"
-                          class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary outline-none rounded-[4px] transition-opacity duration-150 ease-out hover:opacity-80 focus-visible:shadow-ring-gray"
-                          @click.stop
-                        >Supprimer</button>
+                  <div class="flex flex-col gap-[16px]">
+                    <Input
+                      :model-value="cardForm.number"
+                      label="Numéro de carte"
+                      placeholder="1234 1234 1234 1234"
+                      inputmode="numeric"
+                      autocomplete="cc-number"
+                      :destructive="!!cardErrors.number"
+                      :hint="cardErrors.number"
+                      @update:model-value="onCardNumberInput"
+                    />
+                    <div class="flex items-start gap-[16px]">
+                      <div class="min-w-0 flex-1">
+                        <Input
+                          :model-value="cardForm.expiry"
+                          label="Date d'expiration"
+                          placeholder="MM / AA"
+                          inputmode="numeric"
+                          autocomplete="cc-exp"
+                          :destructive="!!cardErrors.expiry"
+                          :hint="cardErrors.expiry"
+                          @update:model-value="onExpiryInput"
+                        />
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <Input
+                          :model-value="cardForm.cvc"
+                          label="Code de sécurité"
+                          placeholder="CVC"
+                          inputmode="numeric"
+                          autocomplete="cc-csc"
+                          :destructive="!!cardErrors.cvc"
+                          :hint="cardErrors.cvc"
+                          @update:model-value="onCvcInput"
+                        />
                       </div>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    class="flex h-[100px] w-full items-center justify-center gap-[12px] rounded-[16px] border border-dashed border-border-neutral-secondary bg-neutral outline-none transition-[border-color,background-color] duration-150 ease-out hover:border-border-neutral hover:bg-neutral-secondary focus-visible:shadow-ring-gray motion-reduce:transition-none"
-                  >
-                    <Icon name="plus" variant="outline" :size="24" class="text-icon-neutral-secondary" />
-                    <span class="font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral-secondary">Nouvelle carte</span>
-                  </button>
+                  <Button
+                    type="primary"
+                    size="md"
+                    label="Ajouter cette carte"
+                    class="w-full"
+                    :disabled="!cardFormFilled"
+                    @click="submitCard"
+                  />
                 </div>
               </div>
             </div>
@@ -323,39 +361,6 @@ const goBack = (): void => {
             <div class="flex items-center justify-between">
               <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">01234</p>
               <Button type="tertiaryGray" size="md" icon-only icon-left="pencil" aria-label="Modifier le numéro de commande" />
-            </div>
-          </section>
-
-          <!-- Assignation des coûts -->
-          <section
-            class="anim-fade-up w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[24px] flex flex-col gap-[16px]"
-            style="animation-delay: 180ms"
-          >
-            <div class="flex items-center gap-[12px]">
-              <div class="flex size-[32px] shrink-0 items-center justify-center rounded-[8px] border border-border-neutral-secondary bg-neutral-secondary shadow-sm">
-                <Icon name="document-currency-euro" variant="solid" :size="16" class="text-icon-neutral-primary" />
-              </div>
-              <p class="flex-1 min-w-0 font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">Assignation des coûts</p>
-              <Icon name="information-circle" variant="outline" :size="20" class="shrink-0 text-icon-neutral-secondary" />
-            </div>
-            <div class="h-px w-full bg-border-neutral-tertiary" />
-
-            <div class="flex items-center justify-between gap-[16px]">
-              <div class="flex min-w-0 flex-col gap-[2px]">
-                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">Pack itinérance</p>
-                <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Assigné à 2 véhicules</p>
-              </div>
-              <div class="flex shrink-0 items-center gap-[8px]">
-                <Button type="tertiaryGray" size="md" icon-only icon-left="pencil" aria-label="Modifier l'assignation" />
-                <Button type="tertiaryGray" size="md" icon-only icon-left="trash" aria-label="Retirer l'assignation" />
-              </div>
-            </div>
-
-            <div class="h-px w-full bg-border-neutral-tertiary" />
-
-            <div class="flex items-center justify-between gap-[16px]">
-              <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">Pack recharge sur site d'entreprise</p>
-              <Button type="secondary" size="sm" icon-left="plus" label="Ajouter" class="shrink-0" />
             </div>
           </section>
         </div>
