@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
 import mastercardLogo from '@/assets/illustrations/checkout/mastercard.png'
 import visaLogo from '@/assets/illustrations/checkout/visa.png'
+import type { SecondaryCard } from '~/stores/payment'
 
 const headingClass = usePageHeadingClass()
 
@@ -74,9 +75,17 @@ const isExpiryValid = computed<boolean>(() => {
 const isCvcValid = computed<boolean>(() => /^\d{3,4}$/.test(cardForm.cvc))
 const cardFormValid = computed<boolean>(() => isNumberValid.value && isExpiryValid.value && isCvcValid.value)
 
-// Once added, the form is replaced by the saved card; "Supprimer" brings it back.
+// The added card lives in the shared payment store so the BU settings
+// "Moyen de paiement secondaire" section stays in sync. While submitting we show
+// a 3s loading state; "Supprimer cette carte" clears it back to the form.
+const paymentStore = usePaymentStore()
 const cardSubmitting = ref(false)
-const addedCard = ref<{ number: string; expiry: string; logo: string } | null>(null)
+const addedCard = computed(() => {
+  const c = paymentStore.secondaryCard
+  return c
+    ? { number: c.number, expiry: c.expiry, logo: c.brand === 'visa' ? visaLogo : mastercardLogo }
+    : null
+})
 
 const showSuccessToast = (title: string, description: string): void => {
   if (toastTimer) clearTimeout(toastTimer)
@@ -135,13 +144,13 @@ const submitCard = (): void => {
   if (!cardFormValid.value || cardSubmitting.value) return
   cardSubmitting.value = true
   const number = cardForm.number.replace(/\s/g, '')
-  const card = {
+  const card: SecondaryCard = {
     number: `•••• •••• •••• ${number.slice(-4)}`,
     expiry: cardForm.expiry,
-    logo: number.startsWith('4') ? visaLogo : mastercardLogo,
+    brand: number.startsWith('4') ? 'visa' : 'mastercard',
   }
   setTimeout(() => {
-    addedCard.value = card
+    paymentStore.setSecondaryCard(card)
     showSuccessToast('Carte enregistrée', 'Cette carte a été sauvegardée comme moyen de paiement dans cette BU')
     cardSubmitting.value = false
     cardForm.number = ''
@@ -154,7 +163,7 @@ const submitCard = (): void => {
 }
 
 const removeCard = (): void => {
-  addedCard.value = null
+  paymentStore.clearSecondaryCard()
 }
 
 const goBack = (): void => {

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 const headingClass = usePageHeadingClass()
 import { computed, reactive, ref, watch } from 'vue'
+import mastercardLogo from '@/assets/illustrations/checkout/mastercard.png'
+import visaLogo from '@/assets/illustrations/checkout/visa.png'
 const busStore = useBusStore()
 const uiStore = useUiStore()
+const paymentStore = usePaymentStore()
 const tabs = [
   { id: 'general', label: 'Général' },
   { id: 'facturation', label: 'Facturation' },
@@ -14,6 +17,12 @@ const activeTab = ref<string>('moyen-de-paiement')
 
 const currentBu = computed(() => busStore.bus.find(b => b.id === busStore.selectedBuId) ?? null)
 const pageTitle = computed(() => `${currentBu.value?.name ?? 'Paramètres'} BU`)
+
+// Secondary payment method: the card added at the boutique checkout, shared via
+// the payment store. Read-only here; the trash button clears it (also reflected
+// back in the checkout).
+const secondaryCard = computed(() => paymentStore.secondaryCard)
+const secondaryCardLogo = computed(() => (secondaryCard.value?.brand === 'visa' ? visaLogo : mastercardLogo))
 
 // ── Moyen de paiement tab ─────────────────────────────────────────────────
 const moyenPaiementOptions = [
@@ -291,6 +300,12 @@ const showSuccessToast = (title: string, description: string) => {
         <div class="w-full flex flex-col gap-[16px]">
         <!-- Moyen de paiement tab -->
         <template v-if="activeTab === 'moyen-de-paiement'">
+
+          <!-- ── Moyen de paiement principal ── -->
+          <div class="flex flex-col gap-[2px] leading-[1.5] anim-fade-up" style="animation-delay: 100ms">
+            <p class="font-sans font-medium text-[18px] tracking-[-0.54px] text-text-neutral">Moyen de paiement principal</p>
+            <p class="font-sans font-normal text-[14px] tracking-[-0.42px] text-text-neutral-secondary">Utiliser pour régler les recharges et les commandes par default</p>
+          </div>
 
           <!-- Tertiary-gray frame holding the cards (radio + form, or status + saved bodies).
                Cards remain bg-neutral; the outer fill provides visual separation per Figma. -->
@@ -662,6 +677,48 @@ const showSuccessToast = (title: string, description: string) => {
                 </template>
               </div>
             </Transition>
+          </div>
+
+          <!-- ── Moyen de paiement secondaire (synced from the boutique checkout) ── -->
+          <div class="flex flex-col gap-[16px] anim-fade-up" style="animation-delay: 160ms">
+            <div class="flex flex-col gap-[2px] leading-[1.5]">
+              <p class="font-sans font-medium text-[18px] tracking-[-0.54px] text-text-neutral">Moyen de paiement secondaire</p>
+              <p class="font-sans font-normal text-[14px] tracking-[-0.42px] text-text-neutral-secondary">Permet uniquement de régler les commandes dans la boutique</p>
+            </div>
+
+            <!-- Saved card (added at the boutique checkout) -->
+            <div v-if="secondaryCard" class="w-full bg-neutral-tertiary border border-border-neutral-secondary rounded-[8px] shadow-sm p-[8px] flex flex-col gap-[12px]">
+              <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[16px] flex items-center gap-[8px]">
+                <div class="flex flex-1 min-w-0 items-center gap-[8px]">
+                  <Icon name="check-circle" variant="outline" :size="18" class="shrink-0 text-icon-neutral-secondary" />
+                  <p class="truncate font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">Paiement par carte bancaire activé</p>
+                </div>
+                <Button type="secondary" size="sm" label="Modifier les infos" class="shrink-0" />
+                <Button type="secondary" size="sm" icon-only icon-left="trash" aria-label="Supprimer la carte secondaire" class="shrink-0" @click="paymentStore.clearSecondaryCard()" />
+              </div>
+              <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[24px] flex flex-col gap-[24px]">
+                <div class="flex items-center justify-between gap-[16px]">
+                  <p class="whitespace-nowrap font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Numéro de carte</p>
+                  <div class="flex shrink-0 items-center gap-[8px]">
+                    <p class="font-sans text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">{{ secondaryCard.number }}</p>
+                    <img :src="secondaryCardLogo" alt="" class="block h-[24px] w-[34px] shrink-0 rounded-[4px]" />
+                  </div>
+                </div>
+                <div class="h-[2px] w-full bg-border-neutral-tertiary" />
+                <div class="flex items-center gap-[16px] font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px]">
+                  <p class="shrink-0 whitespace-nowrap text-text-neutral-secondary">Date d'expiration</p>
+                  <p class="flex-1 min-w-0 text-right text-text-neutral">{{ secondaryCard.expiry }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- No card added yet -->
+            <div v-else class="w-full bg-neutral-tertiary border border-border-neutral-secondary rounded-[8px] shadow-sm p-[8px]">
+              <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm px-[24px] py-[32px] flex flex-col items-center justify-center gap-[4px] text-center">
+                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">Aucune carte enregistrée</p>
+                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Ajoutez une carte bancaire depuis la boutique pour l'utiliser comme moyen de paiement secondaire.</p>
+              </div>
+            </div>
           </div>
         </template>
 
