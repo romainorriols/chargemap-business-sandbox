@@ -65,10 +65,11 @@ const prelevementInfo = {
 }
 
 const contactFacturation = ref('')
-// Carte bancaire form state — used when moyenPaiement === 'carte'.
-const numeroCarte = ref('')
-const dateExpiration = ref('')
-const codeSecurite = ref('')
+// Carte bancaire forms (the principal selector + the secondaire add-card form)
+// reuse the boutique checkout's masks, regexes and error messages via the shared
+// composable, so every card form validates identically.
+const carteForm = useCardForm()
+const secondaryForm = useCardForm()
 
 // Banner persists until the user has saved a payment method at least once.
 const hasPaymentMethod = ref(false)
@@ -88,60 +89,6 @@ watch(contactFacturation, () => {
   if (showContactError.value) showContactError.value = false
 })
 
-// ── Carte bancaire field validation ─────────────────────────────────────
-// Each field has a "showXError" flag that flips on invalid Valider and
-// resets as soon as the user types. Format checks strip whitespace so the
-// user can paste "1234 1234 1234 1234" or "11 / 27" without rejection.
-const numeroCarteDigits = computed(() => numeroCarte.value.replace(/\s/g, ''))
-const isNumeroCarteValid = computed(() => /^\d{16}$/.test(numeroCarteDigits.value))
-const dateExpirationCleaned = computed(() => dateExpiration.value.replace(/\s/g, ''))
-const isDateExpirationValid = computed(() => {
-  const m = /^(\d{2})\/(\d{2})$/.exec(dateExpirationCleaned.value)
-  if (!m) return false
-  const month = Number(m[1])
-  return month >= 1 && month <= 12
-})
-const isCodeSecuriteValid = computed(() => /^\d{3,4}$/.test(codeSecurite.value.trim()))
-
-const showNumeroCarteError = ref(false)
-const showDateExpirationError = ref(false)
-const showCodeSecuriteError = ref(false)
-
-watch(numeroCarte, () => {
-  if (showNumeroCarteError.value) showNumeroCarteError.value = false
-})
-watch(dateExpiration, () => {
-  if (showDateExpirationError.value) showDateExpirationError.value = false
-})
-
-// MM/AA input mask — strip non-digits, cap at 4 digits, auto-insert "/" after MM.
-watch(dateExpiration, val => {
-  const digits = val.replace(/\D/g, '').slice(0, 4)
-  const formatted = digits.length <= 2 ? digits : `${digits.slice(0, 2)}/${digits.slice(2)}`
-  if (formatted !== val) dateExpiration.value = formatted
-})
-watch(codeSecurite, () => {
-  if (showCodeSecuriteError.value) showCodeSecuriteError.value = false
-})
-
-const numeroCarteHint = computed(() => {
-  if (!showNumeroCarteError.value) return ''
-  return numeroCarte.value.trim()
-    ? 'Numéro de carte invalide'
-    : 'Veuillez renseigner un numéro de carte'
-})
-const dateExpirationHint = computed(() => {
-  if (!showDateExpirationError.value) return ''
-  return dateExpiration.value.trim()
-    ? 'Format invalide (MM / AA)'
-    : 'Veuillez renseigner une date'
-})
-const codeSecuriteHint = computed(() => {
-  if (!showCodeSecuriteError.value) return ''
-  return codeSecurite.value.trim()
-    ? 'Code invalide'
-    : 'Veuillez renseigner le code'
-})
 
 const onValiderMoyen = () => {
   if (moyenPaiement.value === 'virement') {
@@ -154,20 +101,7 @@ const onValiderMoyen = () => {
     return
   }
   if (moyenPaiement.value === 'carte') {
-    let valid = true
-    if (!isNumeroCarteValid.value) {
-      showNumeroCarteError.value = true
-      valid = false
-    }
-    if (!isDateExpirationValid.value) {
-      showDateExpirationError.value = true
-      valid = false
-    }
-    if (!isCodeSecuriteValid.value) {
-      showCodeSecuriteError.value = true
-      valid = false
-    }
-    if (!valid) return
+    if (!carteForm.isValid) return
     hasPaymentMethod.value = true
     showSuccessToast('Carte bancaire enregistrée', '')
     return
@@ -194,16 +128,29 @@ const savedStatusLabel = computed(() => {
   }
 })
 const displayCardLast4 = computed(() => {
-  const digits = numeroCarte.value.replace(/\s/g, '')
+  const digits = carteForm.form.number.replace(/\s/g, '')
   return digits.slice(-4) || '••••'
 })
 const displayCardExpiration = computed(() => {
   // Accepts "MM/YY" or "MM / YY" → outputs "MM/YY". Falls back to raw input.
-  const cleaned = dateExpiration.value.replace(/\s/g, '')
+  const cleaned = carteForm.form.expiry.replace(/\s/g, '')
   const m = /^(\d{1,2})\/(\d{2})$/.exec(cleaned)
   if (m) return `${m[1].padStart(2, '0')}/${m[2]}`
   return cleaned || '——'
 })
+
+// Secondaire add-card form — saving stores the card so the boutique checkout
+// reflects it too.
+const onValiderSecondary = () => {
+  if (!secondaryForm.isValid) return
+  paymentStore.setSecondaryCard({
+    number: secondaryForm.maskedNumber,
+    expiry: secondaryForm.form.expiry,
+    brand: secondaryForm.brand,
+  })
+  showSuccessToast('Carte enregistrée', 'Cette carte a été sauvegardée comme moyen de paiement dans cette BU')
+  secondaryForm.reset()
+}
 
 // Edit-in-place for the Informations card. Snapshot on enter so Annuler can revert.
 const editingInfo = ref(false)
@@ -425,32 +372,44 @@ const showSuccessToast = (title: string, description: string) => {
                       class="flex flex-col gap-[16px] w-full"
                     >
                       <Input
-                        v-model="numeroCarte"
+                        :model-value="carteForm.form.number"
                         size="md"
                         label="Numéro de carte"
                         placeholder="1234 1234 1234 1234"
-                        :destructive="showNumeroCarteError"
-                        :hint="numeroCarteHint"
+                        inputmode="numeric"
+                        autocomplete="cc-number"
+                        :destructive="!!carteForm.errors.number"
+                        :hint="carteForm.errors.number"
+                        @update:model-value="carteForm.onNumberInput"
+                        @blur="carteForm.validateNumber"
                       />
                       <div class="flex gap-[16px] w-full">
                         <div class="flex-1 min-w-0">
                           <Input
-                            v-model="dateExpiration"
+                            :model-value="carteForm.form.expiry"
                             size="md"
                             label="Date d’expiration"
                             placeholder="MM / AA"
-                            :destructive="showDateExpirationError"
-                            :hint="dateExpirationHint"
+                            inputmode="numeric"
+                            autocomplete="cc-exp"
+                            :destructive="!!carteForm.errors.expiry"
+                            :hint="carteForm.errors.expiry"
+                            @update:model-value="carteForm.onExpiryInput"
+                            @blur="carteForm.validateExpiry"
                           />
                         </div>
                         <div class="flex-1 min-w-0">
                           <Input
-                            v-model="codeSecurite"
+                            :model-value="carteForm.form.cvc"
                             size="md"
                             label="Code de sécurité"
                             placeholder="CVC"
-                            :destructive="showCodeSecuriteError"
-                            :hint="codeSecuriteHint"
+                            inputmode="numeric"
+                            autocomplete="cc-csc"
+                            :destructive="!!carteForm.errors.cvc"
+                            :hint="carteForm.errors.cvc"
+                            @update:model-value="carteForm.onCvcInput"
+                            @blur="carteForm.validateCvc"
                           />
                         </div>
                       </div>
@@ -458,10 +417,17 @@ const showSuccessToast = (title: string, description: string) => {
 
                   </Transition>
 
-                  <!-- CTA — always inside the form card, md size (same for all variants). -->
+                  <!-- CTA — always inside the form card, md size (same for all variants).
+                       Carte stays disabled until the fields pass validation (like the checkout). -->
                   <button
                     type="button"
-                    class="w-full flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] bg-brand text-white font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] outline-none transition-[background-color,transform] duration-200 ease-out hover:bg-brand-hover focus-visible:shadow-ring-brand active:scale-[0.97]"
+                    :disabled="moyenPaiement === 'carte' && !carteForm.isValid"
+                    :class="[
+                      'w-full flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] outline-none transition-[background-color,transform] duration-200 ease-out',
+                      moyenPaiement === 'carte' && !carteForm.isValid
+                        ? 'bg-neutral-disabled text-text-neutral-disabled cursor-not-allowed'
+                        : 'bg-brand text-white hover:bg-brand-hover focus-visible:shadow-ring-brand active:scale-[0.97]',
+                    ]"
                     @click="onValiderMoyen"
                   >
                     {{ moyenPaiementCtaLabel }}
@@ -712,11 +678,71 @@ const showSuccessToast = (title: string, description: string) => {
               </div>
             </div>
 
-            <!-- No card added yet -->
+            <!-- No card yet: the add-card form (same validation as the checkout) -->
             <div v-else class="w-full bg-neutral-tertiary border border-border-neutral-secondary rounded-[8px] shadow-sm p-[8px]">
-              <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm px-[24px] py-[32px] flex flex-col items-center justify-center gap-[4px] text-center">
-                <p class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">Aucune carte enregistrée</p>
-                <p class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">Ajoutez une carte bancaire depuis la boutique pour l'utiliser comme moyen de paiement secondaire.</p>
+              <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[8px] shadow-sm p-[24px] flex flex-col gap-[24px]">
+                <div class="flex flex-col gap-[4px] leading-[1.5]">
+                  <p class="font-sans font-medium text-[18px] tracking-[-0.54px] text-text-neutral">Carte bancaire</p>
+                  <p class="font-sans font-normal text-[14px] tracking-[-0.42px] text-text-neutral-secondary">Renseigner les informations de votre carte bancaire</p>
+                </div>
+                <div class="h-px w-full bg-border-neutral-secondary" />
+                <div class="flex flex-col gap-[16px] w-full">
+                  <Input
+                    :model-value="secondaryForm.form.number"
+                    size="md"
+                    label="Numéro de carte"
+                    placeholder="1234 1234 1234 1234"
+                    inputmode="numeric"
+                    autocomplete="cc-number"
+                    :destructive="!!secondaryForm.errors.number"
+                    :hint="secondaryForm.errors.number"
+                    @update:model-value="secondaryForm.onNumberInput"
+                    @blur="secondaryForm.validateNumber"
+                  />
+                  <div class="flex gap-[16px] w-full">
+                    <div class="flex-1 min-w-0">
+                      <Input
+                        :model-value="secondaryForm.form.expiry"
+                        size="md"
+                        label="Date d’expiration"
+                        placeholder="MM / AA"
+                        inputmode="numeric"
+                        autocomplete="cc-exp"
+                        :destructive="!!secondaryForm.errors.expiry"
+                        :hint="secondaryForm.errors.expiry"
+                        @update:model-value="secondaryForm.onExpiryInput"
+                        @blur="secondaryForm.validateExpiry"
+                      />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <Input
+                        :model-value="secondaryForm.form.cvc"
+                        size="md"
+                        label="Code de sécurité"
+                        placeholder="CVC"
+                        inputmode="numeric"
+                        autocomplete="cc-csc"
+                        :destructive="!!secondaryForm.errors.cvc"
+                        :hint="secondaryForm.errors.cvc"
+                        @update:model-value="secondaryForm.onCvcInput"
+                        @blur="secondaryForm.validateCvc"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  :disabled="!secondaryForm.isValid"
+                  :class="[
+                    'w-full flex items-center justify-center gap-[8px] min-h-[44px] px-[16px] py-[8px] rounded-[8px] font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] outline-none transition-[background-color,transform] duration-200 ease-out',
+                    !secondaryForm.isValid
+                      ? 'bg-neutral-disabled text-text-neutral-disabled cursor-not-allowed'
+                      : 'bg-brand text-white hover:bg-brand-hover focus-visible:shadow-ring-brand active:scale-[0.97]',
+                  ]"
+                  @click="onValiderSecondary"
+                >
+                  Valider
+                </button>
               </div>
             </div>
           </div>

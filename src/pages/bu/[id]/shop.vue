@@ -59,21 +59,9 @@ const prelevementDetails: { label: string; value: string }[] = [
   { label: 'Banque', value: 'Crédit Agricole' },
 ]
 
-// Carte bancaire: the "new card" form. Fields are masked as the user types and
-// validated per field on blur; the submit button enables only once all three
-// pass their format check.
-const cardForm = reactive({ number: '', expiry: '', cvc: '' })
-const cardErrors = reactive({ number: '', expiry: '', cvc: '' })
-
-const isNumberValid = computed<boolean>(() => /^\d{16}$/.test(cardForm.number.replace(/\s/g, '')))
-const isExpiryValid = computed<boolean>(() => {
-  const m = cardForm.expiry.match(/^(\d{2})\/(\d{2})$/)
-  if (!m || Number(m[1]) < 1 || Number(m[1]) > 12) return false
-  const now = new Date()
-  return (2000 + Number(m[2])) * 12 + (Number(m[1]) - 1) >= now.getFullYear() * 12 + now.getMonth()
-})
-const isCvcValid = computed<boolean>(() => /^\d{3,4}$/.test(cardForm.cvc))
-const cardFormValid = computed<boolean>(() => isNumberValid.value && isExpiryValid.value && isCvcValid.value)
+// Carte bancaire form — masks, regex validation and per-field errors come from
+// the shared composable so the checkout and the BU settings forms behave alike.
+const card = useCardForm()
 
 // The added card lives in the shared payment store so the BU settings
 // "Moyen de paiement secondaire" section stays in sync. While submitting we show
@@ -105,60 +93,19 @@ const removeLine = (id: string): void => {
 const placeOrder = (): void =>
   showSuccessToast('Commande confirmée', 'Votre commande a bien été enregistrée.')
 
-// New-card field masks — keep only digits, group them per the printed format,
-// and clear that field's error as soon as the user edits it again.
-const onCardNumberInput = (value: string): void => {
-  cardForm.number = value.replace(/\D/g, '').slice(0, 16).replace(/(.{4})(?=.)/g, '$1 ')
-  cardErrors.number = ''
-}
-const onExpiryInput = (value: string): void => {
-  const digits = value.replace(/\D/g, '').slice(0, 4)
-  cardForm.expiry = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits
-  cardErrors.expiry = ''
-}
-const onCvcInput = (value: string): void => {
-  cardForm.cvc = value.replace(/\D/g, '').slice(0, 4)
-  cardErrors.cvc = ''
-}
-
-// Surface a field's error once the user has filled it and left it (on blur).
-// An empty field shows no error — it just keeps the submit button disabled.
-const validateNumber = (): void => {
-  cardErrors.number = !cardForm.number || isNumberValid.value ? '' : 'Numéro de carte invalide'
-}
-const validateExpiry = (): void => {
-  if (!cardForm.expiry) {
-    cardErrors.expiry = ''
-    return
-  }
-  const m = cardForm.expiry.match(/^(\d{2})\/(\d{2})$/)
-  cardErrors.expiry = !m || Number(m[1]) < 1 || Number(m[1]) > 12
-    ? "Date d'expiration invalide"
-    : isExpiryValid.value ? '' : "Date d'expiration dépassée"
-}
-const validateCvc = (): void => {
-  cardErrors.cvc = !cardForm.cvc || isCvcValid.value ? '' : 'Code de sécurité invalide'
-}
-
 const submitCard = (): void => {
-  if (!cardFormValid.value || cardSubmitting.value) return
+  if (!card.isValid || cardSubmitting.value) return
   cardSubmitting.value = true
-  const number = cardForm.number.replace(/\s/g, '')
-  const card: SecondaryCard = {
-    number: `•••• •••• •••• ${number.slice(-4)}`,
-    expiry: cardForm.expiry,
-    brand: number.startsWith('4') ? 'visa' : 'mastercard',
+  const saved: SecondaryCard = {
+    number: card.maskedNumber,
+    expiry: card.form.expiry,
+    brand: card.brand,
   }
   setTimeout(() => {
-    paymentStore.setSecondaryCard(card)
+    paymentStore.setSecondaryCard(saved)
     showSuccessToast('Carte enregistrée', 'Cette carte a été sauvegardée comme moyen de paiement dans cette BU')
     cardSubmitting.value = false
-    cardForm.number = ''
-    cardForm.expiry = ''
-    cardForm.cvc = ''
-    cardErrors.number = ''
-    cardErrors.expiry = ''
-    cardErrors.cvc = ''
+    card.reset()
   }, 3000)
 }
 
@@ -352,41 +299,41 @@ const goBack = (): void => {
                   <template v-else>
                     <div class="flex flex-col gap-[16px]">
                       <Input
-                        :model-value="cardForm.number"
+                        :model-value="card.form.number"
                         label="Numéro de carte"
                         placeholder="1234 1234 1234 1234"
                         inputmode="numeric"
                         autocomplete="cc-number"
-                        :destructive="!!cardErrors.number"
-                        :hint="cardErrors.number"
-                        @update:model-value="onCardNumberInput"
-                        @blur="validateNumber"
+                        :destructive="!!card.errors.number"
+                        :hint="card.errors.number"
+                        @update:model-value="card.onNumberInput"
+                        @blur="card.validateNumber"
                       />
                       <div class="flex items-start gap-[16px]">
                         <div class="min-w-0 flex-1">
                           <Input
-                            :model-value="cardForm.expiry"
+                            :model-value="card.form.expiry"
                             label="Date d'expiration"
                             placeholder="MM / AA"
                             inputmode="numeric"
                             autocomplete="cc-exp"
-                            :destructive="!!cardErrors.expiry"
-                            :hint="cardErrors.expiry"
-                            @update:model-value="onExpiryInput"
-                            @blur="validateExpiry"
+                            :destructive="!!card.errors.expiry"
+                            :hint="card.errors.expiry"
+                            @update:model-value="card.onExpiryInput"
+                            @blur="card.validateExpiry"
                           />
                         </div>
                         <div class="min-w-0 flex-1">
                           <Input
-                            :model-value="cardForm.cvc"
+                            :model-value="card.form.cvc"
                             label="Code de sécurité"
                             placeholder="CVC"
                             inputmode="numeric"
                             autocomplete="cc-csc"
-                            :destructive="!!cardErrors.cvc"
-                            :hint="cardErrors.cvc"
-                            @update:model-value="onCvcInput"
-                            @blur="validateCvc"
+                            :destructive="!!card.errors.cvc"
+                            :hint="card.errors.cvc"
+                            @update:model-value="card.onCvcInput"
+                            @blur="card.validateCvc"
                           />
                         </div>
                       </div>
@@ -398,7 +345,7 @@ const goBack = (): void => {
                       label="Ajouter cette carte"
                       class="w-full"
                       :loading="cardSubmitting"
-                      :disabled="!cardFormValid"
+                      :disabled="!card.isValid"
                       @click="submitCard"
                     />
                   </template>
