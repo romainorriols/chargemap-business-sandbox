@@ -56,13 +56,21 @@ const prelevementDetails: { label: string; value: string }[] = [
   { label: 'Banque', value: 'Crédit Agricole' },
 ]
 
-// Carte bancaire: the "new card" form. Fields are masked as the user types;
-// regex validation runs on submit, the button enables once all three are filled.
+// Carte bancaire: the "new card" form. Fields are masked as the user types and
+// validated per field on blur; the submit button enables only once all three
+// pass their format check.
 const cardForm = reactive({ number: '', expiry: '', cvc: '' })
 const cardErrors = reactive({ number: '', expiry: '', cvc: '' })
-const cardFormFilled = computed<boolean>(
-  () => cardForm.number.trim() !== '' && cardForm.expiry.trim() !== '' && cardForm.cvc.trim() !== '',
-)
+
+const isNumberValid = computed<boolean>(() => /^\d{16}$/.test(cardForm.number.replace(/\s/g, '')))
+const isExpiryValid = computed<boolean>(() => {
+  const m = cardForm.expiry.match(/^(\d{2})\/(\d{2})$/)
+  if (!m || Number(m[1]) < 1 || Number(m[1]) > 12) return false
+  const now = new Date()
+  return (2000 + Number(m[2])) * 12 + (Number(m[1]) - 1) >= now.getFullYear() * 12 + now.getMonth()
+})
+const isCvcValid = computed<boolean>(() => /^\d{3,4}$/.test(cardForm.cvc))
+const cardFormValid = computed<boolean>(() => isNumberValid.value && isExpiryValid.value && isCvcValid.value)
 
 const showSuccessToast = (title: string, description: string): void => {
   if (toastTimer) clearTimeout(toastTimer)
@@ -98,33 +106,34 @@ const onCvcInput = (value: string): void => {
   cardErrors.cvc = ''
 }
 
-const validateCardForm = (): boolean => {
-  cardErrors.number = /^\d{16}$/.test(cardForm.number.replace(/\s/g, ''))
-    ? ''
-    : 'Numéro de carte invalide'
-
-  const expiry = cardForm.expiry.match(/^(\d{2})\/(\d{2})$/)
-  if (!expiry || Number(expiry[1]) < 1 || Number(expiry[1]) > 12) {
-    cardErrors.expiry = "Date d'expiration invalide"
+// Surface a field's error once the user has filled it and left it (on blur).
+// An empty field shows no error — it just keeps the submit button disabled.
+const validateNumber = (): void => {
+  cardErrors.number = !cardForm.number || isNumberValid.value ? '' : 'Numéro de carte invalide'
+}
+const validateExpiry = (): void => {
+  if (!cardForm.expiry) {
+    cardErrors.expiry = ''
+    return
   }
-  else {
-    const now = new Date()
-    const expired = (2000 + Number(expiry[2])) * 12 + (Number(expiry[1]) - 1)
-      < now.getFullYear() * 12 + now.getMonth()
-    cardErrors.expiry = expired ? "Date d'expiration dépassée" : ''
-  }
-
-  cardErrors.cvc = /^\d{3,4}$/.test(cardForm.cvc) ? '' : 'Code de sécurité invalide'
-
-  return !cardErrors.number && !cardErrors.expiry && !cardErrors.cvc
+  const m = cardForm.expiry.match(/^(\d{2})\/(\d{2})$/)
+  cardErrors.expiry = !m || Number(m[1]) < 1 || Number(m[1]) > 12
+    ? "Date d'expiration invalide"
+    : isExpiryValid.value ? '' : "Date d'expiration dépassée"
+}
+const validateCvc = (): void => {
+  cardErrors.cvc = !cardForm.cvc || isCvcValid.value ? '' : 'Code de sécurité invalide'
 }
 
 const submitCard = (): void => {
-  if (!cardFormFilled.value || !validateCardForm()) return
+  if (!cardFormValid.value) return
   showSuccessToast('Carte ajoutée', '')
   cardForm.number = ''
   cardForm.expiry = ''
   cardForm.cvc = ''
+  cardErrors.number = ''
+  cardErrors.expiry = ''
+  cardErrors.cvc = ''
 }
 
 const goBack = (): void => {
@@ -302,6 +311,7 @@ const goBack = (): void => {
                       :destructive="!!cardErrors.number"
                       :hint="cardErrors.number"
                       @update:model-value="onCardNumberInput"
+                      @blur="validateNumber"
                     />
                     <div class="flex items-start gap-[16px]">
                       <div class="min-w-0 flex-1">
@@ -314,6 +324,7 @@ const goBack = (): void => {
                           :destructive="!!cardErrors.expiry"
                           :hint="cardErrors.expiry"
                           @update:model-value="onExpiryInput"
+                          @blur="validateExpiry"
                         />
                       </div>
                       <div class="min-w-0 flex-1">
@@ -326,6 +337,7 @@ const goBack = (): void => {
                           :destructive="!!cardErrors.cvc"
                           :hint="cardErrors.cvc"
                           @update:model-value="onCvcInput"
+                          @blur="validateCvc"
                         />
                       </div>
                     </div>
@@ -336,7 +348,7 @@ const goBack = (): void => {
                     size="md"
                     label="Ajouter cette carte"
                     class="w-full"
-                    :disabled="!cardFormFilled"
+                    :disabled="!cardFormValid"
                     @click="submitCard"
                   />
                 </div>
