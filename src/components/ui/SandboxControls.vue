@@ -1,29 +1,19 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS } from '~/stores/ui'
 import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
 import type { ConnectionScenario } from '~/stores/vehicles'
 
-// Sandbox-only floating control center. A single FAB at the bottom-right
-// opens a small popover that lists every dev / demo toggle (nav V2 vs V1,
-// empty state on/off, …). Adding a new toggle = appending one entry to
-// the `controls` array — no extra component, no extra fixed pill.
-const navStore = useNavStore()
-const uiStore = useUiStore()
+// Sandbox-only floating control center (FAB bottom-right + popover).
+// Vehicles prototype branch: the generic demo options (nav, empty state, max width)
+// are removed; the panel only exists on a vehicle page, to switch its connection
+// scenario (statuses + compatibility cases).
 const route = useRoute()
-
-// Max-width is stored per-page so each page keeps an independent value.
-// The popover always reflects the page the user is currently looking at.
-const currentPageKey = computed(() => pageKeyForPath(route.path))
-const currentMaxWidth = computed(() => uiStore.getMaxWidth(currentPageKey.value))
-// Vehicles prototype: no demo options on the listing; on a vehicle page the panel
-// only offers the connection scenario switcher (statuses + compatibility cases).
-const isHidden = computed<boolean>(() => /^\/bu\/[^/]+\/vehicles\/?$/.test(route.path))
 const vehicleId = computed<string | null>(() => route.path.match(/^\/bu\/[^/]+\/vehicles\/([^/]+)/)?.[1] ?? null)
 
 const vehiclesStore = useVehiclesStore()
 const currentVehicle = computed(() => (vehicleId.value ? vehiclesStore.byId(vehicleId.value) : null))
+const isHidden = computed<boolean>(() => !currentVehicle.value)
 const SCENARIO_ITEMS: DropdownItem[] = [
   { value: 'NOT_CONNECTED', label: 'Non connecté' },
   { value: 'REQUESTED', label: 'Invitation envoyée' },
@@ -65,25 +55,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
   document.removeEventListener('pointerdown', onPointerDown)
 })
-
-interface Control {
-  label: string
-  value: boolean
-  set: (v: boolean) => void
-}
-
-const controls = computed<Control[]>(() => [
-  {
-    label: 'Nav V2',
-    value: navStore.isNavV2,
-    set: (v) => { navStore.isNavV2 = v },
-  },
-  {
-    label: 'Empty state',
-    value: uiStore.showEmptyState,
-    set: (v) => { uiStore.showEmptyState = v },
-  },
-])
 </script>
 
 <template>
@@ -105,8 +76,7 @@ const controls = computed<Control[]>(() => [
         <p class="px-[8px] pt-[4px] pb-[8px] font-sans font-semibold text-[11px] uppercase tracking-[0.6px] text-text-neutral-secondary">
           Sandbox
         </p>
-        <!-- Vehicle page: connection scenario only -->
-        <div v-if="currentVehicle" class="flex flex-col gap-[6px] px-[8px] py-[8px] w-[260px]">
+        <div class="flex flex-col gap-[6px] px-[8px] py-[8px] w-[260px]">
           <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
             Statut connexion
           </span>
@@ -121,49 +91,6 @@ const controls = computed<Control[]>(() => [
             @update:model-value="onScenarioChange"
           />
         </div>
-
-        <template v-else>
-        <div
-          v-for="c in controls"
-          :key="c.label"
-          class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px] transition-colors duration-150 ease-out hover:bg-neutral-secondary motion-reduce:transition-none"
-        >
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-            {{ c.label }}
-          </span>
-          <Toggle
-            :model-value="c.value"
-            size="sm"
-            :aria-label="c.label"
-            @update:model-value="c.set"
-          />
-        </div>
-
-        <!-- Max-width selector — applies to the current page only.
-             Each page persists its own value in the UI store. -->
-        <div class="flex items-center justify-between gap-[16px] px-[8px] py-[8px] rounded-[8px]">
-          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
-            Max width
-          </span>
-          <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
-            <button
-              v-for="w in SANDBOX_MAX_WIDTH_OPTIONS"
-              :key="w"
-              type="button"
-              :class="[
-                'px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] tabular-nums outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
-                currentMaxWidth === w
-                  ? 'bg-neutral text-text-neutral shadow-sm'
-                  : 'text-text-neutral-secondary hover:text-text-neutral',
-              ]"
-              :aria-pressed="currentMaxWidth === w"
-              @click="uiStore.setMaxWidth(currentPageKey, w)"
-            >
-              {{ w }}
-            </button>
-          </div>
-        </div>
-        </template>
       </div>
     </Transition>
 
