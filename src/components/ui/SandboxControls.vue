@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { pageKeyForPath, SANDBOX_MAX_WIDTH_OPTIONS } from '~/stores/ui'
+import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
+import type { ConnectionScenario } from '~/stores/vehicles'
 
 // Sandbox-only floating control center. A single FAB at the bottom-right
 // opens a small popover that lists every dev / demo toggle (nav V2 vs V1,
@@ -15,6 +17,32 @@ const route = useRoute()
 // The popover always reflects the page the user is currently looking at.
 const currentPageKey = computed(() => pageKeyForPath(route.path))
 const currentMaxWidth = computed(() => uiStore.getMaxWidth(currentPageKey.value))
+// Vehicles prototype: no demo options on the listing; on a vehicle page the panel
+// only offers the connection scenario switcher (statuses + compatibility cases).
+const isHidden = computed<boolean>(() => /^\/bu\/[^/]+\/vehicles\/?$/.test(route.path))
+const vehicleId = computed<string | null>(() => route.path.match(/^\/bu\/[^/]+\/vehicles\/([^/]+)/)?.[1] ?? null)
+
+const vehiclesStore = useVehiclesStore()
+const currentVehicle = computed(() => (vehicleId.value ? vehiclesStore.byId(vehicleId.value) : null))
+const SCENARIO_ITEMS: DropdownItem[] = [
+  { value: 'NOT_CONNECTED', label: 'Non connecté' },
+  { value: 'REQUESTED', label: 'Invitation envoyée' },
+  { value: 'IN_PROGRESS', label: 'En attente' },
+  { value: 'CONNECTED', label: 'Connecté' },
+  { value: 'ACTION_REQUIRED', label: 'Action requise' },
+  { value: 'FAILED', label: 'Échec de connexion' },
+  { value: 'DISCONNECTED', label: 'Déconnecté' },
+  { value: 'NOT_COMPATIBLE', label: 'Non compatible' },
+  { value: 'UNKNOWN', label: 'Compatibilité inconnue' },
+]
+const currentScenario = computed<string>(() => {
+  const v = currentVehicle.value
+  if (!v) return ''
+  return v.compatibility === 'COMPATIBLE' ? v.connectionStatus : v.compatibility
+})
+const onScenarioChange = (value: string | string[]) => {
+  if (vehicleId.value) vehiclesStore.setScenario(vehicleId.value, String(value) as ConnectionScenario)
+}
 
 const open = ref(false)
 const rootRef = ref<HTMLElement | null>(null)
@@ -59,7 +87,7 @@ const controls = computed<Control[]>(() => [
 </script>
 
 <template>
-  <div ref="rootRef" class="fixed bottom-[16px] right-[16px] z-50 flex flex-col items-end gap-[8px]">
+  <div v-if="!isHidden" ref="rootRef" class="fixed bottom-[16px] right-[16px] z-50 flex flex-col items-end gap-[8px]">
     <Transition
       enter-active-class="transition-[opacity,transform] duration-[200ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
       enter-from-class="opacity-0 translate-y-[6px] scale-[0.96]"
@@ -77,6 +105,24 @@ const controls = computed<Control[]>(() => [
         <p class="px-[8px] pt-[4px] pb-[8px] font-sans font-semibold text-[11px] uppercase tracking-[0.6px] text-text-neutral-secondary">
           Sandbox
         </p>
+        <!-- Vehicle page: connection scenario only -->
+        <div v-if="currentVehicle" class="flex flex-col gap-[6px] px-[8px] py-[8px] w-[260px]">
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+            Statut connexion
+          </span>
+          <Dropdown
+            :model-value="currentScenario"
+            :items="SCENARIO_ITEMS"
+            size="sm"
+            :show-label="false"
+            :show-hint="false"
+            :searchable="false"
+            placeholder="Choisir un statut"
+            @update:model-value="onScenarioChange"
+          />
+        </div>
+
+        <template v-else>
         <div
           v-for="c in controls"
           :key="c.label"
@@ -117,6 +163,7 @@ const controls = computed<Control[]>(() => [
             </button>
           </div>
         </div>
+        </template>
       </div>
     </Transition>
 

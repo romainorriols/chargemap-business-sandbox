@@ -76,17 +76,39 @@ const displayValue = computed(() => {
 
 // Teleported menu uses `position: fixed` so it must be re-positioned manually
 // (top/left/width derived from the trigger's bounding rect). Captured below.
-const menuPos = ref<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 })
+const menuPos = ref<{ top: number; bottom: number; left: number; width: number }>({ top: 0, bottom: 0, left: 0, width: 0 })
+
+// Open upward when the menu (max 360px, see DropdownMenu) doesn't fit below the
+// trigger and there is more room above — e.g. a dropdown at the bottom of a page.
+const MENU_MAX_HEIGHT = 360 + 8
+const openUpward = ref(false)
+function updateDirection() {
+  if (!container.value) return
+  const r = container.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - r.bottom
+  openUpward.value = spaceBelow < MENU_MAX_HEIGHT && r.top > spaceBelow
+}
 
 function updateMenuPos() {
   if (!container.value) return
   const r = container.value.getBoundingClientRect()
-  menuPos.value = { top: r.bottom + 4, left: r.left, width: r.width }
+  menuPos.value = { top: r.bottom + 4, bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width }
 }
+
+const menuStyle = computed(() => {
+  if (!props.teleport) return undefined
+  const { top, bottom, left, width } = menuPos.value
+  return openUpward.value
+    ? { bottom: `${bottom}px`, left: `${left}px`, width: `${width}px` }
+    : { top: `${top}px`, left: `${left}px`, width: `${width}px` }
+})
 
 const toggle = () => {
   if (props.disabled) return
-  if (!isOpen.value && props.teleport) updateMenuPos()
+  if (!isOpen.value) {
+    updateDirection()
+    if (props.teleport) updateMenuPos()
+  }
   isOpen.value = !isOpen.value
 }
 
@@ -176,10 +198,11 @@ onUnmounted(() => {
           v-if="isOpen"
           ref="menuEl"
           :class="[
-            'z-50 origin-top will-change-[opacity,transform]',
-            teleport ? 'fixed' : 'absolute top-full mt-1 left-0 right-0',
+            'z-50 will-change-[opacity,transform]',
+            openUpward ? 'origin-bottom' : 'origin-top',
+            teleport ? 'fixed' : ['absolute left-0 right-0', openUpward ? 'bottom-full mb-1' : 'top-full mt-1'],
           ]"
-          :style="teleport ? { top: `${menuPos.top}px`, left: `${menuPos.left}px`, width: `${menuPos.width}px` } : undefined"
+          :style="menuStyle"
         >
           <DropdownMenu
             :size="size"

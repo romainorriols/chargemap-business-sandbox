@@ -1,9 +1,20 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue'
 
+export type HorizontalTabBadgeTone = 'blue' | 'orange' | 'rose'
+
 export interface HorizontalTab {
   id: string
   label: string
+  // Optional status pill next to the label (underline variant only)
+  badge?: { label: string; tone: HorizontalTabBadgeTone }
+}
+
+// DS "PillColor" Sm colors (Figma [BU] Véhicules, horizontal-tabs badge)
+const BADGE_TONE_CLASSES: Record<HorizontalTabBadgeTone, string> = {
+  blue: 'bg-[#f0f6ff] border-[#91c3fd] text-[#2463eb]',
+  orange: 'bg-[#fff6eb] border-[#fed6a9] text-[#e9590c]',
+  rose: 'bg-[#fff0f1] border-[#fecdd3] text-[#e21d48]',
 }
 
 type Variant = 'pill' | 'underline'
@@ -110,7 +121,7 @@ onMounted(async () => {
         role="tab"
         :aria-selected="tab.id === modelValue"
         :class="[
-          'relative pb-[8px] px-[4px] outline-none rounded-[4px] focus-visible:shadow-ring-gray',
+          'relative flex items-center gap-[8px] pb-[8px] px-[4px] outline-none rounded-[4px] focus-visible:shadow-ring-gray',
           'font-sans font-semibold text-[16px] leading-[1.5] tracking-[-0.48px] whitespace-nowrap',
           'transition-colors duration-150 ease-out active:scale-[0.98]',
           tab.id === modelValue
@@ -120,6 +131,15 @@ onMounted(async () => {
         @click="emit('update:modelValue', tab.id)"
       >
         {{ tab.label }}
+        <span
+          v-if="tab.badge"
+          :class="[
+            'inline-flex items-center px-[8px] py-[2px] rounded-full border font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px]',
+            BADGE_TONE_CLASSES[tab.badge.tone],
+          ]"
+        >
+          {{ tab.badge.label }}
+        </span>
       </button>
       <span
         class="pointer-events-none absolute -bottom-[1px] left-0 h-[2px] bg-brand rounded-[1px]"
