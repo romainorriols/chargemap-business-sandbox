@@ -159,6 +159,8 @@ const finishSelfConnection = (ids: string[], manualCount = 0, remainingCount = 0
     kind: 'connect',
     vehicles: linked.map(id => vehiclesStore.byId(id)).filter((v): v is Vehicle => !!v),
     incompatible: incompatible.value,
+    // "Plus tard" in the match popup: these vehicles now wait in "À associer"
+    toMatch: remainingCount ? matchGroups.value.flatMap(g => g.candidates) : [],
     autoCount: linked.length - manualCount,
     manualCount,
     remainingCount,

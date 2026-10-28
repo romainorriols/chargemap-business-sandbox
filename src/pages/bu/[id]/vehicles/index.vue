@@ -48,6 +48,7 @@ const confirmMatch = (matches: { vehicleId: string; vin: string }[]) => {
     autoCount: linkedIds.length - matches.length,
     manualCount: matches.length,
     remainingCount: pendingCount.value,
+    toMatch: matchGroups.value.flatMap(g => g.candidates),
   }
   isResultOpen.value = true
 }

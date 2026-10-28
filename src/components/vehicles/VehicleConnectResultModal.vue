@@ -8,12 +8,14 @@ import { vehiclePhotoUrl } from '~/utils/vehicleCatalog'
 // - connect: vehicles of a manufacturer account, now "En attente" (+ match counts)
 // - invite: drivers invited together, now "Invitation envoyée"
 // - connect with incompatible vehicles (year read from the account): Compatibles /
-//   Incompatibles tabs (Figma modale-confirmation-connexion-incompatibles)
+//   Incompatibles tabs (Figma modale-confirmation-connexion-incompatibles), plus an
+//   "À associer" tab when some vehicles are still waiting for their VIN
 // The list loads by batches (lazy).
 export interface ConnectResult {
   kind?: 'connect' | 'invite'
   vehicles: Vehicle[]
   incompatible?: Vehicle[]
+  toMatch?: Vehicle[]
   autoCount: number
   manualCount: number
   remainingCount: number
@@ -26,15 +28,24 @@ const FIRST_BATCH = 3
 const BATCH = 5
 const visibleCount = ref(FIRST_BATCH)
 const isLoadingMore = ref(false)
-const listTab = ref<'compatibles' | 'incompatibles'>('compatibles')
+type ListTab = 'compatibles' | 'incompatibles' | 'to-match'
+const listTab = ref<ListTab>('compatibles')
 
 const incompatibleVehicles = computed<Vehicle[]>(() => result.incompatible ?? [])
+const toMatchVehicles = computed<Vehicle[]>(() => result.toMatch ?? [])
 const hasIncompatible = computed<boolean>(() => incompatibleVehicles.value.length > 0)
-const LIST_TABS: HorizontalTab[] = [
+// Tabs only when there is something besides the linked vehicles
+const listTabs = computed<HorizontalTab[]>(() => [
   { id: 'compatibles', label: 'Compatibles' },
-  { id: 'incompatibles', label: 'Incompatibles' },
-]
-const listedVehicles = computed<Vehicle[]>(() => (listTab.value === 'incompatibles' ? incompatibleVehicles.value : result.vehicles))
+  ...(hasIncompatible.value ? [{ id: 'incompatibles', label: 'Incompatibles' }] : []),
+  ...(toMatchVehicles.value.length ? [{ id: 'to-match', label: 'À associer' }] : []),
+])
+const LISTS: Record<ListTab, () => Vehicle[]> = {
+  'compatibles': () => result.vehicles,
+  'incompatibles': () => incompatibleVehicles.value,
+  'to-match': () => toMatchVehicles.value,
+}
+const listedVehicles = computed<Vehicle[]>(() => LISTS[listTab.value]())
 
 const resetList = () => {
   visibleCount.value = FIRST_BATCH
@@ -111,7 +122,7 @@ const rowClass = 'flex items-center gap-[12px] px-[16px] py-[10px] border-t bord
         </div>
       </div>
 
-      <HorizontalTabs v-if="hasIncompatible" v-model="listTab" :tabs="LIST_TABS" full-width />
+      <HorizontalTabs v-if="listTabs.length > 1" v-model="listTab" :tabs="listTabs" full-width />
 
       <!-- Linked (or incompatible) vehicles: first batch, then lazy-loaded by 5 -->
       <ul class="flex flex-col max-h-[300px] overflow-y-auto rounded-[12px] border border-border-neutral-secondary">
