@@ -29,6 +29,7 @@ interface Props {
   searchable?: boolean
   footer?: boolean
   searchPlaceholder?: string
+  maxHeight?: number // px, list scrolls beyond it
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -112,7 +113,8 @@ const itemInnerClass = (item: DropdownItem) => {
 <template>
   <!-- Menu container -->
   <div
-    class="bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] w-full max-h-[360px] flex flex-col overflow-hidden"
+    class="bg-neutral border border-border-neutral-tertiary rounded-[8px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] w-full flex flex-col overflow-hidden"
+    :style="{ maxHeight: `${maxHeight ?? 360}px` }"
   >
     <!-- Search (sticky, non-scrollable) -->
     <div v-if="searchable" class="px-[12px] pt-[12px] pb-[4px] w-full shrink-0">

@@ -3,6 +3,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { HorizontalTab } from '~/components/ui/HorizontalTabs.vue'
 import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
 import type { Vehicle } from '~/stores/vehicles'
+import type { MatchGroup } from '~/components/vehicles/VehicleMatchModal.vue'
+import type { ConnectResult } from '~/components/vehicles/VehicleConnectResultModal.vue'
 import vehicleIllustration from '~/assets/illustrations/vehicle-header.png'
 
 // Vehicles listing (Figma "listing-1-vehicules"). Compatibility has its own text
@@ -28,7 +30,30 @@ const compatibilityItems: DropdownItem[] = [
   { value: 'UNKNOWN', label: 'Compatibilité inconnue' },
 ]
 
+// ─── Vehicles waiting for a VIN match (all brands) ───────────────────────────
+const isMatchOpen = ref(false)
+const isResultOpen = ref(false)
+const matchResult = ref<ConnectResult>({ vehicles: [], autoCount: 0, manualCount: 0, remainingCount: 0 })
+const pendingCount = computed<number>(() => vehiclesStore.pendingMatches.reduce((n, g) => n + g.vins.length, 0))
+const matchGroups = computed<MatchGroup[]>(() => vehiclesStore.pendingMatches.map(g => ({
+  label: g.label,
+  vins: g.vins,
+  candidates: g.candidateIds.map(id => vehiclesStore.byId(id)).filter((v): v is Vehicle => !!v),
+})))
+const confirmMatch = (matches: { vehicleId: string; vin: string }[]) => {
+  const linkedIds = vehiclesStore.resolveMatches(matches)
+  isMatchOpen.value = false
+  matchResult.value = {
+    vehicles: linkedIds.map(id => vehiclesStore.byId(id)).filter((v): v is Vehicle => !!v),
+    autoCount: linkedIds.length - matches.length,
+    manualCount: matches.length,
+    remainingCount: pendingCount.value,
+  }
+  isResultOpen.value = true
+}
+
 const connectionItems: DropdownItem[] = [
+  { value: 'TO_MATCH', label: 'À associer' },
   { value: 'NOT_CONNECTED', label: 'Non connecté' },
   { value: 'REQUESTED', label: 'Invitation envoyée' },
   { value: 'IN_PROGRESS', label: 'En attente' },
@@ -71,20 +96,24 @@ const COMPATIBILITY_LABELS: Record<Vehicle['compatibility'], string> = {
 }
 
 const openVehicle = (v: Vehicle) => navigateTo(`/bu/${route.params.id}/vehicles/${v.id}`)
+// Compatible but never connected: the row offers a CTA straight to the Données tab
+const canConnect = (v: Vehicle): boolean => v.compatibility === 'COMPATIBLE' && v.connectionStatus === 'NOT_CONNECTED'
+const connectVehicle = (v: Vehicle) => navigateTo(`/bu/${route.params.id}/vehicles/${v.id}?tab=donnees`)
 
 // Skeleton loading
 const isLoading = ref(true)
 onMounted(() => { setTimeout(() => { isLoading.value = false }, 600) })
 const skeletonRows = Array.from({ length: 9 }, (_, i) => i)
 
-// Column widths follow the Figma table proportions (220/240/140/120/150/200).
+// Column widths sized on the longest content of each column (+ 32px padding),
+// extra width shared in the same proportions. Total min = 950px (scroll below).
 const COL = {
-  vehicle: 'flex-[220] min-w-[180px]',
-  driver: 'flex-[240] min-w-[220px]',
-  badge: 'flex-[140] min-w-[120px]',
-  mileage: 'flex-[120] min-w-[110px]',
-  compatibility: 'flex-[150] min-w-[130px]',
-  connection: 'flex-[200] min-w-[190px]',
+  vehicle: 'flex-[200] min-w-[200px]',
+  driver: 'flex-[160] min-w-[160px]',
+  badge: 'flex-[160] min-w-[160px]',
+  mileage: 'flex-[110] min-w-[110px]',
+  compatibility: 'flex-[140] min-w-[140px]',
+  connection: 'flex-[180] min-w-[180px]',
 }
 const headerCell = 'px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary whitespace-nowrap'
 const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans text-[14px] leading-[1.5] tracking-[-0.42px]'
@@ -93,6 +122,20 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
     <div class="mx-auto w-full max-w-[1280px] flex flex-col gap-[32px]">
+
+      <!-- Vehicles found on manufacturer accounts but not matched yet (all brands),
+           at the top of the page like the vehicle page banner -->
+      <Banner
+        v-if="pendingCount"
+        type="warning"
+        :text="`${pendingCount} véhicules trouvés sur vos comptes constructeur restent à associer à leur immatriculation.`"
+        action-label="Associer"
+        icon-left=""
+        icon-right=""
+        class="anim-fade-up"
+        style="animation-delay: 0ms"
+        @action="isMatchOpen = true"
+      />
 
       <!-- Page header -->
       <div class="flex items-center justify-between gap-[16px] anim-fade-up" style="animation-delay: 0ms">
@@ -146,6 +189,7 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
               menu-type="multiselect"
               icon="link"
               :searchable="false"
+              :menu-max-height="240"
               :placeholder="connectionFilter.length ? `${connectionFilter.length} sélectionné(s)` : 'Statut de connexion'"
               :show-label="false"
               :show-hint="false"
@@ -163,9 +207,9 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
               <!-- Header row -->
               <div class="flex items-stretch w-full bg-neutral-tertiary min-h-[40px]">
                 <div :class="[COL.vehicle, headerCell]">Véhicule</div>
-                <div :class="[COL.driver, headerCell]">Conducteur / Immatriculation</div>
+                <div :class="[COL.driver, headerCell]">Conducteur / Plaque</div>
                 <div :class="[COL.badge, headerCell]">Badge</div>
-                <div :class="[COL.mileage, headerCell]">Kilométrage</div>
+                <div :class="[COL.mileage, 'justify-end', headerCell]">Kilométrage</div>
                 <div :class="[COL.compatibility, 'gap-[6px]', headerCell]">
                   <Icon name="information-circle" :size="16" class="shrink-0" />
                   Compatibilité
@@ -186,7 +230,7 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
                   <div :class="[COL.vehicle, bodyCell]"><Skeleton width="60%" /></div>
                   <div :class="[COL.driver, 'gap-[6px]', bodyCell]"><Skeleton width="55%" /><Skeleton width="35%" /></div>
                   <div :class="[COL.badge, bodyCell]"><Skeleton width="60%" /></div>
-                  <div :class="[COL.mileage, bodyCell]"><Skeleton width="70%" /></div>
+                  <div :class="[COL.mileage, 'items-end', bodyCell]"><Skeleton width="70%" /></div>
                   <div :class="[COL.compatibility, bodyCell]"><Skeleton width="65%" /></div>
                   <div :class="[COL.connection, bodyCell]"><Skeleton width="110px" height="24px" rounded="9999px" /></div>
                 </div>
@@ -202,15 +246,18 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
 
               <!-- Body rows -->
               <div v-else class="flex flex-col">
-                <button
+                <!-- Row is a div (not a <button>) so it can hold the "Connecter" CTA -->
+                <div
                   v-for="(v, vi) in paginated"
                   :key="v.id"
-                  type="button"
+                  role="button"
+                  tabindex="0"
                   :class="[
-                    'flex items-stretch w-full min-h-[66px] text-left outline-none transition-colors duration-150 ease-out hover:bg-neutral-secondary focus-visible:bg-neutral-secondary',
+                    'flex items-stretch w-full min-h-[66px] text-left cursor-pointer outline-none transition-colors duration-150 ease-out hover:bg-neutral-secondary focus-visible:bg-neutral-secondary',
                     vi < paginated.length - 1 ? 'border-b border-[#f1f5f9]' : '',
                   ]"
                   @click="openVehicle(v)"
+                  @keydown.enter.self="openVehicle(v)"
                 >
                   <div :class="[COL.vehicle, bodyCell]">
                     <span class="font-normal text-text-neutral truncate">{{ vehicleName(v) }}</span>
@@ -220,9 +267,16 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
                     <span :class="['font-normal truncate', v.driver ? 'text-text-neutral-secondary' : 'text-text-neutral']">{{ v.plate }}</span>
                   </div>
                   <div :class="[COL.badge, bodyCell]">
-                    <span class="font-normal text-text-neutral truncate">{{ v.badge ?? 'Aucun' }}</span>
+                    <!-- Badge code as a blue link (same recipe as supervised charges) -->
+                    <a
+                      v-if="v.badge"
+                      href="#"
+                      class="font-normal text-[#1e40af] hover:underline truncate"
+                      @click.stop.prevent
+                    >{{ v.badge }}</a>
+                    <span v-else class="font-normal text-text-neutral truncate">Aucun</span>
                   </div>
-                  <div :class="[COL.mileage, bodyCell]">
+                  <div :class="[COL.mileage, 'items-end', bodyCell]">
                     <span class="font-normal text-text-neutral tabular-nums whitespace-nowrap">{{ formatMileage(v.mileage) }}</span>
                   </div>
                   <div :class="[COL.compatibility, bodyCell]">
@@ -232,10 +286,13 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
                   </div>
                   <!-- Connection only makes sense for compatible vehicles -->
                   <div :class="[COL.connection, 'items-start', bodyCell]">
-                    <ConnectionBadge v-if="v.compatibility === 'COMPATIBLE'" :status="v.connectionStatus" />
+                    <span v-if="canConnect(v)" @click.stop>
+                      <Button :type="vehiclesStore.connectCtaType" size="sm" label="Connecter" icon-left="link" @click="connectVehicle(v)" />
+                    </span>
+                    <ConnectionBadge v-else-if="v.compatibility === 'COMPATIBLE'" :status="v.connectionStatus" />
                     <span v-else class="font-normal text-text-neutral-secondary">—</span>
                   </div>
-                </button>
+                </div>
               </div>
 
             </div>
@@ -262,5 +319,15 @@ const bodyCell = 'px-[16px] py-[12px] flex flex-col justify-center font-sans tex
         Les campagnes kilométriques ne font pas partie de ce prototype.
       </div>
     </div>
+
+    <!-- Same popup as after a connection, with every brand's pending vehicles -->
+    <VehicleMatchModal
+      :open="isMatchOpen"
+      :groups="matchGroups"
+      @close="isMatchOpen = false"
+      @later="isMatchOpen = false"
+      @confirm="confirmMatch"
+    />
+    <VehicleConnectResultModal :open="isResultOpen" brand="" :result="matchResult" @close="isResultOpen = false" />
   </div>
 </template>

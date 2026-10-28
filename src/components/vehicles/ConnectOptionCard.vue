@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // One of the two connection choices (invite the driver / connect myself), Figma
 // connexion-1-*: radio header; when selected, numbered steps + footer slot (checkbox, CTA).
-// Steps use **…** to mark the emphasized words.
-const { title, selected, steps } = defineProps<{ title: string; selected: boolean; steps: string[] }>()
+// Steps use **…** to mark the emphasized words. `single`: the only choice, so no radio.
+const { title, selected, steps, single = false } = defineProps<{ title: string; selected: boolean; steps: string[]; single?: boolean }>()
 const emit = defineEmits<{ select: [] }>()
 
 const segments = (step: string) => step.split('**').map((text, i) => ({ text, bold: i % 2 === 1 }))
@@ -10,7 +10,11 @@ const segments = (step: string) => step.split('**').map((text, i) => ({ text, bo
 
 <template>
   <div class="w-full bg-neutral border border-border-neutral-secondary rounded-[16px] shadow-sm overflow-hidden">
+    <p v-if="single" class="flex items-center w-full p-[16px] min-h-[76px] font-sans font-medium text-[16px] leading-[1.5] tracking-[-0.48px] text-text-neutral">
+      {{ title }}
+    </p>
     <button
+      v-else
       type="button"
       role="radio"
       :aria-checked="selected"

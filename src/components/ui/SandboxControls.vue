@@ -6,14 +6,19 @@ import type { ConnectionScenario } from '~/stores/vehicles'
 
 // Sandbox-only floating control center (FAB bottom-right + popover).
 // Vehicles prototype branch: the generic demo options (nav, empty state, max width)
-// are removed; the panel only exists on a vehicle page, to switch its connection
-// scenario (statuses + compatibility cases).
+// are removed. The panel only exists on the vehicles listing (style of the
+// "Connecter" CTA) and on a vehicle page (connection scenario switcher).
 const route = useRoute()
 const vehicleId = computed<string | null>(() => route.path.match(/^\/bu\/[^/]+\/vehicles\/([^/]+)/)?.[1] ?? null)
+const isListing = computed<boolean>(() => /^\/bu\/[^/]+\/vehicles\/?$/.test(route.path))
 
 const vehiclesStore = useVehiclesStore()
 const currentVehicle = computed(() => (vehicleId.value ? vehiclesStore.byId(vehicleId.value) : null))
-const isHidden = computed<boolean>(() => !currentVehicle.value)
+const isHidden = computed<boolean>(() => !currentVehicle.value && !isListing.value)
+const CTA_STYLES = [
+  { value: 'secondary', label: 'Secondaire' },
+  { value: 'tertiaryGray', label: 'Tertiaire gris' },
+] as const
 const SCENARIO_ITEMS: DropdownItem[] = [
   { value: 'NOT_CONNECTED', label: 'Non connecté' },
   { value: 'REQUESTED', label: 'Invitation envoyée' },
@@ -76,7 +81,32 @@ onBeforeUnmount(() => {
         <p class="px-[8px] pt-[4px] pb-[8px] font-sans font-semibold text-[11px] uppercase tracking-[0.6px] text-text-neutral-secondary">
           Sandbox
         </p>
-        <div class="flex flex-col gap-[6px] px-[8px] py-[8px] w-[260px]">
+        <!-- Listing: style of the "Connecter" CTA -->
+        <div v-if="isListing" class="flex flex-col gap-[6px] px-[8px] py-[8px] w-[260px]">
+          <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
+            Bouton « Connecter »
+          </span>
+          <div class="inline-flex items-center p-[2px] rounded-[8px] bg-neutral-secondary border border-border-neutral-tertiary">
+            <button
+              v-for="s in CTA_STYLES"
+              :key="s.value"
+              type="button"
+              :class="[
+                'flex-1 px-[8px] py-[2px] rounded-[6px] font-sans font-medium text-[12px] leading-[1.5] tracking-[-0.36px] whitespace-nowrap outline-none focus-visible:shadow-ring-gray transition-[background-color,color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
+                vehiclesStore.connectCtaType === s.value
+                  ? 'bg-neutral text-text-neutral shadow-sm'
+                  : 'text-text-neutral-secondary hover:text-text-neutral',
+              ]"
+              :aria-pressed="vehiclesStore.connectCtaType === s.value"
+              @click="vehiclesStore.connectCtaType = s.value"
+            >
+              {{ s.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Vehicle page: connection scenario -->
+        <div v-else class="flex flex-col gap-[6px] px-[8px] py-[8px] w-[260px]">
           <span class="font-sans font-medium text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral">
             Statut connexion
           </span>
@@ -90,6 +120,11 @@ onBeforeUnmount(() => {
             placeholder="Choisir un statut"
             @update:model-value="onScenarioChange"
           />
+        </div>
+
+        <!-- Back to the seed fleet (statuses, VINs, notes…) to replay the flows -->
+        <div class="mt-[4px] pt-[8px] px-[8px] pb-[4px] border-t border-border-neutral-secondary">
+          <Button type="tertiaryGray" size="sm" label="Réinitialiser la démo" icon-left="arrow-path" @click="vehiclesStore.resetDemo()" />
         </div>
       </div>
     </Transition>

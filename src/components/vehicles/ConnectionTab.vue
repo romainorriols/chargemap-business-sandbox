@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { ConnectionStatus, Vehicle } from '~/stores/vehicles'
+import type { ConnectionStatus, Vehicle, VehicleEdit } from '~/stores/vehicles'
+import { COMPATIBLE_FROM_YEAR } from '~/stores/vehicles'
+import type { DropdownItem } from '~/components/ui/DropdownMenu.vue'
+import type { MatchGroup } from '~/components/vehicles/VehicleMatchModal.vue'
+import type { ConnectResult } from '~/components/vehicles/VehicleConnectResultModal.vue'
 
 // "Données" tab of the vehicle detail page: connection status and flows
 // (Figma connexion-par-le-conducteur / -par-le-gestionnaire / cas-d-erreur / compatibilite).
-const { vehicle } = defineProps<{ vehicle: Vehicle }>()
-const emit = defineEmits<{ toast: [title: string, description: string]; changeModel: []; goTab: [tab: string] }>()
+// draft: the vehicle with the page's unsaved edits, shown in the details form
+const { vehicle, draft } = defineProps<{ vehicle: Vehicle; draft: Vehicle }>()
+const emit = defineEmits<{ toast: [title: string, description: string]; edit: [patch: Partial<VehicleEdit>]; changeModel: []; removeModel: []; goTab: [tab: string] }>()
 
 const vehiclesStore = useVehiclesStore()
 
@@ -25,60 +30,89 @@ const driverFirstName = computed<string | null>(() => vehicle.driver?.split(' ')
 const isCompatible = computed<boolean>(() => vehicle.compatibility === 'COMPATIBLE')
 const status = computed<ConnectionStatus>(() => vehicle.connectionStatus)
 const isLinked = computed<boolean>(() => status.value === 'IN_PROGRESS' || status.value === 'CONNECTED')
+// Action required on a driver's vehicle: the driver is re-invited, nothing for the manager to choose
+const waitsForDriver = computed<boolean>(() => status.value === 'ACTION_REQUIRED' && !!vehicle.driver)
+
+// ─── "À associer": pick this vehicle's VIN among the ones left on its account ─
+const pendingGroup = computed(() => vehiclesStore.pendingMatches.find(g => g.candidateIds.includes(vehicle.id)) ?? null)
+const vinItems = computed<DropdownItem[]>(() => (pendingGroup.value?.vins ?? []).map(v => ({ value: v, label: v })))
+const vinToMatch = ref('')
+watch(() => vehicle.id, () => { vinToMatch.value = '' })
+const matchThisVehicle = () => {
+  const linkedIds = vehiclesStore.resolveMatches([{ vehicleId: vehicle.id, vin: vinToMatch.value }])
+  vinToMatch.value = ''
+  const others = linkedIds.length - 1
+  emit('toast', 'Véhicule associé', others
+    ? `Le dernier véhicule du groupe a aussi été associé. ${linkedIds.length} véhicules en attente de leurs premières données.`
+    : 'Le véhicule est en attente de ses premières données.')
+}
 
 // Header subtitle + alert per state (texts from Figma)
 const view = computed<{ subtitle: string; alert: { type: AlertType; title: string; description?: string } }>(() => {
   if (vehicle.compatibility === 'UNKNOWN') {
     return { subtitle: SUBTITLES.compatibility, alert: { type: 'neutral', title: 'Compatibilité inconnue', description: 'Nous vous invitons à renseigner le modèle de ce véhicule ci-dessous pour connaître sa compatibilité.' } }
   }
+  // Compatible model, but too old (e.g. year read from the manufacturer account)
+  const fromYear = COMPATIBLE_FROM_YEAR[`${vehicle.brand} ${vehicle.model}`]
+  if (vehicle.compatibility === 'NOT_COMPATIBLE' && fromYear) {
+    return { subtitle: SUBTITLES.compatibility, alert: { type: 'neutral', title: 'Ce véhicule n’est pas compatible', description: `Il date de ${vehicle.year} : la ${vehicle.model} n’est compatible avec la connexion en direct qu’à partir de ${fromYear}.` } }
+  }
   if (vehicle.compatibility === 'NOT_COMPATIBLE') {
-    return { subtitle: SUBTITLES.compatibility, alert: { type: 'neutral', title: 'Ce véhicule n’est pas compatible', description: 'Malheureusement, ce modèle ne permet pas de faire remonter automatiquement le kilométrage et les recharges.' } }
+    // The model itself can't be connected (vs. a compatible model that is too old, above)
+    return { subtitle: SUBTITLES.compatibility, alert: { type: 'neutral', title: 'Ce modèle n’est pas compatible', description: 'La connexion en direct n’est pas disponible pour ce modèle : le kilométrage et les recharges ne peuvent pas remonter automatiquement.' } }
   }
   const name = driverFirstName.value
   switch (status.value) {
     case 'REQUESTED':
       return { subtitle: SUBTITLES.connect, alert: { type: 'brand', title: `Connexion demandée. ${name ?? 'Le conducteur'} a reçu une invitation pour connecter ce véhicule.` } }
     case 'IN_PROGRESS':
-      return { subtitle: SUBTITLES.linked, alert: { type: 'brand', title: 'Liaison en cours de validation, cela peut prendre jusqu’à 30 min.' } }
+      return { subtitle: SUBTITLES.linked, alert: { type: 'brand', title: 'En attente de la réception des premières données.' } }
     case 'CONNECTED':
       return { subtitle: SUBTITLES.linked, alert: { type: 'success', title: `Véhicule connecté. Données reçues pour la dernière fois le ${today}.` } }
     case 'ACTION_REQUIRED':
-      return { subtitle: SUBTITLES.reconnect, alert: { type: 'warning', title: 'L’autorisation de partage a expiré', description: 'Choisissez ci-dessous qui reconnecte le véhicule.' } }
+      // With a driver, he is invited automatically to reconnect (Figma erreur-1-action-requise)
+      return waitsForDriver.value
+        ? { subtitle: SUBTITLES.reconnect, alert: { type: 'warning', title: `Action requise par ${name}`, description: 'La connexion avec ce véhicule a été suspendue : nous avons invité le conducteur à établir une nouvelle connexion.' } }
+        : { subtitle: SUBTITLES.reconnect, alert: { type: 'warning', title: 'L’autorisation de partage a expiré', description: 'Reconnectez le véhicule ci-dessous.' } }
     case 'FAILED':
       return { subtitle: SUBTITLES.connect, alert: { type: 'danger', title: 'La connexion n’a pas abouti', description: 'Réessayez en choisissant ci-dessous qui connecte le véhicule. Si le problème persiste, contactez notre support.' } }
     case 'DISCONNECTED':
       return { subtitle: SUBTITLES.reconnect, alert: { type: 'warning', title: 'Ce véhicule a été déconnecté', description: `Il n’a transmis aucune donnée pendant plus de ${DISCONNECTED_AFTER_DAYS} jours. Reconnectez-le pour que les données remontent à nouveau.` } }
+    case 'TO_MATCH':
+      return { subtitle: SUBTITLES.connect, alert: { type: 'warning', title: 'Véhicule à associer', description: `Il a été trouvé sur le compte ${vehicle.brand}, avec d’autres du même modèle et de la même année : choisissez son VIN pour terminer la connexion.` } }
     default:
-      return {
-        subtitle: SUBTITLES.connect,
-        alert: { type: 'neutral', title: name ? 'Véhicule non connecté. Choisissez qui le connecte : son conducteur ou vous.' : 'Véhicule non connecté. Aucun conducteur n’est rattaché : vous pouvez le connecter vous-même.' },
-      }
+      // Not connected yet: without the year, compatibility can't be guaranteed (not blocking)
+      return vehicle.year
+        ? { subtitle: SUBTITLES.connect, alert: { type: 'brand', title: 'Le modèle et l’année de ce véhicule sont compatibles avec la connexion en direct', description: 'Activez-la dès maintenant.' } }
+        : { subtitle: SUBTITLES.connect, alert: { type: 'neutral', title: 'L’année de ce véhicule n’est pas renseignée', description: `Nous ne pouvons pas garantir sa compatibilité : elle sera vérifiée lors de la connexion, où vous pourrez aussi choisir vos autres véhicules ${vehicle.brand}.` } }
   }
 })
 
 // ─── Connection options (not connected, invitation sent, error states) ───────
 const option = ref<Option>(vehicle.driver ? 'invite' : 'self')
-const alsoOthers = ref(false)
+// "Also the other drivers" checkbox: inviting stays opt-in
+const alsoInvite = ref(false)
 watch(() => vehicle.id, () => { option.value = vehicle.driver ? 'invite' : 'self' })
 
-// "connecter" / "reconnecter" / "réessayer" wording depending on the state
+// Options framed by who holds the manufacturer account (Figma connexion-1-*):
+// a single title each, then 2 steps once selected.
+// "connecter" / "reconnecter" / "réessayer" depends on the state.
 const optionTitles = computed<Record<Option, string>>(() => {
   const name = driverFirstName.value
-  if (status.value === 'FAILED') return { invite: `Inviter ${name} à réessayer la connexion`, self: 'Réessayer moi-même la connexion' }
-  if (status.value === 'ACTION_REQUIRED' || status.value === 'DISCONNECTED') return { invite: `Inviter ${name} à reconnecter ce véhicule`, self: 'Reconnecter moi-même ce véhicule' }
-  return { invite: `Inviter ${name} à connecter ce véhicule`, self: 'Connecter moi-même ce véhicule' }
+  if (status.value === 'FAILED') return { invite: `Inviter ${name} à réessayer la connexion`, self: 'Je réessaie moi-même avec le compte constructeur' }
+  if (status.value === 'ACTION_REQUIRED' || status.value === 'DISCONNECTED') return { invite: `Inviter ${name} à reconnecter ce véhicule`, self: 'Je reconnecte moi-même avec le compte constructeur' }
+  return { invite: `Inviter ${name} à connecter ce véhicule`, self: 'Je connecte moi-même avec le compte constructeur' }
 })
 const inviteSteps = computed<string[]>(() => [
   `${driverFirstName.value} reçoit **un lien** par e-mail et dans l’app Chargemap.`,
-  'Il se connecte avec les **identifiants de son compte constructeur**.',
-  '**Les données remontent** automatiquement. Vous suivez le statut ici.',
+  'Il se connecte à **son compte constructeur**. Les données remontent ensuite automatiquement.',
 ])
-const SELF_STEPS = [
-  'Cliquez sur **Connecter le véhicule** : une fenêtre de connexion sécurisée s’ouvre.',
-  'Connectez-vous avec les **identifiants du compte constructeur** du véhicule.',
-  '**Autorisez le partage**. Les données remontent ensuite automatiquement.',
-]
-// The "also the others" checkbox only makes sense for a first connection
+const selfSteps = computed<string[]>(() => [
+  'Connectez-vous au **compte constructeur** dans la fenêtre sécurisée.',
+  `**Choisissez les véhicules ${vehicle.brand}** du compte à partager et autorisez le partage.`,
+])
+// Bringing the other vehicles along (invite checkbox, vehicles picked in the
+// manufacturer window) only applies to a first connection
 const showAlsoOthers = computed<boolean>(() => status.value === 'NOT_CONNECTED' || status.value === 'REQUESTED')
 
 // Other vehicles the checkbox applies to
@@ -91,22 +125,100 @@ const otherSameBrand = computed<Vehicle[]>(() =>
 const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
 
 const sendInvitation = () => {
-  const others = showAlsoOthers.value && alsoOthers.value ? otherDriversToInvite.value : []
-  vehiclesStore.sendInvitation([vehicle.id, ...others.map(v => v.id)])
-  emit('toast', 'Invitation envoyée', others.length
-    ? `${driverFirstName.value} et ${plural(others.length, 'autre conducteur')} ont reçu un lien de connexion.`
-    : `${driverFirstName.value} a reçu un lien par e-mail et dans l’app Chargemap.`)
-  alsoOthers.value = false
+  const others = showAlsoOthers.value && alsoInvite.value ? otherDriversToInvite.value : []
+  const ids = [vehicle.id, ...others.map(v => v.id)]
+  vehiclesStore.sendInvitation(ids)
+  alsoInvite.value = false
+  if (!others.length) return emit('toast', 'Invitation envoyée', `${driverFirstName.value} a reçu un lien par e-mail et dans l’app Chargemap.`)
+  // Several drivers invited: same recap modal as a multi-vehicle connection
+  connectResult.value = { kind: 'invite', vehicles: ids.map(id => vehiclesStore.byId(id)).filter((v): v is Vehicle => !!v), autoCount: 0, manualCount: 0, remainingCount: 0 }
+  isResultOpen.value = true
 }
 const resendInvitation = () => emit('toast', 'Invitation relancée', `${driverFirstName.value} a reçu un nouveau lien de connexion.`)
 
+// Several vehicles linked at once: recap modal instead of a toast
+const isResultOpen = ref(false)
+const connectResult = ref<ConnectResult>({ kind: 'connect', vehicles: [], autoCount: 0, manualCount: 0, remainingCount: 0 })
+
+// Selected vehicles whose year (read from the account) isn't compatible: not linked
+const incompatible = ref<Vehicle[]>([])
+
+// Linked vehicles get the VIN returned by the manufacturer account
+const finishSelfConnection = (ids: string[], manualCount = 0, remainingCount = 0) => {
+  const linked = ids.filter(id => !incompatible.value.some(v => v.id === id))
+  linked.forEach((id) => {
+    const v = vehiclesStore.byId(id)
+    if (v && !v.vin) vehiclesStore.updateInfo(id, { vin: fakeVin(v) })
+  })
+  vehiclesStore.connectSelf(linked)
+  if (linked.length === 1 && !incompatible.value.length) return emit('toast', 'Partage autorisé', 'Le véhicule est en attente de ses premières données.')
+  if (!linked.length && incompatible.value.length === 1) {
+    return emit('toast', 'Véhicule non compatible', `D’après le compte constructeur, il date de ${vehicle.year} : ce modèle n’est pas compatible avec la connexion en direct.`)
+  }
+  connectResult.value = {
+    kind: 'connect',
+    vehicles: linked.map(id => vehiclesStore.byId(id)).filter((v): v is Vehicle => !!v),
+    incompatible: incompatible.value,
+    autoCount: linked.length - manualCount,
+    manualCount,
+    remainingCount,
+  }
+  isResultOpen.value = true
+}
+
+// ─── Matching the manufacturer account's vehicles (VIN) with the fleet ───────
+// Prototype: the account returns one VIN per selected vehicle. Business can only
+// match a VIN on its own when the vehicle is the only one of its model + year
+// without a VIN; otherwise the manager resolves it in the match modal.
+// Plausible Renault-like VIN (17 chars), unrelated to the plate so the demo isn't guessable
+const fakeVin = (v: Vehicle) => `VF1RFB00${String(Number(v.id.slice(2)) * 7919 + 104729).padStart(9, '0')}`
+const isMatchOpen = ref(false)
+const autoMatched = ref<Vehicle[]>([])
+const matchGroups = ref<MatchGroup[]>([])
+
 const connectSelf = () => {
-  const others = showAlsoOthers.value && alsoOthers.value ? otherSameBrand.value : []
-  vehiclesStore.connectSelf([vehicle.id, ...others.map(v => v.id)])
-  alsoOthers.value = false
-  emit('toast', 'Partage autorisé', others.length
-    ? `${plural(others.length + 1, 'véhicule')} en cours de liaison, cela peut prendre jusqu’à 30 min.`
-    : 'Liaison en cours de validation, cela peut prendre jusqu’à 30 min.')
+  // Prototype: in the manufacturer window (Smartcar), the manager ticked every compatible
+  // vehicle of the brand, so they all come back with this one
+  const selected = showAlsoOthers.value ? otherSameBrand.value : []
+  // Back from the account: the year of each vehicle is known, some may turn out not compatible
+  const incompatibleIds = vehiclesStore.applyAccountYears([vehicle.id, ...selected.map(v => v.id)])
+  incompatible.value = incompatibleIds.map(id => vehiclesStore.byId(id)).filter((v): v is Vehicle => !!v)
+  const others = selected.filter(v => !incompatibleIds.includes(v.id))
+  const byModelYear = new Map<string, Vehicle[]>()
+  others.filter(v => !v.vin).forEach(v => {
+    const key = `${v.model}|${v.year}`
+    byModelYear.set(key, [...(byModelYear.get(key) ?? []), v])
+  })
+  const ambiguous = [...byModelYear.values()].filter(list => list.length > 1)
+  if (!ambiguous.length) return finishSelfConnection([vehicle.id, ...others.map(v => v.id)])
+
+  const ambiguousIds = ambiguous.flat().map(v => v.id)
+  autoMatched.value = others.filter(v => !ambiguousIds.includes(v.id))
+  matchGroups.value = ambiguous.map(list => ({
+    label: `${list[0].brand} ${list[0].model}${list[0].year ? ` · ${list[0].year}` : ''}`,
+    vins: list.map(fakeVin),
+    candidates: list,
+  }))
+  isMatchOpen.value = true
+}
+const confirmMatch = (matches: { vehicleId: string; vin: string }[]) => {
+  matches.forEach(m => vehiclesStore.updateInfo(m.vehicleId, { vin: m.vin }))
+  isMatchOpen.value = false
+  finishSelfConnection([vehicle.id, ...autoMatched.value.map(v => v.id), ...matches.map(m => m.vehicleId)], matches.length)
+}
+// The rest of the account is linked; unmatched vehicles wait in "À associer"
+// (listing banner, vehicle page) with the VINs returned by the account
+const matchLater = () => {
+  isMatchOpen.value = false
+  const remaining = matchGroups.value.reduce((n, g) => n + g.vins.length, 0)
+  vehiclesStore.addPendingMatches(matchGroups.value.map((g, i) => ({
+    id: `pm-${Date.now()}-${i}`,
+    brand: g.candidates[0].brand ?? '',
+    label: g.label,
+    vins: g.vins,
+    candidateIds: g.candidates.map(c => c.id),
+  })))
+  finishSelfConnection([vehicle.id, ...autoMatched.value.map(v => v.id)], 0, remaining)
 }
 
 // ─── Disconnection ───────────────────────────────────────────────────────────
@@ -152,7 +264,22 @@ const DATA_ROWS = [
           <ConnectionBadge status="UNKNOWN" />
         </div>
         <VehicleCard v-else :vehicle="vehicle">
-          <ConnectionBadge :status="isCompatible ? status : vehicle.compatibility" size="md" />
+          <!-- À associer: pick the VIN right in the card (same layout as the match popup) -->
+          <div v-if="status === 'TO_MATCH'" class="flex items-center gap-[12px]">
+            <div class="w-[220px]">
+              <Dropdown
+                v-model="vinToMatch"
+                :items="vinItems"
+                size="sm"
+                :show-label="false"
+                :show-hint="false"
+                :searchable="false"
+                placeholder="VIN"
+              />
+            </div>
+            <Button type="primary" size="sm" label="Associer" :disabled="!vinToMatch" @click="matchThisVehicle" />
+          </div>
+          <ConnectionBadge v-else :status="isCompatible ? status : vehicle.compatibility" size="md" />
         </VehicleCard>
       </div>
     </div>
@@ -163,12 +290,14 @@ const DATA_ROWS = [
       <Button type="secondary" destructive size="sm" label="Déconnecter" @click="isDisconnectOpen = true" />
     </div>
 
-    <!-- Unknown compatibility: fill in the model -->
-    <div v-if="vehicle.compatibility === 'UNKNOWN'" :class="[cardClass, 'p-[16px]']">
-      <VehicleCard :vehicle="vehicle">
-        <Button type="tertiaryGray" size="sm" label="Renseigner" @click="emit('changeModel')" />
-      </VehicleCard>
-    </div>
+    <!-- Unknown compatibility (no model, or missing year): complete the vehicle details right here (Figma compatibilite-1-inconnue) -->
+    <VehicleInfoForm
+      v-if="vehicle.compatibility === 'UNKNOWN'"
+      :vehicle="draft"
+      @edit="(p) => emit('edit', p)"
+      @change-model="emit('changeModel')"
+      @remove-model="emit('removeModel')"
+    />
 
     <template v-else-if="isCompatible">
       <!-- Connected: shared data + disconnect -->
@@ -193,7 +322,10 @@ const DATA_ROWS = [
       </div>
 
       <!-- Not linked: invite the driver or connect myself -->
-      <template v-else-if="!isLinked">
+      <!-- À associer: handled in the vehicle card above -->
+      <template v-else-if="status === 'TO_MATCH'" />
+
+      <template v-else-if="!isLinked && !waitsForDriver">
         <ConnectOptionCard
           v-if="vehicle.driver"
           :title="optionTitles.invite"
@@ -208,8 +340,8 @@ const DATA_ROWS = [
             </template>
             <template v-else>
               <VehicleCheckbox
-                v-if="showAlsoOthers"
-                v-model="alsoOthers"
+                v-if="showAlsoOthers && otherDriversToInvite.length"
+                v-model="alsoInvite"
                 label="Inviter aussi les conducteurs des autres véhicules compatibles"
               />
               <span v-else />
@@ -221,21 +353,34 @@ const DATA_ROWS = [
         <ConnectOptionCard
           :title="optionTitles.self"
           :selected="option === 'self'"
-          :steps="SELF_STEPS"
+          :steps="selfSteps"
+          :single="!vehicle.driver"
           @select="option = 'self'"
         >
           <template #footer>
-            <VehicleCheckbox
-              v-if="showAlsoOthers"
-              v-model="alsoOthers"
-              label="Connecter aussi les autres véhicules compatibles de ce constructeur"
-            />
-            <span v-else />
+            <span />
             <Button type="primary" size="sm" label="Connecter le véhicule" class="shrink-0" @click="connectSelf" />
           </template>
         </ConnectOptionCard>
       </template>
     </template>
+
+    <!-- Account vehicles that couldn't be matched to the fleet automatically -->
+    <VehicleMatchModal
+      :open="isMatchOpen"
+      :groups="matchGroups"
+      @close="isMatchOpen = false"
+      @later="matchLater"
+      @confirm="confirmMatch"
+    />
+
+    <!-- Recap after linking several vehicles of the account -->
+    <VehicleConnectResultModal
+      :open="isResultOpen"
+      :brand="vehicle.brand ?? ''"
+      :result="connectResult"
+      @close="isResultOpen = false"
+    />
 
     <!-- Disconnection confirmation (Figma connexion-5-confirmation-de-deconnexion) -->
     <VehicleModal

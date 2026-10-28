@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import type { HorizontalTab, HorizontalTabBadgeTone } from '~/components/ui/HorizontalTabs.vue'
-import type { ConnectionStatus, Vehicle } from '~/stores/vehicles'
+import type { ConnectionStatus, Vehicle, VehicleEdit } from '~/stores/vehicles'
 import vehicleIllustration from '~/assets/illustrations/vehicle-header.png'
 
 // Vehicle detail page (Figma [BU] Véhicules — "Détails du véhicule", 800px wide).
@@ -28,7 +28,16 @@ const DATA_TAB_BADGES: Record<ConnectionStatus, { label: string; tone: Horizonta
   ACTION_REQUIRED: { label: 'Action requise', tone: 'orange' },
   FAILED: { label: 'Échec', tone: 'rose' },
   DISCONNECTED: { label: 'Déconnecté', tone: 'orange' },
+  TO_MATCH: { label: 'À associer', tone: 'orange' },
 }
+
+// Compatible vehicle never connected: a banner sends the manager to the Données tab
+// (hidden on that tab, where the connection options already are)
+const showConnectBanner = computed<boolean>(() =>
+  vehicle.value?.compatibility === 'COMPATIBLE'
+  && vehicle.value.connectionStatus === 'NOT_CONNECTED'
+  && activeTab.value !== 'donnees',
+)
 
 const tabs = computed<HorizontalTab[]>(() => [
   { id: 'informations', label: 'Informations' },
@@ -50,30 +59,81 @@ const showToast = (title: string, description: string) => {
   toastTimer = setTimeout(() => { toast.visible = false }, 3500)
 }
 
-const onModelSelected = (model: { brand: string; model: string; version: string }) => {
+// Unsaved edits (model, registration fields, notes): applied together with "Modifier"
+const toEdit = (v: Vehicle): VehicleEdit => ({
+  brand: v.brand, model: v.model, version: v.version, country: v.country, plate: v.plate, vin: v.vin, year: v.year, notes: v.notes ?? '',
+})
+const edits = ref<VehicleEdit | null>(null)
+const resetEdits = () => { edits.value = vehicle.value ? toEdit(vehicle.value) : null }
+// Follow the saved vehicle (other vehicle, VIN set by a match…) unless there are unsaved edits
+watch(
+  () => (vehicle.value ? JSON.stringify(toEdit(vehicle.value)) : ''),
+  (_, before) => { if (!edits.value || JSON.stringify(edits.value) === before) resetEdits() },
+  { immediate: true },
+)
+
+const draftVehicle = computed<Vehicle | null>(() => (vehicle.value && edits.value ? { ...vehicle.value, ...edits.value } : vehicle.value))
+const isDirty = computed<boolean>(() =>
+  !!vehicle.value && !!edits.value && JSON.stringify(toEdit(vehicle.value)) !== JSON.stringify(edits.value),
+)
+const onEdit = (patch: Partial<VehicleEdit>) => {
   if (!vehicle.value) return
-  vehiclesStore.setModel(vehicle.value.id, model)
-  isModelModalOpen.value = false
-  showToast('Modèle mis à jour', `${model.brand} ${model.model} · ${model.version}`)
+  if (isEditing.value) {
+    if (edits.value) Object.assign(edits.value, patch)
+    return
+  }
+  vehiclesStore.saveVehicle(vehicle.value.id, { ...toEdit(vehicle.value), ...patch })
 }
 
-const removeModel = () => {
-  if (!vehicle.value) return
-  vehiclesStore.setModel(vehicle.value.id, null)
-  showToast('Modèle retiré', 'Renseignez un modèle pour connaître la compatibilité du véhicule.')
+const onModelSelected = (model: { brand: string; model: string; version: string }) => {
+  onEdit(model)
+  isModelModalOpen.value = false
 }
+
+// Pages showing the vehicle details form edit through a draft + "Retour à la liste / Modifier" footer
+const isEditing = computed<boolean>(() =>
+  activeTab.value === 'informations'
+  || (activeTab.value === 'donnees' && vehicle.value?.compatibility === 'UNKNOWN'),
+)
+const listPath = computed<string>(() => `/bu/${route.params.id}/vehicles`)
+
+const saveVehicle = () => {
+  if (!vehicle.value || !edits.value) return
+  vehiclesStore.saveVehicle(vehicle.value.id, edits.value)
+  resetEdits()
+  showToast('Véhicule modifié', 'Les informations du véhicule ont été enregistrées.')
+}
+
+const removeModel = () => onEdit({ brand: null, model: null, version: null })
 </script>
 
 <template>
   <div class="min-h-full px-[32px] pt-[44px] pb-[32px]">
     <div class="mx-auto w-full max-w-[800px] flex flex-col gap-[32px]">
+      <Transition
+        enter-active-class="transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none"
+        enter-from-class="opacity-0 -translate-y-[4px]"
+        leave-active-class="transition-[opacity,transform] duration-[160ms] ease-in motion-reduce:transition-none"
+        leave-to-class="opacity-0 -translate-y-[4px]"
+      >
+        <Banner
+          v-if="showConnectBanner"
+          type="brand"
+          text="Connectez ce véhicule pour que le kilométrage et les recharges remontent automatiquement."
+          action-label="Connecter"
+          icon-left="link"
+          icon-right=""
+          icon-variant="solid"
+          @action="activeTab = 'donnees'"
+        />
+      </Transition>
 
       <!-- Page header -->
       <div class="flex items-center gap-[16px] anim-fade-up" style="animation-delay: 0ms">
         <img :src="vehicleIllustration" alt="" class="w-[96px] h-[88px] shrink-0 object-contain">
         <div class="flex flex-col items-start justify-center">
           <NuxtLink
-            :to="`/bu/${route.params.id}/vehicles`"
+            :to="listPath"
             class="-m-[4px] inline-flex items-center gap-[8px] rounded-[4px] p-[4px] text-text-neutral-secondary outline-none transition-[color,background-color] duration-150 ease-out hover:text-text-neutral focus-visible:shadow-ring-gray motion-reduce:transition-none"
           >
             <Icon name="arrow-left" variant="outline" :size="16" />
@@ -101,7 +161,8 @@ const removeModel = () => {
         <template #panel>
           <VehicleInfoTab
             v-if="activeTab === 'informations'"
-            :vehicle="vehicle"
+            :vehicle="draftVehicle ?? vehicle"
+            @edit="onEdit"
             @change-model="isModelModalOpen = true"
             @remove-model="removeModel"
           />
@@ -109,8 +170,11 @@ const removeModel = () => {
           <ConnectionTab
             v-else-if="activeTab === 'donnees'"
             :vehicle="vehicle"
+            :draft="draftVehicle ?? vehicle"
             @toast="showToast"
+            @edit="onEdit"
             @change-model="isModelModalOpen = true"
+            @remove-model="removeModel"
             @go-tab="(tab: string) => (activeTab = tab)"
           />
 
@@ -126,6 +190,12 @@ const removeModel = () => {
           </div>
         </template>
       </HorizontalTabs>
+
+      <!-- Edit footer (Figma fiche véhicule) -->
+      <div v-if="vehicle && isEditing" class="flex items-center justify-end gap-[12px]">
+        <Button type="secondary" size="md" label="Retour à la liste" @click="navigateTo(listPath)" />
+        <Button type="primary" size="md" label="Modifier" :disabled="!isDirty" @click="saveVehicle" />
+      </div>
     </div>
 
     <ChangeModelModal :open="isModelModalOpen" @close="isModelModalOpen = false" @select="onModelSelected" />

@@ -20,6 +20,7 @@ const CONFIG: Record<ConnectionStatus | Compatibility, { label: string; icon: st
   ACTION_REQUIRED: { label: 'Action requise', icon: 'exclamation-triangle', tone: 'orange' },
   FAILED: { label: 'Échec de connexion', icon: 'x-circle', tone: 'rose' },
   DISCONNECTED: { label: 'Déconnecté', icon: 'signal-slash', tone: 'orange' },
+  TO_MATCH: { label: 'À associer', icon: 'exclamation-circle', tone: 'orange' },
   COMPATIBLE: { label: 'Compatible', icon: 'check-circle', tone: 'turquoise' },
   NOT_COMPATIBLE: { label: 'Non compatible', icon: 'no-symbol', tone: 'gray' },
   UNKNOWN: { label: 'Compatibilité inconnue', icon: 'question-mark-circle', tone: 'gray' },

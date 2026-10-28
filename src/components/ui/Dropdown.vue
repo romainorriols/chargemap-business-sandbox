@@ -29,6 +29,7 @@ interface Props {
   // otherwise clip the menu (e.g. cards with internal scroll). Position
   // is recomputed on scroll/resize while the menu is open.
   teleport?: boolean
+  menuMaxHeight?: number // px, defaults to the menu's 360px
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -198,9 +199,10 @@ onUnmounted(() => {
           v-if="isOpen"
           ref="menuEl"
           :class="[
-            'z-50 will-change-[opacity,transform]',
+            'will-change-[opacity,transform]',
             openUpward ? 'origin-bottom' : 'origin-top',
-            teleport ? 'fixed' : ['absolute left-0 right-0', openUpward ? 'bottom-full mb-1' : 'top-full mt-1'],
+            // Teleported menus sit above modals (z-70) so they also work inside one
+            teleport ? 'fixed z-[80]' : ['z-50 absolute left-0 right-0', openUpward ? 'bottom-full mb-1' : 'top-full mt-1'],
           ]"
           :style="menuStyle"
         >
@@ -212,6 +214,7 @@ onUnmounted(() => {
             :searchable="searchable"
             :footer="footer"
             :search-placeholder="searchPlaceholder"
+            :max-height="menuMaxHeight"
             @update:model-value="onSelect"
             @cancel="onCancel"
             @confirm="onConfirm"

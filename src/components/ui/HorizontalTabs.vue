@@ -23,9 +23,12 @@ interface Props {
   tabs: HorizontalTab[]
   modelValue: string
   variant?: Variant
+  // Pill variant only: stretch to the container, tabs share the width equally
+  fullWidth?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   variant: 'pill',
+  fullWidth: false,
 })
 const emit = defineEmits<{
   'update:modelValue': [id: string]
@@ -72,8 +75,8 @@ onMounted(async () => {
   <div :class="['flex flex-col items-stretch w-full', $slots.panel ? 'gap-[40px]' : '']">
 
     <!-- Pill variant — segmented control with sliding white pill. -->
-    <div v-if="variant === 'pill'" class="bg-neutral-secondary flex p-[4px] rounded-[10px] w-fit">
-      <div class="relative flex gap-[4px] items-center">
+    <div v-if="variant === 'pill'" :class="['bg-neutral-secondary flex p-[4px] rounded-[10px]', fullWidth ? 'w-full' : 'w-fit']">
+      <div :class="['relative flex gap-[4px] items-center', fullWidth ? 'flex-1' : '']">
         <div
           class="pointer-events-none absolute top-0 left-0 h-full bg-neutral rounded-[6px] shadow-sm"
           :style="{
@@ -93,6 +96,7 @@ onMounted(async () => {
           type="button"
           :class="[
             'relative z-[1] flex items-center justify-center px-[12px] py-[8px] rounded-[6px] outline-none',
+            fullWidth ? 'flex-1' : '',
             'font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] whitespace-nowrap',
             'transition-[color,transform] duration-200 ease-out active:scale-[0.97]',
             tab.id === modelValue
