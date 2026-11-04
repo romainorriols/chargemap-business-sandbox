@@ -65,6 +65,12 @@ type LocationKind = 'home' | 'away' | 'unknown'
 // Journal des autorisations — accept/reject decision the gateway returned at attempt time.
 type AuthorizationStatus = 'accepted' | 'rejected'
 
+// Domicile certification — the driver's connected vehicle confirms the home charge:
+// charging when the session started, within 100 m of the home zone.
+// 'not-applicable' = the driver's vehicle isn't connected, reimbursement rules unchanged.
+type CertificationStatus = 'certified' | 'not-certified' | 'pending' | 'not-applicable'
+type CertificationReason = 'distance' | 'not-charging' | 'other-vehicle' | 'subscription'
+
 interface ChargeRow {
   id: string
   zoneName: string
@@ -99,6 +105,10 @@ interface ChargeRow {
   // Données partielles — borne/câble qui remonte des valeurs proches de zéro
   // (kWh / coût / durée). Masqué par défaut sur Entreprise / Domicile / Câbles connectés.
   isParasitic: boolean
+  // Domicile-specific — see assignCertification().
+  certification: CertificationStatus
+  certificationReason: CertificationReason | null
+  vehicleDistanceM: number | null // distance to the home zone when the reason is 'distance'
 }
 
 // Badge code is always issued by Chargemap → fixed "CMP" prefix.
@@ -258,6 +268,9 @@ function generateRows(count: number): ChargeRow[] {
       unknownBadge,
       rfid,
       isParasitic,
+      certification: 'not-applicable',
+      certificationReason: null,
+      vehicleDistanceM: null,
     })
   }
   // Visibility guarantee — for each tab-scoped listing (entreprise / home /
@@ -272,7 +285,54 @@ function generateRows(count: number): ChargeRow[] {
     const seed = firstPage.find(r => !r.isParasitic && r.reimbursementStatus !== 'suspect')
     if (seed) seed.reimbursementStatus = 'suspect'
   }
+  assignCertification(rows)
   return rows
+}
+
+// Drivers whose company vehicle isn't connected — their home charges can't be certified.
+const UNCONNECTED_DRIVERS = new Set<string>(['Thomas Garnier', 'Léa Moreau'])
+
+// Certification of the home charges. Own RNG so the rest of the dataset stays unchanged.
+// A non-certified charge is not reimbursed; the manager can still force it in decision mode.
+function assignCertification(rows: ChargeRow[]) {
+  const certRng = makeRng(20261104)
+  const homeRows = rows.filter(r => r.liveKind === 'home')
+  homeRows.forEach((r, i) => {
+    if (UNCONNECTED_DRIVERS.has(r.homeDriver)) return
+    // The most recent charges are still waiting for the vehicle data.
+    if (i < 2) {
+      r.certification = 'pending'
+      return
+    }
+    const x = certRng()
+    // 0 kWh session (battery already full): the vehicle wasn't charging.
+    if (r.isParasitic) {
+      r.certification = 'not-certified'
+      r.certificationReason = 'not-charging'
+      if (r.reimbursementStatus !== 'suspect') r.reimbursementStatus = 'rejected'
+      return
+    }
+    if (x < 0.82) {
+      r.certification = 'certified'
+      return
+    }
+    const y = certRng()
+    r.certification = 'not-certified'
+    r.certificationReason = y < 0.5 ? 'distance' : y < 0.75 ? 'not-charging' : y < 0.9 ? 'other-vehicle' : 'subscription'
+    if (r.certificationReason === 'distance') r.vehicleDistanceM = Math.round(15 + certRng() * 90) * 10
+    if (r.reimbursementStatus !== 'suspect') r.reimbursementStatus = 'rejected'
+  })
+  // Visibility guarantee — a location failure on the first page.
+  const firstPage = homeRows.slice(0, 15)
+  if (!firstPage.some(r => r.certification === 'not-certified')) {
+    const seed = firstPage.find(r => r.certification === 'certified' && r.reimbursementStatus !== 'suspect')
+    if (seed) {
+      seed.certification = 'not-certified'
+      seed.certificationReason = 'distance'
+      seed.vehicleDistanceM = 340
+      seed.reimbursementStatus = 'rejected'
+    }
+  }
 }
 
 const charges = ref<ChargeRow[]>(generateRows(200))
@@ -293,6 +353,7 @@ const search = ref('')
 const dateFilter = ref('')
 const statusFilter = ref<string[]>([])
 const locationFilter = ref<string[]>([])
+const certificationFilter = ref<string[]>([])
 const liveKindFilter = ref<string[]>([])
 const badgeKnownFilter = ref<string[]>([])
 const authorizationFilter = ref<string[]>([])
@@ -317,6 +378,12 @@ const locationItems = [
   { value: 'home',    label: 'Domicile' },
   { value: 'away',    label: 'Hors domicile' },
   { value: 'unknown', label: 'Inconnu' },
+]
+const certificationItems = [
+  { value: 'certified',      label: 'Certifiée' },
+  { value: 'not-certified',  label: 'Non certifiée' },
+  { value: 'pending',        label: 'En attente du véhicule' },
+  { value: 'not-applicable', label: 'Véhicule non connecté' },
 ]
 const liveKindItems = [
   { value: 'entreprise', label: 'Entreprise' },
@@ -498,6 +565,7 @@ const filteredExceptParasitic = computed(() => {
     // Status filter applies on home-domain tabs and inside decision mode (filtered to pending/rejected at the dropdown level).
     if ((isHomeDomain.value || decisionMode.value) && statusFilter.value.length && !statusFilter.value.includes(c.reimbursementStatus)) return false
     if (isCable.value && locationFilter.value.length && !locationFilter.value.includes(c.location)) return false
+    if (isDomicile.value && certificationFilter.value.length && !certificationFilter.value.includes(c.certification)) return false
     if (isInProgressTab.value && liveKindFilter.value.length && !liveKindFilter.value.includes(c.liveKind)) return false
     if (isAuthJournalTab.value) {
       if (badgeKnownFilter.value.length) {
@@ -607,6 +675,34 @@ const locationConfig = (k: LocationKind) => {
     case 'away':    return { label: 'Hors domicile', icon: 'highway',              dotBg: 'bg-brand' }
     case 'unknown': return { label: 'Inconnu',       icon: 'question-mark-circle', dotBg: 'bg-brand' }
   }
+}
+
+// Domicile certification pill — same recipe as the location pill, + the reason shown in a rich tooltip.
+const CERTIFICATION_HINT = 'Recharge confirmée par le véhicule connecté : en charge au démarrage de la session, à moins de 100 m du domicile. Une recharge non certifiée n\'est pas remboursée, sauf si vous le décidez.'
+const certificationReasonText = (c: ChargeRow) => {
+  switch (c.certificationReason) {
+    case 'distance':      return `Lieu : le véhicule était à ${c.vehicleDistanceM} m du domicile au démarrage de la recharge (100 m maximum).`
+    case 'not-charging':  return 'Véhicule : il n\'était pas en charge au démarrage de la session.'
+    case 'other-vehicle': return `Véhicule : le véhicule en charge n'est pas celui attribué à ${c.homeDriver}.`
+    case 'subscription':  return 'Véhicule : l\'abonnement aux services connectés du constructeur a expiré.'
+    default:              return ''
+  }
+}
+const certificationConfig = (c: ChargeRow) => {
+  switch (c.certification) {
+    case 'certified':
+      return { label: 'Certifiée', icon: 'check-badge', dotBg: 'bg-[#82cb15]', lines: ['Le véhicule connecté était en charge au démarrage de la session, à moins de 100 m du domicile.'] }
+    case 'not-certified':
+      return { label: 'Non certifiée', icon: 'x-mark', dotBg: 'bg-[#f43e5c]', lines: [certificationReasonText(c), 'Vous pouvez quand même la rembourser avec « Décider des remboursements ».'] }
+    case 'pending':
+      return { label: 'En attente', icon: 'clock', dotBg: 'bg-[#94a3b8]', lines: ['Nous attendons les données du véhicule. Le statut se mettra à jour automatiquement.'] }
+    case 'not-applicable':
+      return { label: 'Non connecté', icon: 'link-slash', dotBg: 'bg-[#94a3b8]', lines: [`Le véhicule de ${c.homeDriver} n'est pas connecté : la recharge ne peut pas être certifiée. Le remboursement suit vos règles habituelles.`] }
+  }
+}
+function showCertificationTip(event: MouseEvent | FocusEvent, c: ChargeRow) {
+  const cfg = certificationConfig(c)
+  showStatusTip(event, cfg.lines, { title: cfg.label })
 }
 
 // Currency formatter (FR locale — comma as decimal separator).
@@ -724,6 +820,20 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             icon="check-circle"
             :searchable="false"
             :placeholder="statusFilter.length ? `${statusFilter.length} états sélectionnés` : 'États: Tous'"
+            :show-label="false"
+            :show-hint="false"
+            @update:model-value="resetPage"
+          />
+        </div>
+        <div v-if="isDomicile" class="w-full xl:w-[260px]">
+          <Dropdown
+            v-model="certificationFilter"
+            :items="certificationItems"
+            input-type="leadingIcon"
+            menu-type="multiselect"
+            icon="check-badge"
+            :searchable="false"
+            :placeholder="certificationFilter.length ? `${certificationFilter.length} certifications sélectionnées` : 'Certification: Toutes'"
             :show-label="false"
             :show-hint="false"
             @update:model-value="resetPage"
@@ -986,6 +1096,20 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
           <div class="flex-[158] min-w-px px-[16px] py-[8px] flex items-center font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
             Durée
           </div>
+          <div class="w-[180px] shrink-0 px-[16px] py-[8px] flex items-center gap-[8px] font-sans font-semibold text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral-secondary">
+            Certification
+            <span
+              tabindex="0"
+              class="inline-flex shrink-0 outline-none rounded-[4px] focus-visible:shadow-ring-gray"
+              aria-label="Qu'est-ce qu'une recharge certifiée ?"
+              @mouseenter="showStatusTip($event, [CERTIFICATION_HINT], { title: 'Recharge certifiée' })"
+              @mouseleave="hideStatusTip"
+              @focusin="showStatusTip($event, [CERTIFICATION_HINT], { title: 'Recharge certifiée' })"
+              @focusout="hideStatusTip"
+            >
+              <Icon name="information-circle" variant="outline" :size="16" class="text-icon-neutral-secondary" />
+            </span>
+          </div>
         </div>
 
         <!-- Header row — Câbles connectés variant -->
@@ -1085,7 +1209,7 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             <div v-if="!isHomeDomain" class="flex-[137] min-w-px px-[16px] py-[12px] flex items-center">
               <Skeleton width="48px" height="14px" />
             </div>
-            <div v-if="isCable" class="w-[180px] shrink-0 px-[16px] py-[12px] flex items-center">
+            <div v-if="isCable || isDomicile" class="w-[180px] shrink-0 px-[16px] py-[12px] flex items-center">
               <Skeleton width="100px" height="24px" rounded="9999px" />
             </div>
           </div>
@@ -1444,6 +1568,25 @@ const skeletonRows = Array.from({ length: 12 }, (_, i) => i)
             <!-- Durée -->
             <div class="flex-[158] min-w-px px-[16px] py-[12px] flex items-center font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral tabular-nums whitespace-nowrap">
               {{ c.durationLabel }}
+            </div>
+            <!-- Certification — pill + reason in the teleported tooltip -->
+            <div class="w-[180px] shrink-0 px-[16px] py-[12px] flex items-center">
+              <span
+                tabindex="0"
+                class="inline-flex items-center gap-[8px] pl-[2px] pr-[8px] py-[2px] rounded-full bg-neutral-secondary border border-border-neutral-secondary outline-none focus-visible:shadow-ring-gray cursor-default"
+                :aria-label="certificationConfig(c).label"
+                @mouseenter="showCertificationTip($event, c)"
+                @mouseleave="hideStatusTip"
+                @focusin="showCertificationTip($event, c)"
+                @focusout="hideStatusTip"
+              >
+                <span :class="['inline-flex items-center justify-center size-[21px] rounded-full shrink-0', certificationConfig(c).dotBg]">
+                  <Icon :name="certificationConfig(c).icon" variant="solid" :size="12" class="text-white" />
+                </span>
+                <span class="font-sans font-normal text-[14px] leading-[1.5] tracking-[-0.42px] text-text-neutral whitespace-nowrap">
+                  {{ certificationConfig(c).label }}
+                </span>
+              </span>
             </div>
           </div>
         </TransitionGroup>
